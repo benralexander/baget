@@ -44,7 +44,7 @@
    var prepareForUpload  =  function ()  {
        if (d3.select('#uploadButtonHider').style('display')==='block') {
            d3.select('#uploadButtonHider').style('display','none');
-           window.location.href = '/baget/baget/returnToDefaultJsonData';
+           window.location.href = './baget/returnToDefaultJsonData';
        }  else {
            d3.select('#uploadButtonHider').style('display','block');
        }
@@ -101,7 +101,7 @@
         </div>
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li class="active"><a href="/baget/baget/qqplot">Home</a></li>
+                <li class="active"><a href="./baget/qqplot">Home</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
@@ -162,10 +162,10 @@
 
     var qqPlot ;
     <g:if test="${dataFileBased}">
-    d3.json("/baget/baget/qqPlotData?id=1", function (error, json) {
+    d3.json("../baget/qqPlotData?id=1", function (error, json) {
     </g:if>
     <g:else>
-    d3.json("/baget/baget/qqPlotData", function (error, json) {
+    d3.json("../baget/qqPlotData", function (error, json) {
     </g:else>
 
         var dataRange = extractDataRange(json);
