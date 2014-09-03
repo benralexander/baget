@@ -302,39 +302,43 @@ var baget = baget || {};
             /***
              * data.handling
              */
-            dataDots = d3.select('#groupHolder').selectAll(".dot")
-                .data(data);
+            for ( var  i=0 ; i<1 ; i++ )  {
 
-            dataDots.enter()
-                .append("circle")
-                .on('mouseover', tip.show)
-                .on('mouseout', tip.hide)
-                .on('click', clickCallback)
+                dataDots = d3.select('#groupHolder').selectAll(".dot"+ i)
+                    .data(data);
 
-                .attr("class", "dot")
-                .attr("r", 3)
-                .attr("cx", function (d) {
-                    return x(xAxisAccessor(d));
-                })
-                .attr("cy", function (d) {
-                    return y(yAxisAccessor(d));
-                })
-                .style("fill", function (d) {
-                    return color(d);
-                });
+                dataDots.enter()
+                    .append("circle")
+                    .on('mouseover', tip.show)
+                    .on('mouseout', tip.hide)
+                    .on('click', clickCallback)
+
+                    .attr("class", "dot")
+                    .attr("r", 3)
+                    .attr("cx", function (d) {
+                        return x(xAxisAccessor(d));
+                    })
+                    .attr("cy", function (d) {
+                        return y(yAxisAccessor(d));
+                    })
+                    .style("fill", function (d) {
+                        return color(d);
+                    });
 
 
-            dataDots.transition()
-                .duration(1000)
-                .style("fill", function (d) {
-                    return color(d);
-                });
+                dataDots.transition()
+                    .duration(1000)
+                    .style("fill", function (d) {
+                        return color(d);
+                    });
 
-            dataDots.exit().transition()
-                .style("fill", function (d) {
-                    return color(d);
-                })
-                .remove();
+                dataDots.exit().transition()
+                    .style("fill", function (d) {
+                        return color(d);
+                    })
+                    .remove();
+
+            }
 
 
             /***
