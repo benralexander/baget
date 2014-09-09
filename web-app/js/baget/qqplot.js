@@ -57,6 +57,7 @@ var baget = baget || {};
             globalMinimum,
             globalMaximum,
 
+
         //  private variable
             tip = d3.tip()
                 .attr('class', 'd3-tip scatter-tip')
@@ -75,6 +76,22 @@ var baget = baget || {};
                     }
                     return "<strong><span>" + textToPresent + "</span></strong> ";
                 });
+
+
+        function toggleDataSetVisibility (dataSetNumber)  {
+            var dataSetElements =  d3.selectAll('.dataset'+dataSetNumber);
+            if (!dataSetElements.empty()) {
+                var currentState = dataSetElements.attr('opacity');
+                if ((currentState===null) ||
+                    (currentState === 1)) {   // either it's never been changed ( and therefore it's visible)
+                    // or else has been explicitly made visible
+                    dataSetElements.attr('opacity', 0);
+                } else {
+                    // otherwise the data set must be invisible, so we will set it to be visible
+                    dataSetElements.attr('opacity', 1);
+                }
+            }
+        };
 
 
         function zoomed() {
@@ -189,17 +206,9 @@ var baget = baget || {};
                 .attr('id','groupHolder')
                 .attr("clip-path", "url(#body-clip)");
 
-            var combinedArray = [];
-            for ( var  i=0 ; i<data.length ; i++ ) {
-                for ( var  j=0 ; j<data[i].length ; j++ ) {
-                    combinedArray.push(data[i][j]);
-                }
-            }
             var dataRange = UTILS.extractDataRange(data);
 
             // find the maximum in the minimums in order to scale the plot
-//            x.domain(d3.extent(combinedArray, xAxisAccessor)).nice();
-//            y.domain(d3.extent(combinedArray, yAxisAccessor)).nice();
             x.domain(d3.extent([dataRange.min,dataRange.max])).nice();
             y.domain(d3.extent([dataRange.min,dataRange.max])).nice();
 
@@ -333,7 +342,7 @@ var baget = baget || {};
                         .on('mouseout', tip.hide)
                         .on('click', clickCallback)
 
-                        .attr("class", "dot")
+                        .attr("class", "dot dataset"+dataSet)
                         .attr("r", 3)
                         .attr("cx", function (d) {
                             return x(xAxisAccessor(d));
@@ -368,28 +377,45 @@ var baget = baget || {};
             if ((typeof(dataSetLabels) !== 'undefined') &&
                 (dataSetLabels.length > 0)) {
                 var legendVerticalPositioning = height-(20*dataSetLabels.length);
-                var legend = svg.selectAll(".legend")
-                    .data(dataSetLabels)
-                    .enter().append("g")
-                    .attr("class", "legend")
-                    .attr("transform", function (d, i) {
-                        return "translate(0," + ((i * 20) - margin.top+legendVerticalPositioning) + ")";
-                    });
 
-                legend.append("rect")
-                    .attr("x", width - 18)
-                    .attr("width", 18)
-                    .attr("height", 18)
-                    .style("fill", legendColor);
+                var legendsExist = d3.select('#groupHolder').selectAll("g.legend");
 
-                legend.append("text")
-                    .attr("x", width - 24)
-                    .attr("y", (legendVerticalPositioning/20)-5)
-                    .attr("dy", ".35em")
-                    .style("text-anchor", "end")
-                    .text(function (d) {
-                        return d;
-                    });
+                if (legendsExist.empty()) {
+
+                    var legend = d3.select('#groupHolder').selectAll("g.legend")
+                        .data(dataSetLabels);
+
+                    legend.enter().append("g")
+                        .attr("class", "legend")
+                        .attr("transform", function (d, i) {
+                            return "translate(0," + ((i * 20) - margin.top + legendVerticalPositioning) + ")";
+                        });
+
+                    legend.exit()
+                        .remove();
+
+                    legend.append("rect")
+                        .attr("x", width - 18)
+                        .attr("width", 18)
+                        .attr("height", 18)
+                        .style("fill", legendColor)
+                        .on("click", function(d,i){
+                            toggleDataSetVisibility (i);
+                        })
+
+                    legend.append("text")
+                        .attr("x", width - 24)
+                        .attr("y", (legendVerticalPositioning / 20) - 15)
+                        .attr("dy", ".35em")
+                        .style("text-anchor", "end")
+                        .text(function (d) {
+                            return d;
+                        });
+                }
+
+
+
+
             }
 
 
