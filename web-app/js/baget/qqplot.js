@@ -11,6 +11,7 @@ var baget = baget || {};
             margin = {},
             selectionIdentifier = '',  // string to identify the Dom object that will serve as our route
             data = {},
+            dataSetLabels = [],
             xAxisLabel = 'expected',  // default X axis label
             yAxisLabel = 'observed',  // default Y axis label
             xAxisAccessor = function (d) {
@@ -47,6 +48,7 @@ var baget = baget || {};
             x,
             y,
             color,
+            dataElementColor = d3.scale.category10(),
             legendColor = d3.scale.category10(),
             xAxis,
             yAxis,
@@ -142,7 +144,7 @@ var baget = baget || {};
             y = d3.scale.linear()
                 .range([height, 0]);
 
-            color = function (d){
+            color = function (d,dataSetIndex){
                 if ((displaySignificanceLine)  && (typeof(significanceLineValue) !=="undefined")) {
                     if (yAxisAccessor (d) > significanceLineValue){
                         return d3.rgb("#ff00ff");
@@ -150,7 +152,13 @@ var baget = baget || {};
                         return d3.rgb("#ffffff");
                     }
                 } else {
-                    return d3.rgb("#ffffff");
+                    // We've been asked to provide color but given the data set index we will default to black
+                    if (typeof(dataSetIndex) === 'undefined') {
+                        return d3.rgb("#ffffff");
+                    } else {
+                        return dataElementColor (dataSetIndex);
+                    }
+
                 }
             }
 
@@ -181,11 +189,19 @@ var baget = baget || {};
                 .attr('id','groupHolder')
                 .attr("clip-path", "url(#body-clip)");
 
-
+            var combinedArray = [];
+            for ( var  i=0 ; i<data.length ; i++ ) {
+                for ( var  j=0 ; j<data[i].length ; j++ ) {
+                    combinedArray.push(data[i][j]);
+                }
+            }
+            var dataRange = UTILS.extractDataRange(data);
 
             // find the maximum in the minimums in order to scale the plot
-            x.domain(d3.extent(data, xAxisAccessor)).nice();
-            y.domain(d3.extent(data, yAxisAccessor)).nice();
+//            x.domain(d3.extent(combinedArray, xAxisAccessor)).nice();
+//            y.domain(d3.extent(combinedArray, yAxisAccessor)).nice();
+            x.domain(d3.extent([dataRange.min,dataRange.max])).nice();
+            y.domain(d3.extent([dataRange.min,dataRange.max])).nice();
 
             if (displayIdentityLine){
                 // The identity line we want to draw should fit inside the axes defined
@@ -304,39 +320,44 @@ var baget = baget || {};
              */
             for ( var  i=0 ; i<1 ; i++ )  {
 
-                dataDots = d3.select('#groupHolder').selectAll(".dot"+ i)
-                    .data(data);
+                for ( var  dataSet=0 ; dataSet<data.length ; dataSet++ ) {
 
-                dataDots.enter()
-                    .append("circle")
-                    .on('mouseover', tip.show)
-                    .on('mouseout', tip.hide)
-                    .on('click', clickCallback)
+                    dataSetLabels.push ('data set '+dataSet);
 
-                    .attr("class", "dot")
-                    .attr("r", 3)
-                    .attr("cx", function (d) {
-                        return x(xAxisAccessor(d));
-                    })
-                    .attr("cy", function (d) {
-                        return y(yAxisAccessor(d));
-                    })
-                    .style("fill", function (d) {
-                        return color(d);
-                    });
+                    dataDots = d3.select('#groupHolder').selectAll(".dot" + i)
+                        .data(data[dataSet]);
+
+                    dataDots.enter()
+                        .append("circle")
+                        .on('mouseover', tip.show)
+                        .on('mouseout', tip.hide)
+                        .on('click', clickCallback)
+
+                        .attr("class", "dot")
+                        .attr("r", 3)
+                        .attr("cx", function (d) {
+                            return x(xAxisAccessor(d));
+                        })
+                        .attr("cy", function (d) {
+                            return y(yAxisAccessor(d));
+                        })
+                        .style("fill", function (d) {
+                            return color(d);
+                        });
 
 
-                dataDots.transition()
-                    .duration(1000)
-                    .style("fill", function (d) {
-                        return color(d);
-                    });
+                    dataDots.transition()
+                        .duration(1000)
+                        .style("fill", function (d) {
+                            return color(d,dataSet);
+                        });
 
-                dataDots.exit().transition()
-                    .style("fill", function (d) {
-                        return color(d);
-                    })
-                    .remove();
+                    dataDots.exit().transition()
+                        .style("fill", function (d) {
+                            return color(d,dataSet);
+                        })
+                        .remove();
+                }
 
             }
 
@@ -344,28 +365,33 @@ var baget = baget || {};
             /***
              * legend handling
              */
-            var legend = svg.selectAll(".legend")
-                .data(legendColor.domain())
-                .enter().append("g")
-                .attr("class", "legend")
-                .attr("transform", function (d, i) {
-                    return "translate(0," + ((i * 20) - margin.top) + ")";
-                });
+            if ((typeof(dataSetLabels) !== 'undefined') &&
+                (dataSetLabels.length > 0)) {
+                var legendVerticalPositioning = height-(20*dataSetLabels.length);
+                var legend = svg.selectAll(".legend")
+                    .data(dataSetLabels)
+                    .enter().append("g")
+                    .attr("class", "legend")
+                    .attr("transform", function (d, i) {
+                        return "translate(0," + ((i * 20) - margin.top+legendVerticalPositioning) + ")";
+                    });
 
-            legend.append("rect")
-                .attr("x", width - 18)
-                .attr("width", 18)
-                .attr("height", 18)
-                .style("fill", legendColor);
+                legend.append("rect")
+                    .attr("x", width - 18)
+                    .attr("width", 18)
+                    .attr("height", 18)
+                    .style("fill", legendColor);
 
-            legend.append("text")
-                .attr("x", width - 24)
-                .attr("y", 9)
-                .attr("dy", ".35em")
-                .style("text-anchor", "end")
-                .text(function (d) {
-                    return d;
-                });
+                legend.append("text")
+                    .attr("x", width - 24)
+                    .attr("y", (legendVerticalPositioning/20)-5)
+                    .attr("dy", ".35em")
+                    .style("text-anchor", "end")
+                    .text(function (d) {
+                        return d;
+                    });
+            }
+
 
             defineBodyClip(svg,x(x.domain()[0]),y(y.domain()[1]),x(x.domain()[1]),y(y.domain()[0]));
 

@@ -350,6 +350,12 @@ def rawJson2 ="""
 ]
 """
 
+    def rawCompoundData ="""[
+${rawJson},
+${rawJson2}
+]"""
+
+
     def index() {
         render(view: 'bagetLandingPage')
     }
@@ -364,7 +370,7 @@ def rawJson2 ="""
         String dataFileBased = params.id
         response.setContentType("application/json")
         if (!dataFileBased) {
-            render(rawJson)
+            render(rawCompoundData)
         } else {
             File readFileOfDisk = new File('./tempStorage.txt')
             int howManyLines =  bagetService.howManyLines(readFileOfDisk)

@@ -25,6 +25,7 @@
 <link media="all" rel="stylesheet" href="../css/baget/ie-emulation-modes-warning.js">
 <link media="all" rel="stylesheet" href="../css/baget/ie10-viewport-bug-workaround.js">
 <script src="../js/d3.js"></script>
+<script src="../js/baget/sharedMethods.js"></script>
 <script src="../js/baget/qqplot.js"></script>
 <script src="../js/baget/d3tooltip.js"></script>
 <script src="../js/baget/slider.js"></script>
@@ -39,18 +40,20 @@
 
 </script>
 <script>
-   var displaySignificanceIndicator  =  function ()  {
-       if (d3.select('.qqcontrols').style('display')==='block') {
-           d3.select('.qqcontrols').style('display','none');
-           qqPlot.displaySignificanceLine(false).render();
-       }  else {
-           d3.select('.qqcontrols').style('display','block');
-           qqPlot.displaySignificanceLine(true).render();
-           var significanceLineValue = qqPlot.significanceLineValue();
-           slider.sliderLocation(significanceLineValue);
-       }
+    var displaySignificanceIndicator = function () {
+        if (d3.select('.qqcontrols').style('display') === 'block') {
+            d3.select('.qqcontrols').style('display', 'none');
+            qqPlot.displaySignificanceLine(false).render();
+        } else {
+            d3.select('.qqcontrols').style('display', 'block');
+            qqPlot.displaySignificanceLine(true).render();
+            var significanceLineValue = qqPlot.significanceLineValue();
+            if (typeof(slider.sliderLocation) !== 'undefined') {
+                slider.sliderLocation(significanceLineValue);
+            }
+        }
 
-   };
+    };
    var prepareForUpload  =  function ()  {
        if (d3.select('#uploadButtonHider').style('display')==='block') {
            d3.select('#uploadButtonHider').style('display','none');
@@ -69,19 +72,37 @@
         }
     };
 
-   var extractDataRange  = function(incoming) {
-       var maxX = d3.max(incoming,function(d){return d.x}),
-               maxY = d3.max(incoming,function(d){return d.y}),
-               minX = d3.min(incoming,function(d){return d.x}),
-               minY = d3.min(incoming,function(d){return d.y}),
-               overallMax  =  d3.max([maxX,maxY]),
-               overallMin  =  d3.min([minX,minY]),
-               median = d3.median([overallMin,overallMax]);
-       return { max:overallMax, min:overallMin, median:median }
-   };
+//   /***
+//    *   We need to determine the range of the data, since a maximum and minimum value are essential
+//    *   to building the preliminary set of axes. Assume that data show up in the form of objects containing
+//    *   X/Y values, as in:
+//    *   { x: 47.0,
+//    *     y: 52.87 }
+//    *   These objects should be held inside arrays, with all objects in a single data set held within a single array.
+//    *   These arrays should then be packed inside a holding array, allowing us to pass multiple data sets in a single
+//    *   call. Therefore the final data structure is: arrays of arrays of objects.
+//    */
+//   var extractDataRange  = function(incoming) {
+//       var maxX,maxY,minX,minY,maxForThisLoop,minForThisLoop,overallMax,overallMin,median;
+//       if ((typeof(incoming) !== 'undefined') &&
+//               (Array.isArray(incoming))){
+//           for ( var i=0 ; i<incoming.length ; i++ ) {
+//               maxX = d3.max(incoming[i],function(d){return d.x});
+//               maxY = d3.max(incoming[i],function(d){return d.y});
+//               minX = d3.min(incoming[i],function(d){return d.x});
+//               minY = d3.min(incoming[i],function(d){return d.y});
+//               overallMax  =  d3.max([maxX,maxY]);
+//               overallMin  =  d3.min([minX,minY]);
+//               median = d3.median([overallMin,overallMax]);
+//           }
+//       }
+//       return { max:overallMax, min:overallMin, median:median }
+//   };
 
 
-   data = [
+
+
+   data = [[
        {x:3.5,
            y:3.5,
            p:'rs79716074'
@@ -94,7 +115,7 @@
            y:8,
            p:'more information'
        }
-   ];
+   ]];
 
 </script>
 
@@ -153,6 +174,7 @@
                 </div>
                 </div>
             </div>
+
             <div class="col-md-2"><div class='qqcontrols'><div id='slider'></div></div></div>
         </div>
 
@@ -164,7 +186,7 @@
 
     var margin = {top: 30, right: 20, bottom: 50, left: 70},
             width = 700 - margin.left - margin.right,
-            height = 400 - margin.top - margin.bottom,
+            height = 600 - margin.top - margin.bottom,
             sliderOnScreenTop = 10,
             sliderOnScreenBottom = 200;
 
@@ -178,7 +200,7 @@
     d3.json("../baget/qqPlotData", function (error, json) {
     </g:else>
 
-        var dataRange = extractDataRange(json);
+        var dataRange = UTILS.extractDataRange(json);
 
 
         qqPlot=baget.qqPlot()

@@ -18,7 +18,7 @@ class BagetService {
 
     public String convertFileToJson(File f,int numberOfLines) {
         StringBuilder sb = new StringBuilder ()
-        sb << "["
+        sb << "[["
         int i = 0
         f.eachLine{
             if (i>0){
@@ -37,7 +37,7 @@ class BagetService {
             }
             i++
         }
-        sb << "]"
+        sb << "]]"
         return sb.toString()
     }
 }
