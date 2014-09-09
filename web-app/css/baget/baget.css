@@ -1,52 +1,124 @@
+/**********
+ *    This file contains the CSS statements that may be used to control the  presentation
+ *    of the graphic on the demo page. The first few controls are specific only to the demo
+ *    the page that holds the graphic.   Down below are the controls that are specific to
+ *     the elements in the Q Q plot.
+ **********/
+
+
+/***
+ *   Backdrop upon which the demo page sits
+ */
 body {
     padding-top: 50px;
     font: 10px sans-serif;
 }
+/***
+ *  title at the top of the demo page
+ */
 .starter-template {
     padding: 40px 15px;
     text-align: center;
 }
+/***
+ *  font of the subtitle
+ */
+.bagetTitle  {
+    font-family: 'Gravitas One', 'Arial Black';
+}
+
+
+
+/***********
+ *   The rest of the controls describe elements of the graphic
+ ***********/
+
+
+/***
+ *  This section determines how the slider will appear.
+ *  Currently the slider is used to control the significance line
+ */
 .qqcontrols  {
     margin-top: 50px;
     padding-top: 50px;
     padding-right: 0px;
-    border: 1px solid #0000ff;
+   /* border: 1px solid #0000ff;*/
     display: none;
 }
-.bagetTitle  {
-   font-family: 'Gravitas One', 'Arial Black';
+
+/***
+ * This section controls the appearance of the axis lines
+ */
+.scatter .axis path {
+    fill: none;
+    stroke: #000;
+    stroke-width: 1.2px;
+    shape-rendering: crispEdges;
 }
-#slider {}
-.scatter .axis path,
+
+/***
+ * This section controls the ticks that mark the numbers along the axis lines
+ */
 .scatter .axis line {
     fill: none;
     stroke: #000;
     stroke-width: 1.2px;
     shape-rendering: crispEdges;
 }
+
+
+
+/***
+ *  the tick numbers
+ */
 .scatter .axis text {
-    font-size: 12pt;
+    font-size: 14pt;
+    font-family: "Times New Roman";
 }
+
+/***
+ *  the axis labels
+ */
+.scatter .axis .label {
+    font-size: 14pt;
+    font-family: 'Gravitas One', 'Arial Black';
+}
+
+/***
+ * the line around each point (the color fill inside the point is specified separately)
+ */
 .scatter .dot {
     stroke: #000;
 }
+
+/***
+ *  Helps control where the group of interactivity buttons sit
+ */
 .buttonHolder {
     position:relative;
 }
+/***
+ *  The button group is positioned within the  buttonHolder
+ */
 #btnmgr{
     position: absolute;
     top: 360px;
 }
+/***
+ *   font used for tooltip
+ */
 .d3-tip {
     line-height: 1;
     font-weight: bold;
-    padding: 12px;
+    padding: 16px;
     background: rgba(0, 0, 0, 0.8);
     color: #fff;
     border-radius: 2px;
 }
 
-/* Creates a small triangle extender for the tooltip */
+/***
+ *  Creates a the tiny triangle extender for the tooltip
+ */
 .d3-tip:after {
     box-sizing: border-box;
     display: inline;
@@ -59,44 +131,56 @@ body {
     text-align: center;
 }
 
-/* Style northward tooltips differently */
+/***
+ *  Optional styling for the tooltip
+ */
 .d3-tip.n:after {
     margin: -1px 0 0 0;
     top: 100%;
     left: 0;
 }
+/***
+ * Background color for the tooltip
+ */
 .scatter-tip  {
     background: rgba(30, 121, 36, 0.8);
 }
 
-.slider .axis {
-    font-size: 55px;
-}
+/***
+ *   Where does the significance slider sit after it pops up
+ */
 #slider {
-    margin-left:40px;
+    margin-left:-70px;
     margin-bottom:20px;
 }
 
+/**
+*  the track upon which the slider moves
+*/
 .slider .domain {
     fill: none;
     stroke: #000;
     stroke-opacity: .3;
-    stroke-width: 10px;
+    stroke-width: 18px;
     stroke-linecap: round;
 }
-
+/***
+ *  How does the very end of the slider track appear
+ */
 .axis .halo {
     fill: none;
     stroke: #ddd;
     stroke-width: 8px;
     stroke-linecap: round;
 }
-
+/***
+ * The actual sliding element of the slider widget
+ */
 .slider .handle {
     fill: #fff;
     stroke: #000;
     stroke-opacity: .5;
-    stroke-width: 1.25px;
+    stroke-width: 3.25px;
     pointer-events: none;
 }
 

@@ -72,35 +72,12 @@
         }
     };
 
-//   /***
-//    *   We need to determine the range of the data, since a maximum and minimum value are essential
-//    *   to building the preliminary set of axes. Assume that data show up in the form of objects containing
-//    *   X/Y values, as in:
-//    *   { x: 47.0,
-//    *     y: 52.87 }
-//    *   These objects should be held inside arrays, with all objects in a single data set held within a single array.
-//    *   These arrays should then be packed inside a holding array, allowing us to pass multiple data sets in a single
-//    *   call. Therefore the final data structure is: arrays of arrays of objects.
-//    */
-//   var extractDataRange  = function(incoming) {
-//       var maxX,maxY,minX,minY,maxForThisLoop,minForThisLoop,overallMax,overallMin,median;
-//       if ((typeof(incoming) !== 'undefined') &&
-//               (Array.isArray(incoming))){
-//           for ( var i=0 ; i<incoming.length ; i++ ) {
-//               maxX = d3.max(incoming[i],function(d){return d.x});
-//               maxY = d3.max(incoming[i],function(d){return d.y});
-//               minX = d3.min(incoming[i],function(d){return d.x});
-//               minY = d3.min(incoming[i],function(d){return d.y});
-//               overallMax  =  d3.max([maxX,maxY]);
-//               overallMin  =  d3.min([minX,minY]);
-//               median = d3.median([overallMin,overallMax]);
-//           }
-//       }
-//       return { max:overallMax, min:overallMin, median:median }
-//   };
-
-
-
+  var openTheWindow = function (url,desiredPath){
+       var initialUrl = url;
+       var rootUrl =  initialUrl.substring(0,initialUrl.length-11);
+      var urlExtension = rootUrl + desiredPath;
+       window.open (urlExtension);
+    }
 
    data = [[
        {x:3.5,
@@ -133,7 +110,8 @@
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
                 <li class="active"><a href="<g:createLink controller='baget' action ='index'/>">Home</a></li>
-                <li><a href="#about">About</a></li>
+                <li class="active"><a onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','css/baget/baget.css')">baget.css</a></li>
+                <li class="active"><a onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','js/baget/qqplot.js')">qqplot.js</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
         </div><!--/.nav-collapse -->
