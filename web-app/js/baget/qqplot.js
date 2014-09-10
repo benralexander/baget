@@ -349,7 +349,7 @@ var baget = baget || {};  // encapsulating variable
 
                     dataSetLabels.push ('data set '+dataSet);
 
-                    dataDots = d3.select('#groupHolder').selectAll(".dot" + i)
+                    dataDots = d3.select('#groupHolder').selectAll(".dot"+dataSet)
                         .data(data[dataSet]);
 
                     dataDots.enter()
@@ -358,7 +358,7 @@ var baget = baget || {};  // encapsulating variable
                         .on('mouseout', tip.hide)
                         .on('click', clickCallback)
 
-                        .attr("class", "dot dataset"+dataSet)
+                        .attr("class", "dot dot"+dataSet+" dataset"+dataSet)
                         .attr("r", 3)
                         .attr("cx", function (d) {
                             return x(xAxisAccessor(d));
