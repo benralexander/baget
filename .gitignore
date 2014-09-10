@@ -28,3 +28,10 @@
 
 # "temporary" build files
 /target
+ 
+#Intellij files
+/*.iml
+/*.ipr
+/*.iws
+/projectFilesBackup/
+*application.properties

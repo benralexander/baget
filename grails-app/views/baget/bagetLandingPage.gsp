@@ -110,9 +110,6 @@
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
                 <li class="active"><a href="<g:createLink controller='baget' action ='index'/>">Home</a></li>
-                <li class="active"><a onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','css/baget/baget.css')">baget.css</a></li>
-                <li class="active"><a onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','js/baget/qqplot.js')">qqplot.js</a></li>
-                <li><a href="#contact">Contact</a></li>
             </ul>
         </div><!--/.nav-collapse -->
     </div>

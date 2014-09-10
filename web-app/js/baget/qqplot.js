@@ -1,6 +1,22 @@
-var baget = baget || {};
+/***
+ *               --------------QQplot--------------
+ *
+ * This JavaScript file should be sufficient for creating a QQplot. Combine this single module with other
+ * modules to create a more fully featured interactive visualization.
+ *
+ * @type {baget|*|{}}
+ */
+
+
+
+var baget = baget || {};  // encapsulating variable
 
 (function () {
+
+    /***
+     * The
+     * @returns {{}}
+     */
 
     baget.qqPlot = function () {
 
