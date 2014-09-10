@@ -127,8 +127,35 @@
 
 </div><!-- /.container -->
 
-<div class="jumbotron">
+
+    <div class="jumbotron">
     <div class="container">
+
+
+        <div class="btn-toolbar pull-right">
+        <div class="btn-group">
+            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                JavaScript
+                <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+                <li class="btn" onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','js/baget/sharedMethods.js')">sharedMethods.js</li>
+                <li class="btn" onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','js/baget/qqplot.js')">qqplot.js</li>
+                <li class="btn" onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','js/baget/d3tooltip.js')">d3tooltip.js</li>
+                <li class="btn" onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','js/baget/slider.js')">slider.js</li>
+            </ul>
+        </div>
+        <div class="btn-group">
+            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                Stylesheets
+                <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+                <li class="btn" onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','css/baget/baget.css')">baget.css</li>
+            </ul>
+        </div>
+        </div>
+
 
         <div class="row">
             <div class="col-md-8"><div id="scatterPlot1"></div></div>
