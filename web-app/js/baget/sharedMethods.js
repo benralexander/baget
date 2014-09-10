@@ -1,4 +1,16 @@
+/***
+ *  sharedMethods.js
+ *
+ *  Use this module to house all JavaScript functions that need to be called from more than one higher-level JavaScript function.
+ *  Generally these would be utility methods, but it could also serve to hold any function that is called more than once. Over
+ *  the long-term I could imagine having one of these sharedMethod files that is specific to a particular graphic
+ *  ( say a qqPlot) and then a different file to hold general purpose utility methods that are used all over the place.
+ *  In its current incarnation this file holds some methods from each category.
+ *
+ */
+
 var UTILS = {
+
     /***
      * General-purpose utility that JavaScript ought to have.
      * @param map
@@ -14,6 +26,7 @@ var UTILS = {
         }
         return inv;
     },
+
     /***
      * One of those things JavaScript ought to have. The only warning-- these maps must share no keys Or
      * else to lose  values
@@ -32,8 +45,9 @@ var UTILS = {
         }
         return workingMap;
     },
+
     /***
-     * Everyone seems to use three digits of precision. I wonder why
+     * Everyone seems to preferred three digits of precision in their display.
      * @param incoming
      * @returns {string}
      */
@@ -41,7 +55,10 @@ var UTILS = {
         var value = parseFloat(incoming);
         return value.toPrecision(3);
     },
+
     /***
+     *  extractDataRange: takes a data file and extracts ranges across multiple sets.
+     *
      *   We need to determine the range of the data, since a maximum and minimum value are essential
      *   to building the preliminary set of axes. Assume that data show up in the form of objects containing
      *   X/Y values, as in:
