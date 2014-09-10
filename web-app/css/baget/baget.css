@@ -164,6 +164,7 @@ body {
     stroke-width: 18px;
     stroke-linecap: round;
 }
+
 /***
  *  How does the very end of the slider track appear
  */
@@ -173,6 +174,7 @@ body {
     stroke-width: 8px;
     stroke-linecap: round;
 }
+
 /***
  * The actual sliding element of the slider widget
  */
@@ -182,5 +184,12 @@ body {
     stroke-opacity: .5;
     stroke-width: 3.25px;
     pointer-events: none;
+}
+
+/***
+* The actual sliding element of the slider widget
+*/
+.legend rect {
+    cursor: pointer;
 }
 

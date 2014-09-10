@@ -27,8 +27,18 @@ class BagetController {
         render(view: 'bagetLandingPage')
     }
 
+    def projectDescription() {
+        tempDataStore = null
+        render(view: 'bagetProjectDescription')
+    }
 
-def rawJson2 ="""
+    def minimalQq() {
+        tempDataStore = null
+        render(view: 'minimalQq')
+    }
+
+
+    def rawJson2 ="""
 [{"x":26.34228106,"y":23.94754025},
 {"x":27.49459123,"y":26.36647036},
 {"x":29.10449594,"y":27.51177073},

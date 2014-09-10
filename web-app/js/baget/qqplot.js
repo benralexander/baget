@@ -99,7 +99,7 @@ var baget = baget || {};  // encapsulating variable
             if (!dataSetElements.empty()) {
                 var currentState = dataSetElements.attr('opacity');
                 if ((currentState===null) ||
-                    (currentState === 1)) {   // either it's never been changed ( and therefore it's visible)
+                    (currentState === "1")) {   // either it's never been changed ( and therefore it's visible)
                     // or else has been explicitly made visible
                     dataSetElements.attr('opacity', 0);
                 } else {
