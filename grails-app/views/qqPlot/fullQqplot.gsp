@@ -4,32 +4,12 @@
     <meta name="layout" content="core"/>
     <r:require modules="core"/>
     <r:layoutResources/>
-
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
 </head>
 <body>
 
-<link media="all" rel="stylesheet" href="../css/baget/baget.css">
-<link media="all" rel="stylesheet" href="../css/baget/bootstrap.min.css">
-<link media="all" rel="stylesheet" href="../css/baget/ie-emulation-modes-warning.js">
-<link media="all" rel="stylesheet" href="../css/baget/ie10-viewport-bug-workaround.js">
-<script src="../js/d3.js"></script>
-<script src="../js/baget/sharedMethods.js"></script>
-<script src="../js/baget/qqplot.js"></script>
-<script src="../js/baget/d3tooltip.js"></script>
-<script src="../js/baget/slider.js"></script>
-<script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+<script src="/baget/js/baget/bootstrap.min.js"></script>
 
-    ga('create', 'UA-53398031-1', 'auto');
-    ga('send', 'pageview');
 
-</script>
 <script>
     var displaySignificanceIndicator = function () {
         if (d3.select('.qqcontrols').style('display') === 'block') {
@@ -62,14 +42,14 @@
             qqPlot.displayIdentityLine(true).render();
         }
     };
-
-  var openTheWindow = function (url,desiredPath){
-       var initialUrl = url;
-       var rootUrl =  initialUrl.substring(0,initialUrl.length-11);
-      var urlExtension = rootUrl + desiredPath;
-       window.open (urlExtension);
-    }
-
+//
+//  var openTheWindow = function (url,desiredPath){
+//       var initialUrl = url;
+//       var rootUrl =  initialUrl.substring(0,initialUrl.length-12);
+//      var urlExtension = rootUrl + desiredPath;
+//       window.open (urlExtension);
+//    }
+//
    data = [[
        {x:3.5,
            y:3.5,
@@ -102,7 +82,7 @@
 
 
         <div class="btn-toolbar">
-            <div class="pull-left"> <a href="<g:createLink controller='baget' action ='minimalQq'/>">Minimal example</a></div>
+            <div class="pull-left"> <a href="<g:createLink controller='qqPlot' action ='minimalQq'/>">Minimal example</a></div>
             <div class="pull-right">
         <div class="btn-group">
             <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
@@ -110,10 +90,10 @@
                 <span class="caret"></span>
             </a>
             <ul class="dropdown-menu">
-                <li class="btn" onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','js/baget/sharedMethods.js')">sharedMethods.js</li>
-                <li class="btn" onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','js/baget/qqplot.js')">qqplot.js</li>
-                <li class="btn" onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','js/baget/d3tooltip.js')">d3tooltip.js</li>
-                <li class="btn" onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','js/baget/slider.js')">slider.js</li>
+                <li class="btn" onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>','js/baget/sharedMethods.js')">sharedMethods.js</li>
+                <li class="btn" onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>','js/baget/qqplot.js')">qqplot.js</li>
+                <li class="btn" onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>','js/baget/d3tooltip.js')">d3tooltip.js</li>
+                <li class="btn" onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>','js/baget/slider.js')">slider.js</li>
             </ul>
         </div>
         <div class="btn-group">
@@ -122,7 +102,7 @@
                 <span class="caret"></span>
             </a>
             <ul class="dropdown-menu">
-                <li class="btn" onclick="openTheWindow('<g:createLink controller='baget' action ='index'/>','css/baget/baget.css')">baget.css</li>
+                <li class="btn" onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>','css/baget/baget.css')">baget.css</li>
             </ul>
         </div>
             </div>
@@ -171,10 +151,10 @@
 
     var qqPlot ;
     <g:if test="${dataFileBased}">
-    d3.json("../baget/qqPlotData?id=1", function (error, json) {
+    d3.json("../qqPlot/qqPlotData?id=1", function (error, json) {
     </g:if>
     <g:else>
-    d3.json("../baget/qqPlotData", function (error, json) {
+    d3.json("../qqPlot/qqPlotData", function (error, json) {
     </g:else>
 
         var dataRange = UTILS.extractDataRange(json);
@@ -233,8 +213,8 @@
 
 </script>
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+%{--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>--}%
 <!-- Include all compiled plugins (below), or include individual files as needed -->
-<script src="../js/baget/bootstrap.min.js"></script>
+%{--<script src="../../../web-app/js/baget/bootstrap.min.js"></script>--}%
 </body>
 </html>

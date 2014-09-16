@@ -4,22 +4,10 @@
     <meta name="layout" content="core"/>
     <r:require modules="core"/>
     <r:layoutResources/>
-
-    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
 </head>
 <body>
+<script src="/baget/js/baget/bootstrap.min.js"></script>
 
-<link media="all" rel="stylesheet" href="../css/baget/baget.css">
-<link media="all" rel="stylesheet" href="../css/baget/bootstrap.min.css">
-<link media="all" rel="stylesheet" href="../css/baget/ie-emulation-modes-warning.js">
-<link media="all" rel="stylesheet" href="../css/baget/ie10-viewport-bug-workaround.js">
-<script src="../js/d3.js"></script>
-<script src="../js/baget/sharedMethods.js"></script>
-<script src="../js/baget/qqplot.js"></script>
-<script src="../js/baget/d3tooltip.js"></script>
-<script src="../js/baget/slider.js"></script>
 <div class="container">
 
     <div class="starter-template">
@@ -61,8 +49,8 @@
     </div>
 </div>
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+%{--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>--}%
 <!-- Include all compiled plugins (below), or include individual files as needed -->
-<script src="../js/baget/bootstrap.min.js"></script>
+%{--<script src="../js/baget/bootstrap.min.js"></script>--}%
 </body>
 </html>

@@ -71,11 +71,11 @@ var baget = baget || {};  // encapsulating variable
             svg,
             groupHolder,
             globalMinimum,
-            globalMaximum,
+            globalMaximum;
 
 
         //  private variable
-            tip = d3.tip()
+            var tip = d3.tip()
                 .attr('class', 'd3-tip scatter-tip')
                 .style('z-index', 51)
                 .offset([-10, 0])

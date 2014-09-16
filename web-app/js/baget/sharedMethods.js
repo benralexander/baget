@@ -106,5 +106,12 @@ var UTILS = {
         }
         median = d3.median([overallMin, overallMax]);
         return { max: overallMax, min: overallMin, median: median }
+    },
+     openTheWindow : function (url,desiredPath){
+        var initialUrl = url;
+        var rootUrl =  initialUrl.substring(0,initialUrl.length-12);
+        var urlExtension = rootUrl + desiredPath;
+        window.open (urlExtension);
     }
+
 }
