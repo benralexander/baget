@@ -37,15 +37,23 @@
         font-family: 'Lato';
         font-weight: normal;
         font-size: 14pt;
-        stroke: #909090;
-        fill: #909090;
+        stroke: #aaaaaa;
+        fill: #aaaaaa;
     }
     text.clickableQuestionMark  {
         font-family: 'Arial';
         font-weight: bold;
+        font-size: 12pt;
+        background: #ff0000;
+        stroke: #ffffff;
+        fill: #ffffff;
+    }
+    circle.clickableQuestionMark  {
+        font-family: 'Arial';
+        font-weight: bold;
         font-size: 14pt;
-        stroke: #ff0000;
-        fill: #ff0000;
+        stroke: #4682b4;
+        fill: #4682b4;
     }
     .xaxis  {
         font-family: 'Lato';
@@ -71,6 +79,29 @@
     #xaxis text text {
         font-size: 12px;
     }
+    td.barchartFormatter {
+        width: 800px;
+    }
+    td.significanceDescriptorFormatter {
+        width: 100px;
+    }
+    div.significantDifference {
+        width: 150px;
+        height: 150px;
+        background:  #4682b4;
+        font-size: 14pt;
+        vertical-align: middle;
+        text-align: center;
+        color: #ffffff;
+    }
+    div.significantDifferenceText {
+        padding-top: 20px;
+        font-size: 14pt;
+        vertical-align: middle;
+        text-align: center;
+        color: #ffffff;
+    }
+
 </style>
 
 </head>
@@ -84,21 +115,35 @@
     </div>
 
 </div>
-<div id="chart"></div>
+<table style="width:900px">
+    <tr>
+        <td class="barchartFormatter"><div id="chart"></div></td>
+        <td class="significanceDescriptorFormatter">
+            <div class="significantDifference">
+                <div class="significantDifferenceText">
+                    <p>significant difference</p>
+                    <p>p=0.126</p>
+                    <p>OR=1.4</p>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
 
 <script type="text/javascript">
     var data = [
                 { value: 12,
                     barname: 'Have T2D',
                     barsubname: '(cases)',
+                    barsubnamelink:'http://www.google.com',
                     inbar: '',
-                    quantifier: '12%',
                     descriptor: '(8 out of 6469)'},
-                {value: 33,
+                {value: 99,
                     barname: 'Do not have T2D',
                     barsubname: '(controls)',
+                    barsubnamelink:'http://www.google.com',
                     inbar: '',
-                    quantifier: '12%',
                     descriptor: '(21 out of 6364)'}
             ],
             roomForLabels = 120,
@@ -114,8 +159,8 @@
         var chart =  d3.select("#chart")
                 .append('svg')
                 .attr('class', 'chart')
-                .attr('width', width*3)
-                .attr('height', height*2);
+                .attr('width', width*1.5)
+                .attr('height', height*1.4);
 
         x = d3.scale.linear()
                 .domain([0,maximumPossibleValue ])
@@ -211,7 +256,7 @@
                 .attr("y", function(d){
                     return y(d.barname) + y.rangeBand()/2;
                 } )
-                .attr("dx", 20)
+                .attr("dx", 12)
                 .attr("dy", ""+textLeading+"em")
                 .attr("text-anchor", "start")
                 .attr('class', 'valueLabels')
@@ -227,28 +272,44 @@
                 .attr("y", function(d){
                     return y(d.barname) + y.rangeBand()/2;
                 } )
-                .attr("dx", 80)
+                .attr("dx", 72)
                 .attr("dy", ""+textLeading+"em")
                 .attr("text-anchor", "start")
                 .attr('class', 'valueQualifiers')
-                .text(function(d,i){return ""+d.descriptor+ "%";});
+                .text(function(d,i){return ""+d.descriptor+ "%";})
 
 
-    chart.selectAll("text.clickableQuestionMark")
-            .data(data)
-            .enter()
+        var elem = chart.selectAll("text.clickableQuestionMark")
+            .data(data);
+
+        var elemEnter = elem
+                .enter()
+                .append("svg:a")
+                .attr("xlink:href", function(d){return d.barsubnamelink;})
+                .append("g");
+
+
+        elemEnter
+                .append("circle")
+                .attr("cx",  margin.left+roomForLabels-labelSpacer)
+                .attr("cy", function(d, i){
+                    return y(d.barname) + y.rangeBand()/2;
+                } )
+                .attr('r',8)
+                .attr("transform", function(d){return "translate(-5,29)"})
+                .attr('class', 'clickableQuestionMark')
+        ;
+        elemEnter
             .append("text")
             .attr("x",  margin.left+roomForLabels-labelSpacer)
             .attr("y", function(d, i){
                 return y(d.barname) + y.rangeBand()/2;
             } )
-            .attr("dy", ""+(1.2+textLeading)+"em")
+            .attr("dy", ""+(1.4+textLeading)+"em")
             .attr("text-anchor", "end")
             .attr('class', 'clickableQuestionMark')
-            .text("?")
-            .on("click",function(){alert('foo')});
+            .text("?");
 
-    //.attr("xlink:href", "file:///D:/d3js_projects/refresh.png")
 
     }
 
