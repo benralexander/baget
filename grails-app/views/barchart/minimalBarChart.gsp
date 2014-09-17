@@ -8,11 +8,6 @@
     body {
         font: 12px Arial;
     }
-    text.shadow {
-        stroke: #fff;
-        stroke-width: 2.5px;
-        opacity: 0.9;
-    }
     text.barChartLabel  {
         font-family: 'Lato';
         font-weight: normal;
@@ -154,166 +149,187 @@
             width = 800 - margin.left - margin.right,
             height = 250 - margin.top - margin.bottom;
 
-    function render(data) {
-        var x, y;
-        var chart =  d3.select("#chart")
-                .append('svg')
-                .attr('class', 'chart')
-                .attr('width', width*1.5)
-                .attr('height', height*1.4);
 
-        x = d3.scale.linear()
-                .domain([0,maximumPossibleValue ])
-                .range([margin.left+roomForLabels, width+roomForLabels]);
+    d3.json("../barChart/barChartData", function (error, json) {
 
-        var names=[];
-        data.map(function(d){names.push(d.barname)});
-        y = d3.scale.ordinal()
-                .domain(names)
-                .rangeBands([margin.top, height]);
+        var barChart = baget.barChart()
+                .selectionIdentifier("#chart")
+                .width(width)
+                .height(height)
+                .margin(margin)
+                .roomForLabels (roomForLabels)
+                .maximumPossibleValue (maximumPossibleValue)
+                .labelSpacer (labelSpacer)
+                .assignData(data);
+        barChart.render();
 
-        var	xAxis = d3.svg.axis();
 
-                 xAxis
-                .orient('bottom')
-                .scale(x)
-                .tickSize(2)
-                .tickValues([0,25,50,75,100]);
-
-        var x_xis = chart.append('g')
-                .attr("transform", "translate(0,"+(height+40)+")")
-                .attr('class','xaxis')
-                .call(xAxis);
+    });
 
 
 
-        // the bars in the bar chart
-        var bars = chart.selectAll("rect")
-                .data(data,function(d,i){return d.barname;});
-
-                bars.enter().append("rect")
-                .attr('class','h-bar')
-                .attr("x", x(0))
-                .attr("y", function(d, i){
-                    return y(d.barname) + y.rangeBand()/2;
-                } )
-                .attr("width", function(d,i){
-                    return (0)
-                })
-                .attr("height", y.rangeBand()/4);
-
-        // perform the animation
-        bars.transition()
-            .delay(100).duration(1400)
-                .attr("width", function(d,i){
-                    return (x( d.value)-x(0))
-                });
-
-        // get rid of any extra data in case we've done this before
-        bars.exit().transition().selectAll("rect").remove();
-
-
-
-        // these are tics, without labels
-        var bar_height = 25;
-        var  gap=5;
-
-        // labels to the left
-        var textLeading = (90 - (data.length*5))/100;
-        chart.selectAll("text.barChartLabel")
-                .data(data)
-                .enter().append("text")
-                .attr("x",  margin.left+roomForLabels-labelSpacer)
-                .attr("y", function(d, i){
-                    return y(d.barname) + y.rangeBand()/2;
-                } )
-                .attr("dy", ""+textLeading+"em")
-                .attr("text-anchor", "end")
-                .attr('class', 'barChartLabel')
-                .text(function(d,i){return d.barname;});
-
-         // sub labels, just below the main labels above
-        chart.selectAll("text.barChartSubLabel")
-                .data(data)
-                .enter().append("text")
-                .attr("x",  margin.left+roomForLabels-labelSpacer)
-                .attr("y", function(d, i){
-                    return y(d.barname) + y.rangeBand()/2;
-                } )
-                .attr("dy", ""+(1.5+textLeading)+"em")
-                .attr("dx", "-1em")
-                .attr("text-anchor", "end")
-                .attr('class', 'barSubChartLabel')
-                .text(function(d,i){return d.barsubname;});
-
-        // labels to the right
-        chart.selectAll("text.valueLabels")
-                .data(data)
-                .enter().append("text")
-                .attr("x", function(d){
-                    return (x(d.value));
-                })
-                .attr("y", function(d){
-                    return y(d.barname) + y.rangeBand()/2;
-                } )
-                .attr("dx", 12)
-                .attr("dy", ""+textLeading+"em")
-                .attr("text-anchor", "start")
-                .attr('class', 'valueLabels')
-                .text(function(d,i){return ""+d.value+ "%";});
-
-        // labels to the right of the right hand labels
-        chart.selectAll("text.valueQualifiers")
-                .data(data)
-                .enter().append("text")
-                .attr("x", function(d){
-                    return (x(d.value));
-                })
-                .attr("y", function(d){
-                    return y(d.barname) + y.rangeBand()/2;
-                } )
-                .attr("dx", 72)
-                .attr("dy", ""+textLeading+"em")
-                .attr("text-anchor", "start")
-                .attr('class', 'valueQualifiers')
-                .text(function(d,i){return ""+d.descriptor+ "%";})
-
-
-        var elem = chart.selectAll("text.clickableQuestionMark")
-            .data(data);
-
-        var elemEnter = elem
-                .enter()
-                .append("svg:a")
-                .attr("xlink:href", function(d){return d.barsubnamelink;})
-                .append("g");
-
-
-        elemEnter
-                .append("circle")
-                .attr("cx",  margin.left+roomForLabels-labelSpacer)
-                .attr("cy", function(d, i){
-                    return y(d.barname) + y.rangeBand()/2;
-                } )
-                .attr('r',8)
-                .attr("transform", function(d){return "translate(-5,29)"})
-                .attr('class', 'clickableQuestionMark')
-        ;
-        elemEnter
-            .append("text")
-            .attr("x",  margin.left+roomForLabels-labelSpacer)
-            .attr("y", function(d, i){
-                return y(d.barname) + y.rangeBand()/2;
-            } )
-            .attr("dy", ""+(1.4+textLeading)+"em")
-            .attr("text-anchor", "end")
-            .attr('class', 'clickableQuestionMark')
-            .text("?");
-
-
-    }
-
-    render(data);
+//
+//
+//    function render(data) {
+//        var x, y;
+//        var chart =  d3.select("#chart")
+//                .append('svg')
+//                .attr('class', 'chart')
+//                .attr('width', width*1.5)
+//                .attr('height', height*1.4);
+//
+//        x = d3.scale.linear()
+//                .domain([0,maximumPossibleValue ])
+//                .range([margin.left+roomForLabels, width+roomForLabels]);
+//
+//        var names=[];
+//        data.map(function(d){names.push(d.barname)});
+//        y = d3.scale.ordinal()
+//                .domain(names)
+//                .rangeBands([margin.top, height]);
+//
+//        var	xAxis = d3.svg.axis();
+//
+//                 xAxis
+//                .orient('bottom')
+//                .scale(x)
+//                .tickSize(2)
+//                .tickValues([0,25,50,75,100]);
+//
+//        var x_xis = chart.append('g')
+//                .attr("transform", "translate(0,"+(height+40)+")")
+//                .attr('class','xaxis')
+//                .call(xAxis);
+//
+//
+//
+//        // the bars in the bar chart
+//        var bars = chart.selectAll("rect")
+//                .data(data,function(d,i){return d.barname;});
+//
+//                bars.enter().append("rect")
+//                .attr('class','h-bar')
+//                .attr("x", x(0))
+//                .attr("y", function(d, i){
+//                    return y(d.barname) + y.rangeBand()/2;
+//                } )
+//                .attr("width", function(d,i){
+//                    return (0)
+//                })
+//                .attr("height", y.rangeBand()/4);
+//
+//        // perform the animation
+//        bars.transition()
+//            .delay(100).duration(1400)
+//                .attr("width", function(d,i){
+//                    return (x( d.value)-x(0))
+//                });
+//
+//        // get rid of any extra data in case we've done this before
+//        bars.exit().transition().selectAll("rect").remove();
+//
+//
+//
+//        // these are tics, without labels
+//        var bar_height = 25;
+//        var  gap=5;
+//
+//        // labels to the left
+//        var textLeading = (90 - (data.length*5))/100;
+//        chart.selectAll("text.barChartLabel")
+//                .data(data)
+//                .enter().append("text")
+//                .attr("x",  margin.left+roomForLabels-labelSpacer)
+//                .attr("y", function(d, i){
+//                    return y(d.barname) + y.rangeBand()/2;
+//                } )
+//                .attr("dy", ""+textLeading+"em")
+//                .attr("text-anchor", "end")
+//                .attr('class', 'barChartLabel')
+//                .text(function(d,i){return d.barname;});
+//
+//         // sub labels, just below the main labels above
+//        chart.selectAll("text.barChartSubLabel")
+//                .data(data)
+//                .enter().append("text")
+//                .attr("x",  margin.left+roomForLabels-labelSpacer)
+//                .attr("y", function(d, i){
+//                    return y(d.barname) + y.rangeBand()/2;
+//                } )
+//                .attr("dy", ""+(1.5+textLeading)+"em")
+//                .attr("dx", "-1em")
+//                .attr("text-anchor", "end")
+//                .attr('class', 'barSubChartLabel')
+//                .text(function(d,i){return d.barsubname;});
+//
+//        // labels to the right
+//        chart.selectAll("text.valueLabels")
+//                .data(data)
+//                .enter().append("text")
+//                .attr("x", function(d){
+//                    return (x(d.value));
+//                })
+//                .attr("y", function(d){
+//                    return y(d.barname) + y.rangeBand()/2;
+//                } )
+//                .attr("dx", 12)
+//                .attr("dy", ""+textLeading+"em")
+//                .attr("text-anchor", "start")
+//                .attr('class', 'valueLabels')
+//                .text(function(d,i){return ""+d.value+ "%";});
+//
+//        // labels to the right of the right hand labels
+//        chart.selectAll("text.valueQualifiers")
+//                .data(data)
+//                .enter().append("text")
+//                .attr("x", function(d){
+//                    return (x(d.value));
+//                })
+//                .attr("y", function(d){
+//                    return y(d.barname) + y.rangeBand()/2;
+//                } )
+//                .attr("dx", 72)
+//                .attr("dy", ""+textLeading+"em")
+//                .attr("text-anchor", "start")
+//                .attr('class', 'valueQualifiers')
+//                .text(function(d,i){return ""+d.descriptor+ "%";})
+//
+//
+//        var elem = chart.selectAll("text.clickableQuestionMark")
+//            .data(data);
+//
+//        var elemEnter = elem
+//                .enter()
+//                .append("svg:a")
+//                .attr("xlink:href", function(d){return d.barsubnamelink;})
+//                .append("g");
+//
+//
+//        elemEnter
+//                .append("circle")
+//                .attr("cx",  margin.left+roomForLabels-labelSpacer)
+//                .attr("cy", function(d, i){
+//                    return y(d.barname) + y.rangeBand()/2;
+//                } )
+//                .attr('r',8)
+//                .attr("transform", function(d){return "translate(-5,29)"})
+//                .attr('class', 'clickableQuestionMark')
+//        ;
+//        elemEnter
+//            .append("text")
+//            .attr("x",  margin.left+roomForLabels-labelSpacer)
+//            .attr("y", function(d, i){
+//                return y(d.barname) + y.rangeBand()/2;
+//            } )
+//            .attr("dy", ""+(1.4+textLeading)+"em")
+//            .attr("text-anchor", "end")
+//            .attr('class', 'clickableQuestionMark')
+//            .text("?");
+//
+//
+//    }
+//
+//    render(data);
 
 
 </script>

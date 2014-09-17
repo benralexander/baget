@@ -14,6 +14,8 @@ modules = {
         resource url: 'js/baget/ie-emulation-modes-warning.js'
         resource url: 'js/baget/sharedMethods.js'
         resource url: 'js/baget/qqplot.js'
+        resource url: 'js/baget/barchart.js'
+
         resource url: 'js/baget/sharedMethods.js'
         resource url: 'js/baget/slider.js'
     }
