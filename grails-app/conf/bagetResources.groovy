@@ -15,14 +15,21 @@ modules = {
 
         resource url: 'js/jquery-1.11.0.min.js'
         resource url: 'js/d3.min.js'
+
         resource url: 'js/baget/ie10-viewport-bug-workaround.js'
         resource url: 'js/baget/ie-emulation-modes-warning.js'
-        resource url: 'js/baget/sharedMethods.js'
-        resource url: 'js/baget/qqplot.js'
-        resource url: 'js/baget/barchart.js'
 
         resource url: 'js/baget/sharedMethods.js'
         resource url: 'js/baget/slider.js'
+    }
+    qqplot {
+        resource url: 'css/baget/qqplot.css'
+        resource url: 'js/baget/qqplot.js'
+    }
+
+    barchart {
+          resource url: 'css/baget/barchart.css'
+          resource url: 'js/baget/barchart.js'
     }
 
 }

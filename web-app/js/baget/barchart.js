@@ -42,7 +42,7 @@ var baget = baget || {};  // encapsulating variable
         // private variables
         var  instance = {};
 
-        var margin = {top: 30, right: 20, bottom: 0, left: 70},
+        var margin = {top: 30, right: 20, bottom: 50, left: 70},
             width = 800 - margin.left - margin.right,
             height = 250 - margin.top - margin.bottom;
 
@@ -62,7 +62,7 @@ var baget = baget || {};  // encapsulating variable
             data.map(function(d){names.push(d.barname)});
             y = d3.scale.ordinal()
                 .domain(names)
-                .rangeBands([margin.top, 5*height/6]);
+                .rangeBands([margin.top, height]);
 
             var	xAxis = d3.svg.axis();
 
@@ -163,11 +163,11 @@ var baget = baget || {};  // encapsulating variable
                 .attr("y", function(d){
                     return y(d.barname) + y.rangeBand()/2;
                 } )
-                .attr("dx", 96)
+                .attr("dx", 108)
                 .attr("dy", ""+textLeading+"em")
                 .attr("text-anchor", "start")
                 .attr('class', 'valueQualifiers')
-                .text(function(d,i){return ""+d.descriptor+ "%";})
+                .text(function(d,i){return ""+d.descriptor;})
 
 
             var elem = chart.selectAll("text.clickableQuestionMark")
@@ -180,26 +180,26 @@ var baget = baget || {};  // encapsulating variable
                 .append("g");
 
 
-            elemEnter
-                .append("circle")
-                .attr("cx",  margin.left+roomForLabels-labelSpacer)
-                .attr("cy", function(d, i){
-                    return y(d.barname) + y.rangeBand()/2;
-                } )
-                .attr('r',8)
-                .attr("transform", function(d){return "translate(-5,29)"})
-                .attr('class', 'clickableQuestionMark')
-            ;
-            elemEnter
-                .append("text")
-                .attr("x",  margin.left+roomForLabels-labelSpacer)
-                .attr("y", function(d, i){
-                    return y(d.barname) + y.rangeBand()/2;
-                } )
-                .attr("dy", ""+(1.4+textLeading)+"em")
-                .attr("text-anchor", "end")
-                .attr('class', 'clickableQuestionMark')
-                .text("?");
+//            elemEnter
+//                .append("circle")
+//                .attr("cx",  margin.left+roomForLabels-labelSpacer)
+//                .attr("cy", function(d, i){
+//                    return y(d.barname) + y.rangeBand()/2;
+//                } )
+//                .attr('r',8)
+//                .attr("transform", function(d){return "translate(-5,29)"})
+//                .attr('class', 'clickableQuestionMark')
+//            ;
+//            elemEnter
+//                .append("text")
+//                .attr("x",  margin.left+roomForLabels-labelSpacer)
+//                .attr("y", function(d, i){
+//                    return y(d.barname) + y.rangeBand()/2;
+//                } )
+//                .attr("dy", ""+(1.4+textLeading)+"em")
+//                .attr("text-anchor", "end")
+//                .attr('class', 'clickableQuestionMark')
+//                .text("?");
 
 
         }

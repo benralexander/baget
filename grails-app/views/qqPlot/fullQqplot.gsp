@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="layout" content="core"/>
-    <r:require modules="core"/>
+    <r:require modules="core,qqplot"/>
     <r:layoutResources/>
 </head>
 <body>

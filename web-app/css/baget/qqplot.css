@@ -1,0 +1,62 @@
+/***********
+ *   The rest of the controls describe elements of the graphic
+ ***********/
+
+
+/***
+ *  This section determines how the slider will appear.
+ *  Currently the slider is used to control the significance line
+ */
+.qqcontrols  {
+    margin-top: 50px;
+    padding-top: 50px;
+    padding-right: 0px;
+    /* border: 1px solid #0000ff;*/
+    display: none;
+}
+
+/***
+ * This section controls the appearance of the axis lines
+ */
+.scatter .axis path {
+    fill: none;
+    stroke: #000;
+    stroke-width: 1.2px;
+    shape-rendering: crispEdges;
+}
+
+/***
+ * This section controls the ticks that mark the numbers along the axis lines
+ */
+.scatter .axis line {
+    fill: none;
+    stroke: #000;
+    stroke-width: 1.2px;
+    shape-rendering: crispEdges;
+}
+
+
+
+/***
+ *  the tick numbers
+ */
+.scatter .axis text {
+    font-size: 14pt;
+    font-family: "Times New Roman";
+}
+
+/***
+ *  the axis labels
+ */
+.scatter .axis .label {
+    font-size: 14pt;
+    font-family: 'Gravitas One', 'Arial Black';
+}
+
+/***
+ * the line around each point (the color fill inside the point is specified separately)
+ */
+.scatter .dot {
+    stroke: #000;
+}
+/**/
