@@ -5,8 +5,9 @@
     <r:require modules="core"/>
     <r:layoutResources/>
     <style>
-    body {
-        font: 12px Arial;
+body {
+    font-family: 'Lato';
+    font-weight: 300;
     }
     text.barChartLabel  {
         font-family: 'Lato';
@@ -25,8 +26,8 @@
         font-weight: normal;
         font-size: 18pt;
         color: #4682b4;
-        stroke: steelblue;
-        fill: steelblue;
+        stroke: #052090;
+        fill: #052090;
     }
     text.valueQualifiers  {
         font-family: 'Lato';
@@ -62,14 +63,9 @@
         font-family: 'Arial Black';
         font-size: 5em;
     }
-    p:hover{
-        color: purple;
-        font-family: 'Arial Black';
-        font-size: 2em;
-    }
     rect.h-bar {
         stroke: white;
-        fill: steelblue;
+        fill: #052090;
     }
     #xaxis text text {
         font-size: 12px;
@@ -96,12 +92,18 @@
         text-align: center;
         color: #ffffff;
     }
+.standardFont  {
+    font-size: 18pt;
+}
+.standardEmphasisFont  {
+    font-size: 18pt;
+}
 
 </style>
 
 </head>
 <body>
-<script src="/baget/js/baget/bootstrap.min.js"></script>
+<g:javascript src="bootstrap.min.js" />
 <div class="container">
 
     <div class="starter-template">
@@ -110,6 +112,8 @@
     </div>
 
 </div>
+<p class="standardEmphasisFont">
+    Carriers of at least one copy of one of these variants</p>
 <table style="width:900px">
     <tr>
         <td class="barchartFormatter"><div id="chart"></div></td>
@@ -128,13 +132,13 @@
 
 <script type="text/javascript">
     var data = [
-                { value: 12,
+                { value: 0.124,
                     barname: 'Have T2D',
                     barsubname: '(cases)',
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
                     descriptor: '(8 out of 6469)'},
-                {value: 99,
+                {value: 0.126,
                     barname: 'Do not have T2D',
                     barsubname: '(controls)',
                     barsubnamelink:'http://www.google.com',
@@ -142,12 +146,12 @@
                     descriptor: '(21 out of 6364)'}
             ],
             roomForLabels = 120,
-            maximumPossibleValue = 100,
+            maximumPossibleValue = 1,
             labelSpacer = 10;
 
-    var margin = {top: 30, right: 20, bottom: 50, left: 70},
+    var margin = {top: 0, right: 20, bottom: 0, left: 70},
             width = 800 - margin.left - margin.right,
-            height = 250 - margin.top - margin.bottom;
+            height = 150 - margin.top - margin.bottom;
 
 
     d3.json("../barChart/barChartData", function (error, json) {
@@ -165,172 +169,6 @@
 
 
     });
-
-
-
-//
-//
-//    function render(data) {
-//        var x, y;
-//        var chart =  d3.select("#chart")
-//                .append('svg')
-//                .attr('class', 'chart')
-//                .attr('width', width*1.5)
-//                .attr('height', height*1.4);
-//
-//        x = d3.scale.linear()
-//                .domain([0,maximumPossibleValue ])
-//                .range([margin.left+roomForLabels, width+roomForLabels]);
-//
-//        var names=[];
-//        data.map(function(d){names.push(d.barname)});
-//        y = d3.scale.ordinal()
-//                .domain(names)
-//                .rangeBands([margin.top, height]);
-//
-//        var	xAxis = d3.svg.axis();
-//
-//                 xAxis
-//                .orient('bottom')
-//                .scale(x)
-//                .tickSize(2)
-//                .tickValues([0,25,50,75,100]);
-//
-//        var x_xis = chart.append('g')
-//                .attr("transform", "translate(0,"+(height+40)+")")
-//                .attr('class','xaxis')
-//                .call(xAxis);
-//
-//
-//
-//        // the bars in the bar chart
-//        var bars = chart.selectAll("rect")
-//                .data(data,function(d,i){return d.barname;});
-//
-//                bars.enter().append("rect")
-//                .attr('class','h-bar')
-//                .attr("x", x(0))
-//                .attr("y", function(d, i){
-//                    return y(d.barname) + y.rangeBand()/2;
-//                } )
-//                .attr("width", function(d,i){
-//                    return (0)
-//                })
-//                .attr("height", y.rangeBand()/4);
-//
-//        // perform the animation
-//        bars.transition()
-//            .delay(100).duration(1400)
-//                .attr("width", function(d,i){
-//                    return (x( d.value)-x(0))
-//                });
-//
-//        // get rid of any extra data in case we've done this before
-//        bars.exit().transition().selectAll("rect").remove();
-//
-//
-//
-//        // these are tics, without labels
-//        var bar_height = 25;
-//        var  gap=5;
-//
-//        // labels to the left
-//        var textLeading = (90 - (data.length*5))/100;
-//        chart.selectAll("text.barChartLabel")
-//                .data(data)
-//                .enter().append("text")
-//                .attr("x",  margin.left+roomForLabels-labelSpacer)
-//                .attr("y", function(d, i){
-//                    return y(d.barname) + y.rangeBand()/2;
-//                } )
-//                .attr("dy", ""+textLeading+"em")
-//                .attr("text-anchor", "end")
-//                .attr('class', 'barChartLabel')
-//                .text(function(d,i){return d.barname;});
-//
-//         // sub labels, just below the main labels above
-//        chart.selectAll("text.barChartSubLabel")
-//                .data(data)
-//                .enter().append("text")
-//                .attr("x",  margin.left+roomForLabels-labelSpacer)
-//                .attr("y", function(d, i){
-//                    return y(d.barname) + y.rangeBand()/2;
-//                } )
-//                .attr("dy", ""+(1.5+textLeading)+"em")
-//                .attr("dx", "-1em")
-//                .attr("text-anchor", "end")
-//                .attr('class', 'barSubChartLabel')
-//                .text(function(d,i){return d.barsubname;});
-//
-//        // labels to the right
-//        chart.selectAll("text.valueLabels")
-//                .data(data)
-//                .enter().append("text")
-//                .attr("x", function(d){
-//                    return (x(d.value));
-//                })
-//                .attr("y", function(d){
-//                    return y(d.barname) + y.rangeBand()/2;
-//                } )
-//                .attr("dx", 12)
-//                .attr("dy", ""+textLeading+"em")
-//                .attr("text-anchor", "start")
-//                .attr('class', 'valueLabels')
-//                .text(function(d,i){return ""+d.value+ "%";});
-//
-//        // labels to the right of the right hand labels
-//        chart.selectAll("text.valueQualifiers")
-//                .data(data)
-//                .enter().append("text")
-//                .attr("x", function(d){
-//                    return (x(d.value));
-//                })
-//                .attr("y", function(d){
-//                    return y(d.barname) + y.rangeBand()/2;
-//                } )
-//                .attr("dx", 72)
-//                .attr("dy", ""+textLeading+"em")
-//                .attr("text-anchor", "start")
-//                .attr('class', 'valueQualifiers')
-//                .text(function(d,i){return ""+d.descriptor+ "%";})
-//
-//
-//        var elem = chart.selectAll("text.clickableQuestionMark")
-//            .data(data);
-//
-//        var elemEnter = elem
-//                .enter()
-//                .append("svg:a")
-//                .attr("xlink:href", function(d){return d.barsubnamelink;})
-//                .append("g");
-//
-//
-//        elemEnter
-//                .append("circle")
-//                .attr("cx",  margin.left+roomForLabels-labelSpacer)
-//                .attr("cy", function(d, i){
-//                    return y(d.barname) + y.rangeBand()/2;
-//                } )
-//                .attr('r',8)
-//                .attr("transform", function(d){return "translate(-5,29)"})
-//                .attr('class', 'clickableQuestionMark')
-//        ;
-//        elemEnter
-//            .append("text")
-//            .attr("x",  margin.left+roomForLabels-labelSpacer)
-//            .attr("y", function(d, i){
-//                return y(d.barname) + y.rangeBand()/2;
-//            } )
-//            .attr("dy", ""+(1.4+textLeading)+"em")
-//            .attr("text-anchor", "end")
-//            .attr('class', 'clickableQuestionMark')
-//            .text("?");
-//
-//
-//    }
-//
-//    render(data);
-
 
 </script>
 

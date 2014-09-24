@@ -6,7 +6,8 @@
     <r:layoutResources/>
 </head>
 <body>
-<script src="/baget/js/baget/bootstrap.min.js"></script>
+
+<g:javascript src="bootstrap.min.js" />
 <div class="container">
 
     <div class="starter-template">

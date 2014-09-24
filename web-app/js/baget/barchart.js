@@ -21,7 +21,7 @@ var baget = baget || {};  // encapsulating variable
 //                    barsubnamelink:'http://www.google.com',
 //                    inbar: '',
 //                    descriptor: '(8 out of 6469)'},
-//                {value: 99,
+//                {value: 33,
 //                    barname: 'Do not have T2D',
 //                    barsubname: '(controls)',
 //                    barsubnamelink:'http://www.google.com',
@@ -42,7 +42,7 @@ var baget = baget || {};  // encapsulating variable
         // private variables
         var  instance = {};
 
-        var margin = {top: 30, right: 20, bottom: 50, left: 70},
+        var margin = {top: 30, right: 20, bottom: 0, left: 70},
             width = 800 - margin.left - margin.right,
             height = 250 - margin.top - margin.bottom;
 
@@ -62,15 +62,14 @@ var baget = baget || {};  // encapsulating variable
             data.map(function(d){names.push(d.barname)});
             y = d3.scale.ordinal()
                 .domain(names)
-                .rangeBands([margin.top, height]);
+                .rangeBands([margin.top, 5*height/6]);
 
             var	xAxis = d3.svg.axis();
 
             xAxis
                 .orient('bottom')
                 .scale(x)
-                .tickSize(2)
-                .tickValues([0,25,50,75,100]);
+                .tickSize(2);
 
             var x_xis = chart.append('g')
                 .attr("transform", "translate(0,"+(height+40)+")")
@@ -138,7 +137,7 @@ var baget = baget || {};  // encapsulating variable
                 .attr('class', 'barSubChartLabel')
                 .text(function(d,i){return d.barsubname;});
 
-            // labels to the right
+            // labels to the right -- expected to be numeric
             chart.selectAll("text.valueLabels")
                 .data(data)
                 .enter().append("text")
@@ -152,7 +151,7 @@ var baget = baget || {};  // encapsulating variable
                 .attr("dy", ""+textLeading+"em")
                 .attr("text-anchor", "start")
                 .attr('class', 'valueLabels')
-                .text(function(d,i){return ""+d.value+ "%";});
+                .text(function(d,i){return ""+(d.value).toPrecision(3)+ "%";});
 
             // labels to the right of the right hand labels
             chart.selectAll("text.valueQualifiers")
@@ -164,7 +163,7 @@ var baget = baget || {};  // encapsulating variable
                 .attr("y", function(d){
                     return y(d.barname) + y.rangeBand()/2;
                 } )
-                .attr("dx", 72)
+                .attr("dx", 96)
                 .attr("dy", ""+textLeading+"em")
                 .attr("text-anchor", "start")
                 .attr('class', 'valueQualifiers')

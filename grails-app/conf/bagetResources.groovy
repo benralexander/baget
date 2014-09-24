@@ -3,10 +3,15 @@ modules = {
     tooltip{
         resource url: 'js/baget/d3tooltip.js'
     }
+    bootstrap {
+        resource url: 'http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'
+        resource url: 'http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css'
+        resource url: 'http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'
+    }
     core {
+        dependsOn "bootstrap"
 
         resource url: 'css/baget/baget.css'
-        resource url: 'css/baget/bootstrap.min.css'
 
         resource url: 'js/jquery-1.11.0.min.js'
         resource url: 'js/d3.min.js'
@@ -18,9 +23,6 @@ modules = {
 
         resource url: 'js/baget/sharedMethods.js'
         resource url: 'js/baget/slider.js'
-    }
-    bootstrap {
-        resource url: 'js/baget/bootstrap.min.css'
     }
 
 }
