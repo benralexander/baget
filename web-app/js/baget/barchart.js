@@ -3,6 +3,10 @@
  *
  * This JavaScript file should be sufficient for creating a bar chart.
  *
+ * We want to be able to handle not only individual bars but also grouped bars.  If you are
+ * creating a bar group you'll need to put the grouped bars into an array inside the top level
+ * objects. For each grouping provide a bar name.
+ *
  * @type {baget|*|{}}
  */
 
