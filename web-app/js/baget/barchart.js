@@ -83,6 +83,7 @@ var baget = baget || {};  // encapsulating variable
 
 
             // the bars in the bar chart
+            // special handling in case the bars have groups
             var bars = chart.selectAll("rect")
                 .data(data,function(d,i){return d.barname;});
 

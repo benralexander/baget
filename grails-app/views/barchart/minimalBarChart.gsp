@@ -118,7 +118,9 @@
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
                     descriptor: ''},
-                {value: 4.52,
+                {   barname: 'European',
+                    bargroup:    [
+                        {value: 4.52,
                     barname: 'South Asian',
                     barsubname: '',
                     barsubnamelink:'http://www.google.com',
@@ -130,6 +132,8 @@
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
                     descriptor: '(exome sequence)'}
+                        ]
+    }
             ],
             roomForLabels = 120,
             maximumPossibleValue = 5,
