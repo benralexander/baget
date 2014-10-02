@@ -43,11 +43,18 @@
 
 <hr width="100%">
 <hr width="100%">
-<h2>new style</h2>
+<h2>multiple bars with grouping allowed</h2>
 <div style="width:1000px">
     <div id="chart2"></div>
 </div>
 
+
+<hr width="100%">
+<hr width="100%">
+<h2>multiple bars with grouping allowed</h2>
+<div style="width:1000px">
+    <div id="chart3"></div>
+</div>
 
 
 
@@ -84,7 +91,7 @@
                 .height(height)
                 .margin(margin)
                 .roomForLabels (roomForLabels)
-                .maximumPossibleValue (maximumPossibleValue)
+                .maximumPossibleValue (1)
                 .labelSpacer (labelSpacer)
                 .assignData(data);
         barChart.render();
@@ -101,39 +108,41 @@
 <script type="text/javascript">
     var data2 = [
                 { value: 0.84,
+                    position: 2,
                     barname: 'African-American',
                     barsubname: '',
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
                     descriptor: ''},
                 {value: 0.72,
+                    position: 4,
                     barname: 'Hispanic',
                     barsubname: '',
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
                     descriptor: ''},
                 { value: 1.62,
+                    position: 6,
                     barname: 'East Asian',
                     barsubname: '',
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
                     descriptor: ''},
-                {   barname: 'European',
-                    bargroup:    [
-                        {value: 4.52,
-                    barname: 'South Asian',
+                {  value: 4.52,
+                    position:  8,
+                    barname: 'European',
                     barsubname: '',
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
                     descriptor: ''},
                 { value: 3.91,
-                    barname: 'European',
+                    position: 9,
+                    barname: ' ',
                     barsubname: '',
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
                     descriptor: '(exome sequence)'}
-                        ]
-    }
+
             ],
             roomForLabels = 120,
             maximumPossibleValue = 5,
@@ -152,9 +161,109 @@
                 .height(height)
                 .margin(margin)
                 .roomForLabels (roomForLabels)
-                .maximumPossibleValue (maximumPossibleValue)
+                .maximumPossibleValue (5)
                 .labelSpacer (labelSpacer)
                 .assignData(data2);
+        barChart.render();
+
+
+    });
+
+</script>
+
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+    var data3 = [
+                { value: 1,
+                    position: 1,
+                    barname: 'Cases',
+                    barsubname: '',
+                    barsubnamelink:'http://www.google.com',
+                    inbar: '',
+                    descriptor: '(total 6253)',
+                    inset: 1 },
+                { value:  9,
+                    position: 2,
+                    barname: ' ',
+                    barsubname: '',
+                    barsubnamelink:'http://www.google.com',
+                    inbar: '',
+                    descriptor: ''},
+                {value: 295,
+                    position: 3,
+                    barname: '  ',
+                    barsubname: '',
+                    barsubnamelink:'http://www.google.com',
+                    inbar: '',
+                    descriptor: ''},
+                { value: 5949,
+                    position: 4,
+                    barname: '   ',
+                    barsubname: '',
+                    barsubnamelink:'http://www.google.com',
+                    inbar: '',
+                    descriptor: ''},
+                {  value: 1,
+                    position:  6,
+                    barname: 'Controls',
+                    barsubname: '',
+                    barsubnamelink:'http://www.google.com',
+                    inbar: '',
+                    descriptor: '(total 6498)',
+                    inset: 1 },
+                {  value: 8,
+                    position:  7,
+                    barname: '    ',
+                    barsubname: '',
+                    barsubnamelink:'http://www.google.com',
+                    inbar: '',
+                    descriptor: ''},
+                { value: 211,
+                    position: 8,
+                    barname: '     ',
+                    barsubname: '',
+                    barsubnamelink:'http://www.google.com',
+                    inbar: '',
+                    descriptor: ''},
+                { value: 6279,
+                    position: 9,
+                    barname: '      ',
+                    barsubname: '',
+                    barsubnamelink:'http://www.google.com',
+                    inbar: '',
+                    descriptor: ''}
+
+            ],
+            roomForLabels = 120,
+            maximumPossibleValue = 7000,
+            labelSpacer = 10;
+
+    var margin = {top: 0, right: 20, bottom: 0, left: 70},
+            width = 800 - margin.left - margin.right,
+            height = 250 - margin.top - margin.bottom;
+
+
+    d3.json("../barChart/barChartData", function (error, json) {
+
+        var barChart = baget.barChart()
+                .selectionIdentifier("#chart3")
+                .width(width)
+                .height(height)
+                .margin(margin)
+                .roomForLabels (roomForLabels)
+                .maximumPossibleValue (7000)
+                .labelSpacer (labelSpacer)
+                .assignData(data3)
+                .integerValues(1)
+                .logXScale(1)
+                .customBarColoring(1);
         barChart.render();
 
 
