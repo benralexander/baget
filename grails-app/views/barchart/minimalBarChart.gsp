@@ -106,6 +106,7 @@
 
 
 <script type="text/javascript">
+    (function(){
     var data2 = [
                 { value: 0.84,
                     position: 2,
@@ -168,6 +169,7 @@
 
 
     });
+    })();
 
 </script>
 
@@ -180,6 +182,7 @@
 
 
 <script type="text/javascript">
+(function(){
     var data3 = [
                 { value: 1,
                     position: 1,
@@ -195,21 +198,24 @@
                     barsubname: '',
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
-                    descriptor: ''},
+                    descriptor: '',
+                    legendText: '2 copies (homozygous)'},
                 {value: 295,
                     position: 3,
                     barname: '  ',
                     barsubname: '',
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
-                    descriptor: ''},
+                    descriptor: '',
+                    legendText: '1 copy (heterozygous)'},
                 { value: 5949,
                     position: 4,
                     barname: '   ',
                     barsubname: '',
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
-                    descriptor: ''},
+                    descriptor: '',
+                    legendText: '0 copies'},
                 {  value: 1,
                     position:  6,
                     barname: 'Controls',
@@ -245,9 +251,9 @@
             maximumPossibleValue = 7000,
             labelSpacer = 10;
 
-    var margin = {top: 0, right: 20, bottom: 0, left: 70},
+    var margin = {top: 140, right: 20, bottom: 0, left: 70},
             width = 800 - margin.left - margin.right,
-            height = 250 - margin.top - margin.bottom;
+            height = 520 - margin.top - margin.bottom;
 
 
     d3.json("../barChart/barChartData", function (error, json) {
@@ -263,11 +269,14 @@
                 .assignData(data3)
                 .integerValues(1)
                 .logXScale(1)
-                .customBarColoring(1);
+                .customBarColoring(1)
+                .customLegend(1);
         barChart.render();
 
 
     });
+
+})();
 
 </script>
 
