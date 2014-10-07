@@ -7,6 +7,10 @@ class BarChartController {
         render(view: 'minimalBarChart')
     }
 
+    def minimalBarChart() {
+        render(view: 'minimalBarChart')
+    }
+
     def rawJson = """
     [
     { value: 12,
