@@ -8,7 +8,7 @@ Note that there is no need to compile the entire Grails application if you merel
 however, it should be easy to do.  Step-by-step instructions are provided below.
 
 
-<h1>Building the **BAGET** Grails application</h1>
+<h1>Building the BAGET Grails application</h1>
 
 
 The Baget application is written in Grails. The following description should give you all the information you need to download, compile, and run a local version of the portal.
