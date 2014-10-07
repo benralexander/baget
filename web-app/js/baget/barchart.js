@@ -3,11 +3,12 @@
  *
  * This JavaScript file should be sufficient for creating a bar chart.
  *
- * We want to be able to handle not only individual bars but also grouped bars.  If you are
- * creating a bar group you'll need to put the grouped bars into an array inside the top level
- * objects. For each grouping provide a bar name.
+ * In an effort to provide more flexibility this routine can support either an ordinal vertical
+ * axis (which will space the bars out for you) or else a linear vertical axis (in which case
+ * you need to provide the coordinates on the y-axis to describe where every bar goes).  I incorporated
+ * this switch in order to allow for grouped bar charts.  Include a "position" field in your data
+ * if you want to use the linear scaling.
  *
- * @type {baget|*|{}}
  */
 
 
@@ -16,8 +17,11 @@ var baget = baget || {};  // encapsulating variable
 
 (function () {
 
-    baget.barChart = function () {
+    baget.barChart = function (barChartName) {// name is optional, but allows you to clear specifically
 
+//
+//   Here's an example of the sort of data that this routine expect
+//
 //        var data = [
 //                { value: 12,
 //                    barname: 'Have T2D',
@@ -57,7 +61,7 @@ var baget = baget || {};  // encapsulating variable
 
         instance.render = function() {
             var x, y,
-            minimumValue,
+                minimumValue,
                 maximumValue,
                 range = 0,
                 vPosition;
@@ -67,6 +71,10 @@ var baget = baget || {};  // encapsulating variable
                 .attr('class', 'chart')
                 .attr('width', width*1.5)
                 .attr('height', height*1.4);
+
+            if (typeof barChartName !== 'undefined') {
+                chart.attr('class',barChartName);
+            }
 
             if (logXScale){
                 internalMin = 1;
@@ -148,7 +156,7 @@ var baget = baget || {};  // encapsulating variable
                     //return vPosition.pos(name);
                     return y(name) + y.rangeBand()/2;
                 },
-                barHeight:y.rangeBand()/4}
+                    barHeight:y.rangeBand()/4}
             }
 
             var	xAxis = d3.svg.axis();
@@ -159,7 +167,9 @@ var baget = baget || {};  // encapsulating variable
                 .tickSize(2);
 
             if (logXScale){
-                xAxis.tickValues([1,10,100,1000,10000])
+                xAxis
+                    .tickValues([1,10,100,1000,10000])
+                    .tickFormat(d3.format("d"));
             }
 
             var x_xis = chart.append('g')
@@ -195,7 +205,12 @@ var baget = baget || {};  // encapsulating variable
             bars.transition()
                 .delay(100).duration(1400)
                 .attr("width", function(d,i){
-                    return (x( d.value)-x(internalMin))
+                    if (typeof d.value === 'undefined'){
+                        return 0;
+                    }else{
+                        return (x( d.value)-x(internalMin));
+                    }
+
                 });
 
             // get rid of any extra data in case we've done this before
@@ -213,7 +228,7 @@ var baget = baget || {};  // encapsulating variable
                 .data(data)
                 .enter().append("text")
                 .attr("x", function(d, i){
-                        return margin.left+roomForLabels-labelSpacer;
+                    return margin.left+roomForLabels-labelSpacer;
                 })
                 .attr("y", function(d, i){
                     return vPosition.pos(d.barname);
@@ -248,7 +263,12 @@ var baget = baget || {};  // encapsulating variable
                 .data(data)
                 .enter().append("text")
                 .attr("x", function(d){
-                    return (x(d.value));
+                    if (typeof d.value !== 'undefined') {
+                        return (x(d.value));
+                    }else {
+                        return 0;
+                    }
+
                 })
                 .attr("y", function(d){
                     return vPosition.pos(d.barname);
@@ -261,10 +281,12 @@ var baget = baget || {};  // encapsulating variable
                     // do we format the value to the right of the bar as a percentage or an integer
                     //  one other special case: if the label is inset then don't label anything
                     if (typeof d.inset === 'undefined'){
-                        if (integerValues ===  1){
-                            return ""+(d.value);
-                        }else {
-                            return ""+(d.value).toPrecision(3)+ "%";
+                        if (typeof d.value !== 'undefined') {
+                            if (integerValues ===  1){
+                                return ""+(d.value);
+                            }else {
+                                return ""+(d.value).toPrecision(3)+ "%";
+                            }
                         }
                     }
 
@@ -275,7 +297,11 @@ var baget = baget || {};  // encapsulating variable
                 .data(data)
                 .enter().append("text")
                 .attr("x", function(d){
-                    return (x(d.value));
+                    if (typeof d.value !== 'undefined') {
+                        return (x(d.value));
+                    } else {
+                        return 0;
+                    }
                 })
                 .attr("y", function(d){
                     return vPosition.pos(d.barname);
@@ -361,6 +387,8 @@ var baget = baget || {};  // encapsulating variable
                     });
             }
 
+            // This next section is necessary only if you want to include question marks
+            // that provide external HTML links.
             var elem = chart.selectAll("text.clickableQuestionMark")
                 .data(data);
 
@@ -370,32 +398,7 @@ var baget = baget || {};  // encapsulating variable
                 .attr("xlink:href", function(d){return d.barsubnamelink;})
                 .append("g");
 
-
-//            elemEnter
-//                .append("circle")
-//                .attr("cx",  margin.left+roomForLabels-labelSpacer)
-//                .attr("cy", function(d, i){
-//                    return y(d.barname) + y.rangeBand()/2;
-//                } )
-//                .attr('r',8)
-//                .attr("transform", function(d){return "translate(-5,29)"})
-//                .attr('class', 'clickableQuestionMark')
-//            ;
-//            elemEnter
-//                .append("text")
-//                .attr("x",  margin.left+roomForLabels-labelSpacer)
-//                .attr("y", function(d, i){
-//                    return y(d.barname) + y.rangeBand()/2;
-//                } )
-//                .attr("dy", ""+(1.4+textLeading)+"em")
-//                .attr("text-anchor", "end")
-//                .attr('class', 'clickableQuestionMark')
-//                .text("?");
-
-
         }
-
-
 
         // assign data to the DOM
         instance.assignData = function (x) {
@@ -452,7 +455,6 @@ var baget = baget || {};  // encapsulating variable
             return instance;
         };
 
-
         instance.customBarColoring = function (x) {
             if (!arguments.length) return customBarColoring;
             customBarColoring = x;
@@ -474,8 +476,13 @@ var baget = baget || {};  // encapsulating variable
             return instance;
         };
 
-        instance.clear = function(){
-            selection.select('svg').remove();
+        instance.clear = function(barChartName){ // if there is a name then only clear the svg with that class
+            if (typeof barChartName === 'undefined') {
+                d3.select('svg').remove();
+            } else {
+                d3.select('svg.'+barChartName).remove();
+            }
+
             return instance;
         };
 

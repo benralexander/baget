@@ -12,12 +12,15 @@
 
     <div class="starter-template">
         <h1 style="font-weight: bold">Bar chart</h1>
+        <h1 style="font-weight: normal">All charts made with
+            <a
+                onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/barchart.js')">barchart.js</a>
 
     </div>
 
 </div>
 <p class="standardEmphasisFont">
-    Carriers of at least one copy of one of these variants</p>
+    <h2>Simple bar chart with labels</h2></p>
 <table style="width:900px">
     <tbody>
         <tr>
@@ -43,7 +46,8 @@
 
 <hr width="100%">
 <hr width="100%">
-<h2>multiple bars with grouping allowed</h2>
+<p class="standardEmphasisFont">
+<h2>Use explicit vertical positioning to allow bar groups</h2></p>
 <div style="width:1000px">
     <div id="chart2"></div>
 </div>
@@ -51,7 +55,9 @@
 
 <hr width="100%">
 <hr width="100%">
-<h2>multiple bars with grouping allowed</h2>
+<p class="standardEmphasisFont">
+<h2>Example with customization and a legend (less general/more flexible)</h2>
+</p>
 <div style="width:1000px">
     <div id="chart3"></div>
 </div>
@@ -67,12 +73,12 @@
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
                     descriptor: '(8 out of 6469)'},
-                {value: 0.126,
+                {value: 0.891,
                     barname: 'Do not have T2D',
                     barsubname: '(controls)',
                     barsubnamelink:'http://www.google.com',
                     inbar: '',
-                    descriptor: '(21 out of 6364)'}
+                    descriptor: '(60 out of 6364)'}
             ],
             roomForLabels = 120,
             maximumPossibleValue = 1,
