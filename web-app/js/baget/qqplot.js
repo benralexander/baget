@@ -343,48 +343,103 @@ var baget = baget || {};  // encapsulating variable
             /***
              * data.handling
              */
-            for ( var  i=0 ; i<1 ; i++ )  {
+//            for ( var  dataSet=0 ; dataSet<data.length ; dataSet++ ) {
+//
+//                dataSetLabels.push('data set ' + dataSet);
+//            }
+//
+//
+//            dataDots = d3.select('#groupHolder').selectAll(".dot"+dataSet)
+//                .data(data);
+//
+//            function dotSequence(selection) {
+//                for ( var i = 0 ; i < selection.length; i++){
+//                    var sel=  selection[i];
+//                //selection.each(function (d,i) {
+//                    sel.on('mouseover', tip.show)
+//                        .on('mouseout', tip.hide)
+//                        .on('click', clickCallback)
+//                        .attr("r", 3)
+//                        .attr("cx", function (d) {
+//                            return x(xAxisAccessor(d));
+//                        })
+//                        .attr("cy", function (d) {
+//                            return y(yAxisAccessor(d));
+//                        })
+//                        .style("fill", function (d) {
+//                            return color(d);
+//                        });
+//
+//
+//                    sel.transition()
+//                        .duration(1000)
+//                        .style("fill", function (d) {
+//                            return color(d,dataSet);
+//                        });
+//
+//                    sel.exit().transition()
+//                        .style("fill", function (d) {
+//                            return color(d,dataSet);
+//                        })
+//                        .remove();
+//
+//
+//            }
+//
+//            }
+//
+//
+//            dataDots.enter()
+//                .append("circle")
+//                .attr("class", function (d,i){
+//                    return "dot dot"+dataSet+" dataset"+dataSet
+//                })
+//                .call(dotSequence);
+//
 
-                for ( var  dataSet=0 ; dataSet<data.length ; dataSet++ ) {
-
-                    dataSetLabels.push ('data set '+dataSet);
-
-                    dataDots = d3.select('#groupHolder').selectAll(".dot"+dataSet)
-                        .data(data[dataSet]);
-
-                    dataDots.enter()
-                        .append("circle")
-                        .on('mouseover', tip.show)
-                        .on('mouseout', tip.hide)
-                        .on('click', clickCallback)
-
-                        .attr("class", "dot dot"+dataSet+" dataset"+dataSet)
-                        .attr("r", 3)
-                        .attr("cx", function (d) {
-                            return x(xAxisAccessor(d));
-                        })
-                        .attr("cy", function (d) {
-                            return y(yAxisAccessor(d));
-                        })
-                        .style("fill", function (d) {
-                            return color(d);
-                        });
 
 
-                    dataDots.transition()
-                        .duration(1000)
-                        .style("fill", function (d) {
-                            return color(d,dataSet);
-                        });
+            for ( var  dataSet=0 ; dataSet<data.length ; dataSet++ ) {
 
-                    dataDots.exit().transition()
-                        .style("fill", function (d) {
-                            return color(d,dataSet);
-                        })
-                        .remove();
-                }
+                dataSetLabels.push ('data set '+dataSet);
 
+                dataDots = d3.select('#groupHolder').selectAll(".dot"+dataSet)
+                    .data(data[dataSet]);
+
+                dataDots.enter()
+                    .append("circle")
+                    .on('mouseover', tip.show)
+                    .on('mouseout', tip.hide)
+                    .on('click', clickCallback)
+
+                    .attr("class", "dot dot"+dataSet+" dataset"+dataSet)
+                    .attr("r", 3)
+                    .attr("cx", function (d) {
+                        return x(xAxisAccessor(d));
+                    })
+                    .attr("cy", function (d) {
+                        return y(yAxisAccessor(d));
+                    })
+                    .style("fill", function (d) {
+                        return color(d);
+                    });
+
+
+                dataDots.transition()
+                    .duration(1000)
+                    .style("fill", function (d) {
+                        return color(d,dataSet);
+                    });
+
+                dataDots.exit().transition()
+                    .style("fill", function (d) {
+                        return color(d,dataSet);
+                    })
+                    .remove();
             }
+
+
+
 
 
             /***
