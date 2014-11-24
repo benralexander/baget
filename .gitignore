@@ -1,4 +1,4 @@
-# .gitignore for Grails 1.2 and 1.3
+He# .gitignore for Grails 1.2 and 1.3
 
 # web application files
 /web-app/WEB-INF/classes
@@ -33,5 +33,8 @@
 /*.iml
 /*.ipr
 /*.iws
-/projectFilesBackup/
+/**/*.iml
+/**/*.ipr
+/**/*.iws
+/projectFilesBackup*/**
 *application.properties
