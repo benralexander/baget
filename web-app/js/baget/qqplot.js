@@ -20,6 +20,19 @@ var baget = baget || {};  // encapsulating variable
 
     baget.qqPlot = function () {
 
+//        d3.select(window).on('resize', resize);
+//
+//        var aspect = 960 / 500,
+//            chart = $("#scatterPlot1");
+//
+//        function resize(xxx) {
+//            var targetWidth = chart.parent().parent().parent().parent().parent().parent().parent().width();
+//            console.log('width='+targetWidth) ;
+//            chart.attr("width", targetWidth);
+//            chart.attr("height", targetWidth / aspect);
+//                       // svg.attr("width", x).attr("height", y);
+//        } ;
+
         // the variables we intend to surface
         var
             width = 1,
@@ -169,7 +182,11 @@ var baget = baget || {};  // encapsulating variable
 
 
         // Now walk through the DOM and create the enrichment plot
-        instance.render = function (g) {
+        instance.render = function (currentSelection) {
+
+            svg = currentSelection.select('svg'); // get main holding DOM element
+            data = svg.selectAll('g.allGroups').data();   // get all data sets
+            var insideScatterGroup = svg.select('g.scatter');   // get all data sets
 
             x = d3.scale.linear()
                 .range([0, width]);
@@ -203,24 +220,6 @@ var baget = baget || {};  // encapsulating variable
             yAxis = d3.svg.axis()
                 .scale(y)
                 .orient("left");
-
-            if (!svg) {
-                svg = selection
-                    .append("svg")
-                    .attr("width", width + margin.left + margin.right)
-                    .attr("height", height + margin.top + margin.bottom)
-                    .append("g")
-                    .attr("class", "scatter")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-                    .call(tip);
-            }
-
-            groupHolder = svg.selectAll('#groupHolder')
-                .data([{}])
-                .enter()
-                .append('g')
-                .attr('id','groupHolder')
-                .attr("clip-path", "url(#body-clip)");
 
             var dataRange = UTILS.extractDataRange(data);
 
@@ -262,7 +261,7 @@ var baget = baget || {};  // encapsulating variable
                     .attr("stroke-width", 1.5);
 
             } else {
-                svg.selectAll("#identityLine").remove();
+                insideScatterGroup.selectAll("#identityLine").remove();
             }
 
 
@@ -272,7 +271,8 @@ var baget = baget || {};  // encapsulating variable
                 .scaleExtent([1, 100])
                 .on("zoom", zoomed);
 
-            selection.call(zoom);
+            currentSelection.call(zoom);
+            //selection.call(zoom);
 
 
             if ((displaySignificanceLine)  && (typeof(significanceLineValue) !=="undefined")){
@@ -304,10 +304,10 @@ var baget = baget || {};  // encapsulating variable
                 significanceDifferentiator.exit().remove();
 
             } else {
-                svg.selectAll(".significanceLine").data([significanceLineValue]).remove();
+                insideScatterGroup.selectAll(".significanceLine").data([significanceLineValue]).remove();
             }
 
-            svg.selectAll("#xAxis")
+            insideScatterGroup.selectAll("#xAxis")
                 .data([1])
                 .enter()
                 .append("g")
@@ -323,7 +323,7 @@ var baget = baget || {};  // encapsulating variable
                 .style("font-weight", "bold")
                 .text(xAxisLabel);
 
-            svg.selectAll("#yAxis")
+            insideScatterGroup.selectAll("#yAxis")
                 .data([1])
                 .enter()
                 .append("g")
@@ -343,100 +343,47 @@ var baget = baget || {};  // encapsulating variable
             /***
              * data.handling
              */
-//            for ( var  dataSet=0 ; dataSet<data.length ; dataSet++ ) {
-//
-//                dataSetLabels.push('data set ' + dataSet);
-//            }
-//
-//
-//            dataDots = d3.select('#groupHolder').selectAll(".dot"+dataSet)
-//                .data(data);
-//
-//            function dotSequence(selection) {
-//                for ( var i = 0 ; i < selection.length; i++){
-//                    var sel=  selection[i];
-//                //selection.each(function (d,i) {
-//                    sel.on('mouseover', tip.show)
-//                        .on('mouseout', tip.hide)
-//                        .on('click', clickCallback)
-//                        .attr("r", 3)
-//                        .attr("cx", function (d) {
-//                            return x(xAxisAccessor(d));
-//                        })
-//                        .attr("cy", function (d) {
-//                            return y(yAxisAccessor(d));
-//                        })
-//                        .style("fill", function (d) {
-//                            return color(d);
-//                        });
-//
-//
-//                    sel.transition()
-//                        .duration(1000)
-//                        .style("fill", function (d) {
-//                            return color(d,dataSet);
-//                        });
-//
-//                    sel.exit().transition()
-//                        .style("fill", function (d) {
-//                            return color(d,dataSet);
-//                        })
-//                        .remove();
-//
-//
-//            }
-//
-//            }
-//
-//
-//            dataDots.enter()
-//                .append("circle")
-//                .attr("class", function (d,i){
-//                    return "dot dot"+dataSet+" dataset"+dataSet
-//                })
-//                .call(dotSequence);
-//
 
+            var subGroupHolder  = currentSelection.selectAll('g.allGroups');
+           // var groupHolder  = currentSelection.selectAll('g.allGroups');
+            subGroupHolder
+                .each(function (eachGroupD, eachGroupI) {      // d3 each: d=datum, i=index
 
+                    var oneGroup =  d3.select(subGroupHolder[0][eachGroupI]);
 
-            for ( var  dataSet=0 ; dataSet<data.length ; dataSet++ ) {
+                    dataDots = oneGroup.selectAll("circle.dot")
+                        .data(eachGroupD);
+                    dataDots.enter()
+                        .append('circle')
+                        .attr('class', 'dot')
+                        .on('mouseover', tip.show)
+                        .on('mouseout', tip.hide)
+                        .on('click', clickCallback)
+                        .attr("class", "dot dot"+eachGroupI+" dataset"+eachGroupI)
+                        .attr("r", 3)
+                        .attr("cx", function (d) {
+                            return x(xAxisAccessor(d));
+                        })
+                        .attr("cy", function (d) {
+                            return y(yAxisAccessor(d));
+                        })
+                        .style("fill", function (d) {
+                            return color(d);
+                        });
 
-                dataSetLabels.push ('data set '+dataSet);
+                    dataDots.transition()
+                        .duration(1000)
+                        .style("fill", function (d) {
+                            return color(d,eachGroupI);
+                        });
 
-                dataDots = d3.select('#groupHolder').selectAll(".dot"+dataSet)
-                    .data(data[dataSet]);
+                    dataDots.exit()
+                        .style("fill", function (d) {
+                            return color(d,eachGroupI);
+                        })
+                        .remove();
 
-                dataDots.enter()
-                    .append("circle")
-                    .on('mouseover', tip.show)
-                    .on('mouseout', tip.hide)
-                    .on('click', clickCallback)
-
-                    .attr("class", "dot dot"+dataSet+" dataset"+dataSet)
-                    .attr("r", 3)
-                    .attr("cx", function (d) {
-                        return x(xAxisAccessor(d));
-                    })
-                    .attr("cy", function (d) {
-                        return y(yAxisAccessor(d));
-                    })
-                    .style("fill", function (d) {
-                        return color(d);
-                    });
-
-
-                dataDots.transition()
-                    .duration(1000)
-                    .style("fill", function (d) {
-                        return color(d,dataSet);
-                    });
-
-                dataDots.exit().transition()
-                    .style("fill", function (d) {
-                        return color(d,dataSet);
-                    })
-                    .remove();
-            }
+            });
 
 
 
@@ -490,15 +437,8 @@ var baget = baget || {};  // encapsulating variable
             }
 
 
-            defineBodyClip(svg,x(x.domain()[0]),y(y.domain()[1]),x(x.domain()[1]),y(y.domain()[0]));
+            defineBodyClip(insideScatterGroup,x(x.domain()[0]),y(y.domain()[1]),x(x.domain()[1]),y(y.domain()[0]));
 
-        };
-
-        // assign data to the DOM
-        instance.assignData = function (x) {
-            if (!arguments.length) return data;
-            data = x;
-            return instance;
         };
 
         instance.xAxisAccessor = function (x) {
@@ -595,6 +535,52 @@ var baget = baget || {};  // encapsulating variable
             selection = d3.select(selectionIdentifier);
             return instance;
         };
+
+        // assign data to the DOM
+        instance.assignData = function (x) {
+            if (!arguments.length) return data;
+            data = x;
+            return instance;
+        };
+
+
+        /***
+         * This is not a standard accessor.  The purpose of this method is to take a DOM element and to
+         *  attach the data to it.  All further references to the data should come through that DOM element.
+         * @param x
+         * @returns {*}
+         */
+        instance.dataHanger = function (selectionIdentifier, data) {
+
+
+            selection = d3.select(selectionIdentifier)
+                    .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                    .attr("class", "scatter")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                    .call(tip)
+
+            .selectAll('#groupHolder')
+                .data([{}])
+                .enter()
+                .append('g')
+                .attr('id','groupHolder')
+                .attr("clip-path", "url(#body-clip)")
+
+
+            .selectAll('g.allGroups')
+                .data(data)
+                .enter()
+                .append('g')
+                .attr('class', 'allGroups');
+
+            return instance;
+        };
+
+
+
 
         return instance;
     };

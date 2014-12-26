@@ -51,7 +51,7 @@
             </button>
             <a class="navbar-brand" href="<g:createLink controller='baget' action ='projectDescription'/>">BAGET project</a>
         </div>
-        <div class="collapse navbar-collapse">
+        <div class="collapse navbar-collapse navigationControls">
             <ul class="nav navbar-nav">
                 <li class="active"><a href="<g:createLink controller='qqPlot' action ='index'/>">QQ Plot</a></li>
             </ul>

@@ -14,14 +14,16 @@
     var displaySignificanceIndicator = function () {
         if (d3.select('.qqcontrols').style('display') === 'block') {
             d3.select('.qqcontrols').style('display', 'none');
-            qqPlot.displaySignificanceLine(false).render();
+            qqPlot.displaySignificanceLine(false);
+            d3.select("#scatterPlot1").call(qqPlot.render);
         } else {
             d3.select('.qqcontrols').style('display', 'block');
             var significanceLineValue = qqPlot.significanceLineValue();
             if (typeof(slider.sliderLocation) !== 'undefined') {
                 slider.sliderLocation(significanceLineValue);
             }
-            qqPlot.displaySignificanceLine(true).render();
+            qqPlot.displaySignificanceLine(true);
+            d3.select("#scatterPlot1").call(qqPlot.render);
         }
 
     };
@@ -37,9 +39,11 @@
 
    var displayIdentityLine =  function () {
         if (qqPlot.displayIdentityLine()) {
-            qqPlot.displayIdentityLine(false).render();
+            qqPlot.displayIdentityLine(false);
+            d3.select("#scatterPlot1").call(qqPlot.render);
         }else {
-            qqPlot.displayIdentityLine(true).render();
+            qqPlot.displayIdentityLine(true);
+            d3.select("#scatterPlot1").call(qqPlot.render);
         }
     };
 //
@@ -161,7 +165,6 @@
 
 
         qqPlot=baget.qqPlot()
-                .selectionIdentifier("#scatterPlot1")
                 .width(width)
                 .height(height)
                 .margin(margin)
@@ -179,8 +182,9 @@
                 .displayIdentityLine (false)
                 .displaySignificanceLine(false)
                 .significanceLineValue (dataRange.median)
-                .assignData(json);
-        qqPlot.render();
+                .dataHanger ("#scatterPlot1", json);
+        d3.select("#scatterPlot1").call(qqPlot.render);
+
 
 
         var slider = baget.slider(dataRange.max,
@@ -202,8 +206,9 @@
     };
     var onBrushEndDoThis = function(){
         if (typeof(qqPlot) !=="undefined") {
-            qqPlot.render();
+            d3.select("#scatterPlot1").call(qqPlot.render);
         }
+
     };
 
 
