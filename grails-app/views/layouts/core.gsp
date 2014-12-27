@@ -58,6 +58,10 @@
             <ul class="nav navbar-nav">
                 <li class="active"><a href="<g:createLink controller='barChart' action ='index'/>">Bar Chart</a></li>
             </ul>
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="<g:createLink controller='boxWhisker' action ='index'/>">Box Whisker</a></li>
+            </ul>
+
         </div>
     </div>
 </div>

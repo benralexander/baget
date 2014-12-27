@@ -31,6 +31,16 @@ modules = {
           resource url: 'css/baget/barchart.css'
           resource url: 'js/baget/barchart.js'
     }
+    boxwhisker {
+        resource url: 'css/baget/boxWhiskerPlot.css'
+        resource url: 'css/baget/clickablePopUp.css'
+        resource url: 'css/baget/slider.css'
+        resource url: 'css/baget/d3tooltip.css'
+        resource url: 'css/baget/scatter.css'
+
+        resource url: 'js/baget/boxWhiskerPlot.js'
+
+    }
 
 }
 
