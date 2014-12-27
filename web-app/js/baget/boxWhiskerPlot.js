@@ -3,234 +3,30 @@ var baget = baget || {};
 (function () {
     "use strict";
 
-    var instance; // object that retains the box whisker across instantiations.  We use a
-    //  singleton-based approach, so there is never more than one box whisker.
-
     baget.boxWhiskerPlot = function () {
 
         /***
          * Publicly accessible data goes here
          */
-        var boxWhiskerData,  // All the points the box whisker plot represents ( outliers or boxed )
+        var  instance = {},  // null object around which we will build the boxWhiskerPlot iinstance
+            boxWhiskerData,  // All the points the box whisker plot represents ( outliers or boxed )
             selectionIdentifier = '', // String defining Dom element where the plot will hang
             selection = {}, // DOM element inside D3 wrapper
             min = Infinity,  // min y value.  Autoscale if not set
             max = -Infinity,  // max y value.  Autoscale if not set
-            whiskers = boxWhiskers, // function to set the whiskers
-            boxWhiskerName = '', // little text label under b/w
+            whiskers = function (d) { return [0, d.length - 1]; }, // function to set the whiskers
             outlierRadius = 2,  // size of outlier dots on screen
-            scatterDataCallback,
 
         // Private variables, which can be surfaced as necessary
             duration = 500,  // How many milliseconds to animations require
-            quartiles = boxQuartiles, // function describing how quartiles are calculated
+            quartiles = UTILS.boxQuartiles, // function describing how quartiles are calculated
             value = Number,
             tickFormat = null,
-
-
-        // the callback which retrieves the correlation data. Note that this callback
-        // also assigns a second callback ( scatterDataCallback ) which it uses to
-        // actually launch the scatter plot
-        //
-        // also note: I externalize this callback to support inserting a stub in the test harness.
-        // During regular usage, however, this default value should be perfectly adequate
-            retrieveCorrelationData = function (compoundId, geneName, dataSet) {
-                setWaitCursor();
-                var filter = collectFilterStrings();
-                DTGetCorrelationPoints(compoundId, geneName, dataSet, filter, function (data) {
-                    if (typeof scatterDataCallback !== "undefined") {
-                        scatterDataCallback(data, geneName, compoundId);
-                    }
-                    removeWaitCursor();
-                });
-            },
-
 
         // these sizes referred to each individual bar in the bar whisker plot
             margin = {top: 50, right: 70, bottom: 20, left: 80},
             width = 350 - margin.left - margin.right,
-            height = 500 - margin.top - margin.bottom,
-
-            cleanUpAfterYourself = function (comprehensiveCleanup) {
-
-                // Previous incarnations of this plot can interfere with new ones so clear out the DOM
-                var previouslyExistingScatterPlot = d3.select("#scatterPlot1").selectAll("svg");
-                if (previouslyExistingScatterPlot) {
-                    previouslyExistingScatterPlot.remove();
-                }
-
-                // if we are getting rid of the scatter plot then we'd best also clear out any lingering dose response curves
-                var previouslyExistingdoseResponseCurve = d3.select('#doseResponseCurve').selectAll("svg");
-                if (previouslyExistingdoseResponseCurve) {
-                    previouslyExistingdoseResponseCurve.remove();
-                }
-
-                if (comprehensiveCleanup === true) {
-                    d3.selectAll('svg.box').remove()
-                    d3.select("#examineCorrelation").classed('scatterIsUp', false);
-                    d3.select("#examineCorrelation").style('display', 'none');
-                }
-            };
-
-
-        /***
-         * Begin the code for the box whisker plot (everything up to this point includes only variable definitions,
-         * and nothing that is immediately executed).
-         */
-
-
-        // First step, and enforce that this object is initialized with a 'new'.  If not then we will impose one.
-        if (!(this instanceof baget.boxWhiskerPlot)) {
-            return new baget.boxWhiskerPlot();
-        }
-
-
-        // Enforce that there is only ever one of these objects (Singleton pattern).  We presume
-        //  that calling a boxwhisker that already exists should imply that we reinitialize the plot,
-        //  so we call a clean up before returning the pointer.
-        if (typeof instance === "object") {
-            cleanUpAfterYourself(true);
-            return instance;
-        } else {
-            instance = {};
-        }
-
-
-        /***
-         *  This module adds a handler for clicks on the outlier elements in the
-         *  box whisker plot, and then retrieves the data necessary to insert
-         *  a scatter plot into a common div.  We use prototype definition tricks
-         *  JQuery here, so make sure those libraries are available.
-         */
-        var clickHandling = (function () {
-
-            /***
-             *  deselect: this method will unselect any outliers that might be selected, mark the scatterplot
-             *  as not visible, and remove the underlying SVG representation of the data
-             */
-            var deselect = function () {
-                    visuallyUnidentifyAllDots();
-
-                    cleanUpAfterYourself(false);
-
-                    scatterIsUp(false);
-
-                    d3.select(".pop").style('display', 'block')
-                        .style('height', '445px')
-                        .transition()
-                        .style('height', '5px')
-                        .style('display', 'none');
-
-
-                },
-
-
-                /***
-                 * Mark an outlier point as selected
-                 */
-                visuallyIdentifyDot = function (currentDot) {
-                    d3.select(currentDot).select('circle').classed('selectedCircle', true).classed('outlier', false);
-                },
-
-
-                /***
-                 * Make sure that all outlier points are deselected
-                 */
-                visuallyUnidentifyAllDots = function () {
-                    d3.selectAll('.selectedCircle').classed('outlier', true).classed('selectedCircle', false);
-                },
-
-                /***
-                 * This method is a mixed getter setter. With the parameter we set the specified ID as
-                 * either having or not having a class that tells us the scatterplot is in place.  Without
-                 * a parameter we return a truth value answering the question of whether the scatterplot
-                 * is in place
-                 */
-                scatterIsUp = function (trueOrFalse) {
-                    var retval = false;
-                    if (!arguments.length) {
-                        if (!d3.select("#examineCorrelation").empty()) {
-                            retval = d3.select("#examineCorrelation").classed('scatterIsUp');
-                        }
-                        return retval;
-                    }
-                    d3.select("#examineCorrelation").classed('scatterIsUp', trueOrFalse);
-                },
-
-                /***
-                 * Is this outlier point already selected? We behave differently if we hit a selected point
-                 * ( simply bring down the scatterplot) then if we select a new point ( bring down the old
-                 * scatterplot and put up a new one).
-                 */
-                thisDotIsAlreadySelected = function (currentDot) {
-                    var retval = false;
-                    if (!d3.select(currentDot).select('circle').empty()) {
-                        retval = d3.select(currentDot).select('circle').classed('selectedCircle');
-                    }
-                    return retval;
-                };
-
-
-            /***
-             * Encapsulate the logic of the clickHandling module. The majority of this logic is held within
-             * a callback that is activated when the user clicks on outlier point
-             */
-            $(function () {
-
-                $(document.body).on('click', '.clickable', function () {
-
-                    if (thisDotIsAlreadySelected(this)) {
-
-                        deselect();
-
-                    } else {
-
-                        visuallyUnidentifyAllDots();
-                        if (scatterIsUp()) {
-                            deselect();
-                        }
-
-                        visuallyIdentifyDot(this);
-
-                        var genePrimaryName = $(this).attr('gpn');
-
-                        var cmpd = $('#imageHolder').data('compound'),
-                            correlationDataType = $('input:radio[name=correlationChoice]:checked').val();
-
-                        d3.select('#doseResponseCurve').style('display', 'none');
-                        d3.select('.messagepop').style('width', '400px');
-
-                        retrieveCorrelationData(cmpd,
-                            genePrimaryName,
-                            correlationDataType);
-                        scatterIsUp(true);
-                        d3.select(".pop").style('display', 'block')
-                            .style('height', '5px')
-                            .transition()
-                            .style('height', '445px');
-
-                    }
-                    return false;
-                });
-
-
-                // there is only one close label so we only need to establish the callback once
-                $(document.body).on('click', '.close', function () {
-                    deselect();
-                    d3.select("#examineCorrelation").classed('scatterIsUp', false);
-                    d3.select("#examineCorrelation").style('display', 'none');
-
-                    return false;
-                });
-
-            });
-
-
-            return {
-                // public variables and methods.  Current none are necessary
-            };
-
-        }());
+            height = 500 - margin.top - margin.bottom;
 
 
         /***
@@ -308,28 +104,21 @@ var baget = baget || {};
         }());
 
 
-        //  private variable
-        var tip = d3.tip()
-            .attr('class', 'd3-tip')
-            .offset([-10, 0])
-            .html(function (d) {
-                var nodeData = d3.select(this.parentNode).data()[0].data[d];
-                var valueToDisplay = new Number(nodeData.v);
-                return "<strong></strong> <span style='color:#00ff00'>Gene: " + nodeData.d + "<br/>" +
-                    "Correlation: " + valueToDisplay.toPrecision(3) + "</span>";
-            });
+        //  Handle the tooltip pop-ups.
+        var tip = (function () {
+            return d3.tip()
+                .attr('class', 'd3-tip')
+                .offset([-10, 0])
+                .html(function (d) {
+                    var nodeData = d3.select(this.parentNode).data()[0].data[d];
+                    var valueToDisplay = new Number(nodeData.v);
+                    return "<strong></strong> <span style='color:#00ff00'>Gene: " + nodeData.d + "<br/>" +
+                        "Correlation: " + valueToDisplay.toPrecision(3) + "</span>";
+                });
+        })();
 
-        /***
-         * publicly available method.  The data are changing, so clean up any residual on-screen data elements
-         */
-        instance.launchCleanup = function (thoroughCleanup) {
-            cleanUpAfterYourself(thoroughCleanup);
-            return instance;
-        };
-
-
-        // For each small multiple…
-        instance.render = function (currentSelection) {
+        // Now we get to work  and actually build the box whisker plot.
+        instance.boxWhisker = function (currentSelection) {
             var xAxis,
                 yAxis,
                 boxWhiskerObjects,
@@ -343,7 +132,15 @@ var baget = baget || {};
             numberOfBoxes  = boxWhiskerObjects[0].length;
             boxWidth = width/(1.5*(numberOfBoxes +0.5));
             boxWhiskerObjects
-                .each(function (d, i) {      // d3 each: d=datum, i=index
+                .each(function (d, i) {
+
+                    /***
+                     * Everything inside this block we will loop over once for each  data set
+                     * ( that is, once for each box whisker grouping).  May be breakout the code
+                     * tthat should be executed exactly once ( such as axis definitions)    and put it
+                     * in a separate place from the code  that needs to be reexecuted for each box whisker?
+                     */
+
                     leftEdgeOfBox =  boxWidth*(1.5*(i +0.5)) ;
                     centerForBox =  leftEdgeOfBox+(boxWidth/2) ;
                     rightEdgeOfBox = leftEdgeOfBox+boxWidth;
@@ -711,25 +508,17 @@ var baget = baget || {};
                         .style("font-weight", "bold")
                         .text('');
 
-                    // x axis
-//                    selection
-//                        .select("svg").selectAll("g.x").data([1]).enter()
-//                        .append("g")
-//                        .attr("class", "x axis")
-//                        .attr("transform", "translate(0," + (height) + ")")
-//                        .call(xAxis)
-//                        .append("text")
-//                        .attr("class", "label")
-//                        .attr("x", (width + margin.left + margin.right) / 2)
-//                        .attr("y", margin.bottom)
-//                        .style("text-anchor", "middle")
-//                        .style("font-weight", "bold")
-//                        .text(boxWhiskerName);
-
 
                 });
             d3.timer.flush();
         };
+
+
+        /***
+         *****************************************************************************
+         * This next section of the code describes publicly available methods
+         *****************************************************************************
+         ***/
 
 
         // Note:  this method will assign data to the DOM
@@ -748,7 +537,7 @@ var baget = baget || {};
                 .enter()
                 .append('g')
                 .attr("class", "boxHolder") ;
-               // .attr("transform", "translate(" + margin.left + ",0)");
+            // .attr("transform", "translate(" + margin.left + ",0)");
 
             // calculate the maximum and min.  The user can override these
             // if they like.
@@ -766,28 +555,42 @@ var baget = baget || {};
             return instance;
         };
 
-        // Note:  this method will assign data to the DOM
-        instance.assignData = function (x) {
-            if (!arguments.length) return boxWhiskerData;
-            boxWhiskerData = x;
-            var bwPlot = selection
-                .selectAll("svg")
-                .data(boxWhiskerData);
-
-            var bwPlotExt = bwPlot.enter()
-                .append("svg")
-                .attr("class", "box")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.bottom + margin.top);
-
-
-            bwPlotExt.append("g")
-                .attr("class", "boxHolder")
-                .attr("transform", "translate(" + margin.left + ",0)")
-                .call(tip);
-
+        // identify the dominant element upon which we will hang this graphic
+        instance.selectionIdentifier = function (x) {
+            if (!arguments.length) return selectionIdentifier;
+            selectionIdentifier = x;
+            selection = d3.select(selectionIdentifier);
             return instance;
         };
+
+
+
+        // Returns a function to compute the interquartile range, which is represented
+        // through the whiskers attached to the quartile boxes.  Without this function the
+        // whiskers will expand to cover the entire data range. With it they will
+        // shrink to cover a multiple of the interquartile range.  Set the parameter
+        // two zero and you'll get a box with no whiskers
+        instance.iqr = function (k) {
+            return function(d, i) {
+                var q1 = d.quartiles[0],
+                    q3 = d.quartiles[2],
+                    iqr = (q3 - q1) * k,
+                    i = -1,
+                    j = d.length;
+                while ((d[++i].v) < q1 - iqr);
+                while ((d[--j].v) > q3 + iqr);
+                return [i, j];
+            };
+        };
+
+
+
+
+        /***
+         *****************************************************************************
+         * From here to the end of boxWhiskerPlot the methods are only data accessors
+         *****************************************************************************
+         ***/
 
         instance.width = function (x) {
             if (!arguments.length) return width;
@@ -839,52 +642,8 @@ var baget = baget || {};
             return instance;
         };
 
-        // identify the dominant element upon which we will hang this graphic
-        instance.selectionIdentifier = function (x) {
-            if (!arguments.length) return selectionIdentifier;
-            selectionIdentifier = x;
-            selection = d3.select(selectionIdentifier);
-            return instance;
-        };
-
-        instance.boxWhiskerName = function (x) {
-            if (!arguments.length) return boxWhiskerName;
-            boxWhiskerName = x;
-            return instance;
-        };
-
-        // Methods to be activated to create the scatter plot
-        instance.scatterDataCallback = function (x) {
-            if (!arguments.length) return scatterDataCallback;
-            scatterDataCallback = x;
-            return instance;
-        };
-
-
-        // Methods used to retrieve data in response to a box whisker outlier click.  Necessary only if the default won't  suit you
-        instance.retrieveCorrelationData = function (x) {
-            if (!arguments.length) return retrieveCorrelationData;
-            retrieveCorrelationData = x;
-            return instance;
-        };
 
         return instance;
     };
-
-    function boxWhiskers(d) {
-        return [0, d.length - 1];
-    }
-
-    function boxQuartiles(d) {
-        var accumulator = [];
-        d.forEach(function (x) {
-            accumulator.push(x.v);
-        });
-        return [
-            d3.quantile(accumulator, .25),
-            d3.quantile(accumulator, .5),
-            d3.quantile(accumulator, .75)
-        ];
-    }
 
 })();

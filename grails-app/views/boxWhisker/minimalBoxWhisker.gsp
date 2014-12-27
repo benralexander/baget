@@ -88,14 +88,12 @@
 
 
 <script>
-
-    var
-    // these sizes referred to each individual bar in the bar whisker plot
-            margin = {top: 50, right: 50, bottom: 20, left: 50},
+     /***
+      * Start with all the user adjustable variables.
+      */
+    var margin = {top: 50, right: 50, bottom: 20, left: 50},
             width = 420 - margin.left - margin.right,
-            height = 500 - margin.top - margin.bottom,
-            globalMinimum = Infinity,
-            globalMaximum = -Infinity;
+            height = 500 - margin.top - margin.bottom;
 
     // initial value of the interquartile multiplier. Note that this value
     //  is adjustable via a UI slider
@@ -105,82 +103,59 @@
             onScreenStart = 0,
             onScreenEnd = 100;
 
-    // build those portions of the box whisker plot that are data independent
+
+    /***
+     *   Initial data-independent initializations oof the box whisker plot.  Note that this initialization has to take place
+     *   so that we have something to which we can connect the slider
+     */
     var chart = baget.boxWhiskerPlot()
             .width(width)
-            .height(height)
-            .boxWhiskerName ('3,4,5-trimethoxy benzaldehyde');
+            .height(height);
+
+     /***
+     *   Everything that has to do with the slider.  First we define it, then use the 'chart'
+      *   variable to connect it to the box whisker plot
+      */
+     var createSliderAndConnectToBoxWhisker  = (function(chart) {
+         // build a slider and attach the callback methods
+         baget.slider(minimumInterquartileMultiplier,
+                 maximumInterquartileMultiplier,
+                 onScreenStart,
+                 onScreenEnd,
+                 'vertical',defaultInterquartileMultiplier,onBrushMoveDoThis,onBrushEndDoThis) ;
+         onBrushMoveDoThis(minimumInterquartileMultiplier);
+
+         //  The adjustment we should make every time the slider moves a little
+         function onBrushMoveDoThis (value)  {
+             chart.whiskers(chart.iqr(value));
+         }
+
+         //  What to do when the slider has stopped moving
+         function onBrushEndDoThis () {
+             d3.select('#plot')
+                     .selectAll('svg')
+                     .call(chart.boxWhisker);
+         }
+
+     });
+     createSliderAndConnectToBoxWhisker(chart);
 
 
-    // build a slider and attach the callback methods
-    var slider = baget.slider(minimumInterquartileMultiplier,
-            maximumInterquartileMultiplier,
-            onScreenStart,
-            onScreenEnd,
-            'vertical',defaultInterquartileMultiplier,onBrushMoveDoThis,onBrushEndDoThis) ;
-    onBrushMoveDoThis(minimumInterquartileMultiplier);
 
-    // get your data
+     /***
+     *  Now it's time to get the data
+      */
     d3.json("<g:createLink controller='boxWhisker' action='retrieveMultiBoxData'/>", function (error, data) {
 
 
-        chart.selectionIdentifier('#plot')
-                .initData(data);
+        chart.selectionIdentifier('#plot') // the Dom element from which we will hang the plot
+                .initData(data)            // the information that goes into the plot
+                .whiskers(chart.iqr(defaultInterquartileMultiplier));   // adjust the whiskers so that they go to the right initial  position
 
-        function respondToScatterData(data)  {
-            var margin = {top: 80, right: 20, bottom: 50, left: 70},
-                    width = 400 - margin.left - margin.right,
-                    height = 400 - margin.top - margin.bottom;
-            cbbo.scatterPlot()
-                    .selectionIdentifier("#scatterPlot1")
-                    .width (width)
-                    .height (height)
-                    .margin(margin)
-                    .assignData (data)
-                    .xAxisLabel ('Navitoclax AUC')
-                    .yAxisLabel ('BCL2 expression level')
-                    .yAxisAccessor(function(d){return d.value})
-                    .xAxisAccessor(function(d){return d.cpd_auc})
-                    .clickCallback(function(){console.log('stub clickCallback')})
-                    .render() ;
-
-        }
-
-
-
-        var clickCallback = function (compoundId, geneName) {
-            var regObj = new Object();
-            regObj.cpd_id = compoundId;
-            regObj.gene_primary_name = geneName;
-
-
-            var res = $.ajax({
-                url: './correlationPoints',
-                type: 'post',
-                context: document.body,
-                data: JSON.stringify(regObj),
-                contentType: 'application/json',
-                async: true,
-                success: function (data) {
-                    var obj = (JSON.parse(data));
-                    respondToScatterData(obj.results);
-                },
-                error: function () {
-                    alert('Contact message failed');
-                }
-            });
-        } ;
-
-        chart
-                .whiskers(iqr(defaultInterquartileMultiplier))
-                .scatterDataCallback( respondToScatterData )
-                .retrieveCorrelationData(clickCallback);
-
-
-
+        //  Now we are ready to actually launch the box whisker plot
         d3.select('#plot')
                 .selectAll('svg')
-                .call(chart.render);
+                .call(chart.boxWhisker);
 
 
 
@@ -188,49 +163,12 @@
 
 
 
-
-
-
-    //  The adjustment we should make every time the slider moves a little
-    function onBrushMoveDoThis (value)  {
-        chart.whiskers(iqr(value));
-    }
-
-    //  What to do when the slider has stopped moving
-    function onBrushEndDoThis () {
-
-        d3.select('#plot')
-                .selectAll('svg')
-                .call(chart.render);
-
-
-        //chart.render();
-    }
-
-    // Returns a function to compute the interquartile range, which is represented
-    // through the whiskers attached to the quartile boxes.  Without this function the
-    // whiskers will expand to cover the entire data range. With it they will
-    // shrink to cover a multiple of the interquartile range.  Set the parameter
-    // two zero and you'll get a box with no whiskers
-    function iqr(k) {
-        return function(d, i) {
-            var q1 = d.quartiles[0],
-                    q3 = d.quartiles[2],
-                    iqr = (q3 - q1) * k,
-                    i = -1,
-                    j = d.length;
-            while ((d[++i].v) < q1 - iqr);
-            while ((d[--j].v) > q3 + iqr);
-            return [i, j];
-        };
-    }
-
     $("#outlierRadius").click(function(d,x) {
         var  integerOutlierRadius = parseInt( $('input:radio[name=outlierRadius]:checked').val());
         chart.outlierRadius(integerOutlierRadius);
         d3.select('#plot')
                 .selectAll('svg')
-                .call(chart.render);
+                .call(chart.boxWhisker);
     }) ;
 
 </script>

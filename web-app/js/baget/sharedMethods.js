@@ -107,11 +107,25 @@ var UTILS = {
         median = d3.median([overallMin, overallMax]);
         return { max: overallMax, min: overallMin, median: median }
     },
-     openTheWindow : function (url,desiredPath){
+    openTheWindow: function (url, desiredPath) {
         var initialUrl = url;
-        var rootUrl =  initialUrl.substring(0,initialUrl.length-12);
+        var rootUrl = initialUrl.substring(0, initialUrl.length - 12);
         var urlExtension = rootUrl + desiredPath;
-        window.open (urlExtension);
+        window.open(urlExtension);
+    },
+    // calculate the first second and third quartiles for a given array. Return these
+    // numbers in a three membered array.
+    boxQuartiles: function (d) {
+        var accumulator = [];
+        d.forEach(function (x) {
+            accumulator.push(x.v);
+        });
+        return [
+            d3.quantile(accumulator, .25),
+            d3.quantile(accumulator, .5),
+            d3.quantile(accumulator, .75)
+        ];
     }
+
 
 }
