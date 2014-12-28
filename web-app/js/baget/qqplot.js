@@ -20,19 +20,6 @@ var baget = baget || {};  // encapsulating variable
 
     baget.qqPlot = function () {
 
-//        d3.select(window).on('resize', resize);
-//
-//        var aspect = 960 / 500,
-//            chart = $("#scatterPlot1");
-//
-//        function resize(xxx) {
-//            var targetWidth = chart.parent().parent().parent().parent().parent().parent().parent().width();
-//            console.log('width='+targetWidth) ;
-//            chart.attr("width", targetWidth);
-//            chart.attr("height", targetWidth / aspect);
-//                       // svg.attr("width", x).attr("height", y);
-//        } ;
-
         // the variables we intend to surface
         var
             width = 1,

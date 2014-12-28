@@ -113,7 +113,7 @@ var UTILS = {
         var urlExtension = rootUrl + desiredPath;
         window.open(urlExtension);
     },
-    // calculate the first second and third quartiles for a given array. Return these
+    // calculate the first, second, and third quartiles for a given array. Return these
     // numbers in a three membered array.
     boxQuartiles: function (d) {
         var accumulator = [];
@@ -125,6 +125,43 @@ var UTILS = {
             d3.quantile(accumulator, .5),
             d3.quantile(accumulator, .75)
         ];
+    },
+    distributionMapper: function (incomingArray,numberOfBinsRequested,accessor) {
+        var defAcc = function (x){return x},
+            sortedSet,
+            numberOfElements,
+            currentBin = 1,
+            binWalker,
+            returnValue = {binSize:0,binMap:d3.map()};  // indicate error state to begin with
+        if (( typeof accessor !== 'undefined')){
+            defAcc =  accessor;  // use custom accessor if requested
+        }
+        if ( ( typeof incomingArray !== 'undefined')    &&
+             ( incomingArray.length > 0)    &&
+             ( typeof numberOfBinsRequested !== 'undefined') &&
+             ( numberOfBinsRequested  >  0)) {   //with all obvious error states ruled out we can start processing
+            numberOfElements =  incomingArray.length;
+            sortedSet =  incomingArray.sort (function (a,b){return (defAcc (a)-defAcc (b)); }); // sort in ascending order
+            returnValue.min =  defAcc(sortedSet[0]);
+            returnValue.max =  defAcc(sortedSet[numberOfElements-1]);
+            if ((returnValue.max-returnValue.min) > 0){  // make sure ranges nonzero
+                  // we are ready to count the elements in each bin
+                returnValue.binSize =  (returnValue.max-returnValue.min)/numberOfBinsRequested;
+                var curBinCounter = 0;
+                binWalker = returnValue.min+(currentBin*returnValue.binSize);
+                for ( var i = 0 ; i < numberOfElements ; i++ )   {
+                    while (defAcc(incomingArray[i])>binWalker) {
+                        returnValue.binMap.set(currentBin,curBinCounter);
+                        curBinCounter = 0;
+                        currentBin++;
+                        binWalker = returnValue.min+(currentBin*returnValue.binSize);
+                    } ;
+                    curBinCounter++;
+                }
+                returnValue.binMap.set(numberOfBinsRequested,curBinCounter);
+            }
+        }
+        return returnValue;
     }
 
 

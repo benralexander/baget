@@ -171,6 +171,10 @@
                 .call(chart.boxWhisker);
     }) ;
 
+
+    var v=[-10,10];
+    var x=UTILS.distributionMapper(v,20);
+    console.log('hi, binMap='+ x.binMap+".'");
 </script>
 <div class="messagepop pop" id="examineCorrelation">
     <form method="post" id="new_message" action="/messages">

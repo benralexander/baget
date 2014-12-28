@@ -35,7 +35,7 @@
                     because browser-based graphics could not measure up to their native desktop counterparts. With the recent explosion in JavaScript-based graphics, however,
                     and especially with the spread of SVG, HTML5, CSS3, and graphics meta-packages such as D3, a purely browser-based interface can now rival almost anything
                     available in a desktop UI.  Web-based applications can only proliferate slowly, however, if software engineers
-                    all work independently and fail to leverage one another's work. The goal of this project is offer a alternative approach that emphasizes
+                    all work independently and fail to leverage one another's work. The goal of this project is offer an alternative approach that emphasizes
                     code reuse at least with regard to the graphical aspects of user interfaces.
                 </p>
 
