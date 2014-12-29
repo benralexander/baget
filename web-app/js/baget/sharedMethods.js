@@ -126,11 +126,27 @@ var UTILS = {
             d3.quantile(accumulator, .75)
         ];
     },
+    /***
+     * take an array and break it into distribution information with  numberOfBinsRequested bins
+     *
+     *
+     * @param incomingArray
+     * @param numberOfBinsRequested:
+     * @param accessor
+     * @returns {  binSize // how big is each bin (all bins are the same size)
+     *    min // smallest value
+     *    max // highest value
+     *    binMap // map, where keys are counting numbers (0 to  numberOfBinsRequested-1)
+     *  }
+     *   Note: error condition is implied if  binSize===0
+     *
+     */
     distributionMapper: function (incomingArray,numberOfBinsRequested,accessor) {
         var defAcc = function (x){return x},
             sortedSet,
             numberOfElements,
             currentBin = 1,
+            curBinCounter = 0,
             binWalker,
             returnValue = {binSize:0,binMap:d3.map()};  // indicate error state to begin with
         if (( typeof accessor !== 'undefined')){
@@ -147,7 +163,6 @@ var UTILS = {
             if ((returnValue.max-returnValue.min) > 0){  // make sure ranges nonzero
                   // we are ready to count the elements in each bin
                 returnValue.binSize =  (returnValue.max-returnValue.min)/numberOfBinsRequested;
-                var curBinCounter = 0;
                 binWalker = returnValue.min+(currentBin*returnValue.binSize);
                 for ( var i = 0 ; i < numberOfElements ; i++ )   {
                     while (defAcc(incomingArray[i])>binWalker) {

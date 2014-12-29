@@ -117,6 +117,67 @@ var baget = baget || {};
                 });
         })();
 
+
+        var histogram = (function () {
+            var summaryData,
+                arrayOfBars = [],
+                longestBar = 0,
+
+                summarizeData = function (incoming,numberOfBins,accessor) {
+                    if ( typeof numberOfBins === 'undefined')  {
+                        numberOfBins = 15;
+                    }
+                    summaryData = UTILS.distributionMapper(incoming,numberOfBins,accessor);
+                    return summaryData;
+                },
+
+                convertToArrayOfBarValues = function(summaryForProcessing){
+                    if ( typeof summaryForProcessing === 'undefined')  {
+                        summaryForProcessing = summaryData;
+                    }
+                    if (!(( typeof summaryForProcessing === 'undefined')  ||
+                        ( typeof summaryForProcessing.binSize === 'undefined')  ||
+                        ( summaryForProcessing.binSize <= 0 )))   {
+                        var numericKeys  = summaryForProcessing.binMap.keys().map(function(x){return parseInt(x)}) ;
+                        var sortedKeys =   numericKeys.sort(function(a,b){return a-b;});
+                        sortedKeys.forEach(function(key){     // while we build the array we can also identify the longest bar for scaling purposes
+                            var tempHolder =  summaryForProcessing.binMap.get(key);
+                            if (tempHolder>longestBar) {longestBar = tempHolder;}
+                            arrayOfBars.push(tempHolder);
+                        });
+                    }
+                    return  arrayOfBars;
+                },
+                reinitialize  = function (){
+
+
+                },
+                getLongestBar =   function(){
+                    return longestBar;
+                } ,
+                getSummaryData =   function(){
+                    return summaryData;
+                } ,
+                getArrayOfBars =   function(){
+                    return arrayOfBars;
+                }
+
+            return {
+                // public methods
+
+                reinitialize: reinitialize,
+                summarizeData: summarizeData,
+                getLongestBar:getLongestBar,
+                getSummaryData: getSummaryData,
+                getArrayOfBars: getArrayOfBars,
+                convertToArrayOfBarValues:convertToArrayOfBarValues
+            };
+
+        }());
+
+
+
+
         // Now we get to work  and actually build the box whisker plot.
         instance.boxWhisker = function (currentSelection) {
             var xAxis,
@@ -427,6 +488,60 @@ var baget = baget || {};
                         .duration(duration)
                         .text(format)
                         .attr("y", yScale);
+
+                    /***
+                     *
+                     *
+                     *
+                     *
+                     *
+                     * PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+                     */
+                    if (g.selectAll("g.histogramHolder").empty()){
+                        histogram.summarizeData(d2,15,function(x){return x.v});
+                        histogram.convertToArrayOfBarValues();
+
+                        var histogramScale = d3.scale.linear()
+                            .domain([0,histogram.getLongestBar ()])
+                            .range([0,(rightEdgeOfBox-centerForBox)*0.9]);     // cover up to 90% of the box whisker box
+
+                        //   first we unconditionally create a group to hold the bars
+                        var histogramHolder = g.selectAll("g.histogramHolder")
+                            .data([histogram.getSummaryData()]);
+
+                        histogramHolder.enter().append("g")
+                            .attr("class", "histogramHolder");
+
+                        histogramHolder.exit()
+                            .remove();
+
+                        // now make the bars
+                        var histogramBars = g.select("g.histogramHolder").selectAll("rect.histogramHolder")
+                            .data(histogram.getArrayOfBars());
+
+                        var barHeight =  ( yScale(histogram.getSummaryData().min)  - yScale(histogram.getSummaryData().max) ) / histogram.getArrayOfBars().length;
+
+                        histogramBars.enter().append("rect")
+                            .attr("class", "histogramHolder")
+                            .attr("x", centerForBox)
+                            .attr("y", function (d,i) {
+                                return yScale((histogram.getSummaryData().binSize*i)+histogram.getSummaryData().min);
+                            })
+                            .attr("width", 0)
+                            .attr("height", function (d) {
+                                return barHeight;
+                            });
+
+                        histogramBars.transition()
+                            .duration(duration)
+                            .attr("width", function(d){return histogramScale(d)});
+
+                        histogramBars.exit().remove();
+                    }
+
+
+
+
 
                     // Update whisker ticks. These are the numbers on the side of the whiskers.
                     //
