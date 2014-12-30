@@ -1,3 +1,4 @@
+<%@ page import="temporary.BuildInfo" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -74,7 +75,8 @@
     </div>
 </div>
 
-<div id="belowfooter"></div>
-
+<div id="belowfooter">
+    Built on ${BuildInfo?.buildHost} at ${BuildInfo?.buildTime}.  Version=${BuildInfo?.appVersion}.${BuildInfo?.buildNumber}
+</div>
 </body>
 </html>

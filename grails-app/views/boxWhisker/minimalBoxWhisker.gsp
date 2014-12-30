@@ -19,7 +19,9 @@
 
 </div>
 <p class="standardEmphasisFont">
-<h2>Simple bar chart with labels</h2></p>
+<h2>Box whisker plot.</h2>
+<h4>I'm currently attempting to overlay a histogram  over each box whisker to provide a better feel for the distribution, but the display is not quite right yet</h4>
+</p>
 <table style='margin-top: 50px; border-top: 50px;'>
     <tr>
         <td id='correlationPlotLayout'>
