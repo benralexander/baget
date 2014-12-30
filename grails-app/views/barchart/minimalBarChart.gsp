@@ -92,15 +92,16 @@
     d3.json("../barChart/barChartData", function (error, json) {
 
         var barChart = baget.barChart()
-                .selectionIdentifier("#chart")
                 .width(width)
                 .height(height)
                 .margin(margin)
                 .roomForLabels (roomForLabels)
                 .maximumPossibleValue (1)
                 .labelSpacer (labelSpacer)
-                .assignData(data);
-        barChart.render();
+                .dataHanger("#chart",data);
+
+        d3.select("#chart").call(barChart.render);
+
 
 
     });
@@ -163,15 +164,15 @@
     d3.json("../barChart/barChartData", function (error, json) {
 
         var barChart = baget.barChart()
-                .selectionIdentifier("#chart2")
                 .width(width)
                 .height(height)
                 .margin(margin)
                 .roomForLabels (roomForLabels)
                 .maximumPossibleValue (5)
                 .labelSpacer (labelSpacer)
-                .assignData(data2);
-        barChart.render();
+        .dataHanger("#chart2",data2);
+        d3.select("#chart2").call(barChart.render);
+
 
 
     });
@@ -265,8 +266,7 @@
     d3.json("../barChart/barChartData", function (error, json) {
 
         var barChart = baget.barChart()
-                .selectionIdentifier("#chart3")
-                .width(width)
+                 .width(width)
                 .height(height)
                 .margin(margin)
                 .roomForLabels (roomForLabels)
@@ -276,8 +276,11 @@
                 .integerValues(1)
                 .logXScale(1)
                 .customBarColoring(1)
-                .customLegend(1);
-        barChart.render();
+                .customLegend(1)
+                .dataHanger("#chart3",data3);
+
+        d3.select("#chart3").call(barChart.render);
+      //  barChart.render();
 
 
     });
