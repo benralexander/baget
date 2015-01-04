@@ -130,6 +130,27 @@ body {
     /*padding-top: 50px;*/
     /*padding-right: 40px*/
 }
+.whiskerRelatedLabel   {
+    padding: 0 10px 5px 10px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.outlierRadiusLabel   {
+    padding: 0 10px 5px 10px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.histogramBarLabel   {
+    padding: 0 10px 5px 10px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.boxWhiskerControllerLabel {
+    font-size: 16px;
+    margin: auto;
+    font-weight: bold;
+    padding: 10px 0 10px 35px;
+}
 .controlSwitcher {
     overflow: hidden;
     position: absolute;

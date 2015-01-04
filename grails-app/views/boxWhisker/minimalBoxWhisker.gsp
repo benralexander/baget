@@ -12,7 +12,7 @@
 
     <div class="starter-template">
         <h1 style="font-weight: bold">Bar chart</h1>
-        <h1 style="font-weight: normal">All charts made with
+        <h1 style="font-weight: normal">Chart made with
             <a onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/boxWhiskerPlot.js')">boxWhiskerPlot.js</a>
         </h1>
     </div>
@@ -22,6 +22,8 @@
 <h2>Box whisker plot.</h2>
 </p>
 
+
+
 <div class="row">
     <div class="col-md-6">
         <div id='correlationPlotLayout'>
@@ -30,13 +32,13 @@
     </div>
 
     <div class="col-md-4">
-        <div class="boxWhiskerControls" style="height:210px">
-            <div class="boxAround" style="height:200px; margin-bottom: 10px" >
+        <div class="boxWhiskerControls" style="height:220px">
+            <div class="boxAround" style="height:210px; margin-bottom: 10px" >
                 <div class="row">
                 <div class="col-md-2">
 
                 </div>
-                <div class="col-md-8" style="font-size: 16px; margin: auto; font-weight: bold">
+                <div class="col-md-8 boxWhiskerControllerLabel">
                     Box whisker controls
                 </div>
                 <div class="col-md-2">
@@ -133,8 +135,12 @@
 
 
                         <div id="whiskerRelatedControls" style="display: none">
-                            <div id='slider'>
 
+                                <div class='whiskerRelatedLabel'>Whisker multiplier:</div>
+
+
+
+                            <div id='slider'>
                             </div>
                         </div>
 
@@ -260,18 +266,14 @@
 
 
      var setHistogramToNothing = function() {
-         if ($('input:checkbox[name=histogram]')[0].checked)  {
-             var  histogramBarSize,
-              histogramBarSizeRadioButtonDomElement =  $('input:radio[name=histogram]:checked');
-             if ( typeof histogramBarSizeRadioButtonDomElement=== 'undefined') {  // if the buttons aren't displayed this test comes back as empty so we need a default
-                 histogramBarSize = defaultHistogramBarSize;
-             } else {
-                 histogramBarSize = parseFloat( $('input:radio[name=histogramBar]:checked').val());
-             }
-             chart.histogramBarMultiplier(histogramBarSize);
-         }   else {
-             chart.histogramBarMultiplier(0);
+         var  histogramBarSize,
+          histogramBarSizeRadioButtonDomElement =  $('input:radio[name=histogram]:checked');
+         if ( typeof histogramBarSizeRadioButtonDomElement=== 'undefined') {  // if the buttons aren't displayed this test comes back as empty so we need a default
+             histogramBarSize = defaultHistogramBarSize;
+         } else {
+             histogramBarSize = parseFloat( $('input:radio[name=histogramBar]:checked').val());
          }
+         chart.histogramBarMultiplier(histogramBarSize);
          d3.select('#plot')
                  .selectAll('svg')
                  .call(chart.boxWhisker);
