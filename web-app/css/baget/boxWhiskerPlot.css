@@ -90,12 +90,18 @@ body {
     font: 10px sans-serif;
     padding : 20px;
 }
-#outlierRadiusDiv {
+.boxAround {
     border: 2px outset #777;
-    width: 131px;
+    width: 100%;
+    margin: 4px;
+    padding: 5px;
+}
+.outlierRadiusDiv {
+    border: 2px outset #777;
+    width: 100%;
     margin-left: 10px;
 }
-#outlierRadiusDiv .outlierRadiusLabel {
+.outlierRadiusDiv .outlierRadiusLabel {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 9pt;
     margin-left:5px;
@@ -113,20 +119,66 @@ body {
     font-size: 7pt;
 }
 #slider {
-    border: 2px outset #777;
-    margin-top: 4px;
-    margin-left: 10px;
-    margin-right: 10px;
-    padding-left: 40px;
-    padding-bottom: 50px;
-    padding-top: 50px;
-    padding-right: 40px
+    posirion: relative;
+    /*padding-left: 40px;*/
+    /*border: 2px outset #777;*/
+    /*margin-top: 4px;*/
+    /*margin-left: 10px;*/
+    /*margin-right: 10px;*/
+    /*padding-left: 40px;*/
+    /*padding-bottom: 50px;*/
+    /*padding-top: 50px;*/
+    /*padding-right: 40px*/
+}
+.controlSwitcher {
+    overflow: hidden;
+    position: absolute;
+}
+.histogramRelatedControls  {
+    top: 0px;
+    position: relative;
+}
+.outlierRelatedControls  {
+    top: 0px;
+    position: relative;
+}
+.histogramRelatedControls  {
+    top: 0px;
+     position: relative;
+ }
+.funcExtender {
+    padding: 15px 0 0 0;
+    color: green;
+    font-size: 20px;
+    display: inline-block;
+    padding-top: 5px;
+}
+label.checkboxHolder{
+    display: block;
+    padding-left: 15px;
+    text-indent: -15px;
+    margin: auto;
+}
+label.checkboxHolder input {
+    width: 13px;
+    height: 13px;
+    padding: 0;
+    margin:0;
+    vertical-align: bottom;
+    position: relative;
+    top: -4px;
+    *overflow: hidden;
 }
 #correlationPlotLayout {
     width: 450px;
 }
 #correlationPlotControllers {
     width: 100px;
+}
+.boxWhiskerControls {
+    width: 100%;
+    margin: 5px;
+    padding: 5px;
 }
 #correlationPlotControllers .iqmLabel {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;

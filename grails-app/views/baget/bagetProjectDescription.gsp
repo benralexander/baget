@@ -39,7 +39,17 @@
                     code reuse at least with regard to the graphical aspects of user interfaces.
                 </p>
 
-
+                <p style="margin-top:10px">
+                    This approach to graphical code reuse is different than the bargain implicit in most graphical packages, which is this: learn my package, and
+                    you won't need to depend on anything else. This bargain is irretrievably flawed, of course, since all users have different requirements
+                    and all packages have different capabilities, and therefore no package  can offer all things to all people. The goal of the BAGET project,
+                    and of open source more generally, is different in kind. Provide users with  both working software and the code that defines, and thereby
+                    give  people the opportunity to re-factor, extend, and  to otherwise adapt software to their purposes. D3 is particularly well-suited to
+                    supporting this role since it allows users to leverage the knowledge they already possess, depending as it does on an understanding
+                    of HTML, CSS, the DOM, JavaScript, and JQuery.  This approach fails without a knowledgeable user base, of course, but many people  do possess
+                    some level of skill in some or all of these areas.  If you, or else your  friendly local software engineer, possess these skills (or else
+                    the urge to develop or extend them) then the "adapt, don't adopt" model endorsed by the BAGET project might work for you.
+                </p>
             </div>
             <div class="col-md-2"></div>
         </div>

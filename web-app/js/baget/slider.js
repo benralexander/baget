@@ -40,7 +40,7 @@ var baget = baget || {};
 
             // TODO: make this approach more flxible
             // no more than one
-            var oldSliders =  d3.select("#sliderHolder");
+            var oldSliders =  d3.select(".sliderHolder");
             if (oldSliders){
                 oldSliders.remove();
             }
@@ -50,12 +50,12 @@ var baget = baget || {};
             // that the top (in the case of a vertical slider) or the left (in the case of a horizontal)
             // isn't sitting off the edge of the visible region.
             if (orientation === 'horizontal') {
-                svg = d3.select("#slider").append("svg").attr('id','sliderHolder')
+                svg = d3.select("#slider").append("svg").attr('class','sliderHolder')
                     .attr("width", rangeEnd + 20).attr("height", "50")
                     .append("g")
                     .attr("transform", "translate(10,10)");
             } else {
-                svg = d3.select("#slider").append("svg").attr('id','sliderHolder')
+                svg = d3.select("#slider").append("svg").attr('class','sliderHolder')
                     .attr("width", "50").attr("height", rangeEnd + 20)
                     .append("g")
                     .attr("transform", "translate(10,10)");
@@ -189,7 +189,7 @@ var baget = baget || {};
             // slider.call(brush.event);
         };
 
-        instance.sliderLocation = function (value) {
+        right = function (value) {
             if (!arguments.length) return brush.extent()[0];
            // value = scale.invert(d3.mouse(this)[1]);
             brush.extent([value, value]);

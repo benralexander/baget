@@ -20,63 +20,162 @@
 </div>
 <p class="standardEmphasisFont">
 <h2>Box whisker plot.</h2>
-<h4>I'm currently attempting to overlay a histogram  over each box whisker to provide a better feel for the distribution, but the display is not quite right yet</h4>
 </p>
-<table style='margin-top: 50px; border-top: 50px;'>
-    <tr>
-        <td id='correlationPlotLayout'>
+
+<div class="row">
+    <div class="col-md-6">
+        <div id='correlationPlotLayout'>
             <span id='plot'></span>
-        </td>
-        <td id='correlationPlotControllers'>
-            <div class='iqmLabel'>
-                Interquartile multiplier
-            </div>
-            %{--<div id='slider'--}%
-            %{--style="border: 2px outset #ad0000;--}%
-            %{--">                          --}%
-            <div id='slider'>
-                %{--<span style="margin-left: -35px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; text-decoration: underline">--}%
-                %{--<nobr>Interquartile multiplier</nobr>--}%
-                %{--</span>--}%
-            </div>
+        </div>
+    </div>
 
-            %{--<div id="outlierRadiusDiv" style="border: 2px outset red; width: 131px;margin-left: 10px;">--}%
-            %{--<div class='outlierRadiusLabel' style="font-size: 10pt; margin-left:5px;padding-top:10px;  text-decoration : underline">Outlier radius:</div>--}%
+    <div class="col-md-4">
+        <div class="boxWhiskerControls" style="height:210px">
+            <div class="boxAround" style="height:200px; margin-bottom: 10px" >
+                <div class="row">
+                <div class="col-md-2">
 
-            <div id='outlierRadiusDiv' >
-                <div class='outlierRadiusLabel'>Outlier radius:</div>
-                <form id="outlierRadius">
-                    <table class='options'>
-                        <tr>
-                            <td>
-                                <input type="radio"  name="outlierRadius" value="1">tiny</input>
-                            </td>
-                            <td>
-                                <input type="radio"  name="outlierRadius" value="2">small</input>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <input type="radio"  name="outlierRadius" value="4">medium</input>
-                            </td>
-                            <td>
-                                <input type="radio"  name="outlierRadius" value="6" checked>large</input>
-                            </td>
-                        </tr>
-                    </table>
+                </div>
+                <div class="col-md-8" style="font-size: 16px; margin: auto; font-weight: bold">
+                    Box whisker controls
+                </div>
+                <div class="col-md-2">
 
-                </form>
+                </div>
             </div>
 
-        </td>
-        <td style='margin-right: 0px;'></td>
-    </tr>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-10">
+                            <div class="boxAround">
+                                <label class="checkboxHolder">
+                                    <input type="checkbox" name="whiskers" class="checkbox style-2 pull-right" value="whiskers"
+                                           aria-label="whiskers visible" onclick="setWhiskerToNothing()"
+                                           checked>whiskers visible</input>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <span class="funcExtender">
+                                <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"
+                                      onclick="displaySlider()"></span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-10">
+                            <div class="boxAround">
+                                <label class="checkboxHolder">
+                                    <input type="checkbox" name="outliers" class="checkbox style-2 pull-right" value="outliers"
+                                           aria-label="outliers visible" onclick="setOutliersToNothing()"
+                                           checked>Outliers visible</input>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <span class="funcExtender">
+                                <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"
+                                      onclick="displayRadiusAdjuster()"></span>
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-10">
+                            <div class="boxAround">
+                                <label class="checkboxHolder">
+                                    <input type="checkbox" name="histogram" class="checkbox style-2 pull-right"
+                                           value="histogram" aria-label="histogram visible"
+                                           onclick="setHistogramToNothing()">Histogram visible</input>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <span class="funcExtender">
+                                <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"
+                                      onclick="displayHistogramAdjuster()"></span>
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-4">
+                    <div class="boxAround controlSwitcher" style="height: 150px">
 
 
+                        <div id="outlierRelatedControls" style="display: none">
+                            <div class='outlierRadiusLabel'>Outlier radius:</div>
+
+                            <form id="outlierRadius">
+                                <div class="row options">
+                                    <div class="col-md-4">
+                                        <input type="radio" name="outlierRadius" value="1">small</input>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <input type="radio" name="outlierRadius" value="3" checked>small</input>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <input type="radio" name="outlierRadius" value="6">large</input>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
 
 
+                        <div id="whiskerRelatedControls" style="display: none">
+                            <div id='slider'>
 
-</table>
+                            </div>
+                        </div>
+
+
+                        <div id="histogramRelatedControls" style="display: none">
+                            <div class='histogramBarLabel'>Histogram bar size:</div>
+
+                            <form id="histogramBar">
+                                <div class="row options">
+                                    <div class="col-md-4">
+                                        <input type="radio" name="histogramBar" value="0.5">small</input>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <input type="radio" name="histogramBar" value="1.2" checked>medium</input>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <input type="radio" name="histogramBar" value="2.2">large</input>
+                                    </div>
+                                </div>
+                            </form>
+
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+
+                </div>
+
+            </div>
+
+        </div>
+
+        </div>
+    </div>
+<div class="col-md-2"></div>
+</div>
+
+
 </p>
 
 <div id='imageHolder'></div>
@@ -103,8 +202,10 @@
             maximumInterquartileMultiplier = 3,
             minimumInterquartileMultiplier = 0,
             onScreenStart = 0,
-            onScreenEnd = 100;
+            onScreenEnd = 100,
+            defaultHistogramBarSize = 1.1;
 
+    var whiskerSlider;
 
     /***
      *   Initial data-independent initializations oof the box whisker plot.  Note that this initialization has to take place
@@ -114,13 +215,77 @@
             .width(width)
             .height(height);
 
+
+     var displaySlider  = function ()  {
+         $('#histogramRelatedControls').hide();
+         $('#outlierRelatedControls').hide();
+         $('#whiskerRelatedControls').show();
+     } ;
+     var displayRadiusAdjuster  = function ()  {
+         $('#histogramRelatedControls').hide();
+         $('#whiskerRelatedControls').hide();
+         $('#outlierRelatedControls').show();
+     } ;
+     var displayHistogramAdjuster  = function ()  {
+         $('#outlierRelatedControls').hide();
+         $('#whiskerRelatedControls').hide();
+         $('#histogramRelatedControls').show()
+     } ;
+
+
+
+
+     var setWhiskerToNothing = function() {
+         if ($('input:checkbox[name=whiskers]')[0].checked)  {
+             chart.whiskers(chart.iqr(whiskerSlider.sliderLocation));
+         }   else {
+             chart.whiskers(chart.iqr(minimumInterquartileMultiplier));
+         }
+         d3.select('#plot')
+                 .selectAll('svg')
+                 .call(chart.boxWhisker);
+     };
+
+     var setOutliersToNothing = function() {
+         if ($('input:checkbox[name=outliers]')[0].checked)  {
+             var  integerOutlierRadius = parseInt( $('input:radio[name=outlierRadius]:checked').val());
+             chart.outlierRadius(integerOutlierRadius);
+         }   else {
+             chart.outlierRadius(1e-6);
+         }
+         d3.select('#plot')
+                 .selectAll('svg')
+                 .call(chart.boxWhisker);
+     };
+
+
+     var setHistogramToNothing = function() {
+         if ($('input:checkbox[name=histogram]')[0].checked)  {
+             var  histogramBarSize,
+              histogramBarSizeRadioButtonDomElement =  $('input:radio[name=histogram]:checked');
+             if ( typeof histogramBarSizeRadioButtonDomElement=== 'undefined') {  // if the buttons aren't displayed this test comes back as empty so we need a default
+                 histogramBarSize = defaultHistogramBarSize;
+             } else {
+                 histogramBarSize = parseFloat( $('input:radio[name=histogramBar]:checked').val());
+             }
+             chart.histogramBarMultiplier(histogramBarSize);
+         }   else {
+             chart.histogramBarMultiplier(0);
+         }
+         d3.select('#plot')
+                 .selectAll('svg')
+                 .call(chart.boxWhisker);
+     };
+
+
+
      /***
      *   Everything that has to do with the slider.  First we define it, then use the 'chart'
       *   variable to connect it to the box whisker plot
       */
      var createSliderAndConnectToBoxWhisker  = (function(chart) {
          // build a slider and attach the callback methods
-         baget.slider(minimumInterquartileMultiplier,
+         whiskerSlider = baget.slider(minimumInterquartileMultiplier,
                  maximumInterquartileMultiplier,
                  onScreenStart,
                  onScreenEnd,
@@ -152,7 +317,8 @@
 
         chart.selectionIdentifier('#plot') // the Dom element from which we will hang the plot
                 .initData(data)            // the information that goes into the plot
-                .whiskers(chart.iqr(defaultInterquartileMultiplier));   // adjust the whiskers so that they go to the right initial  position
+                .whiskers(chart.iqr(defaultInterquartileMultiplier))  // adjust the whiskers so that they go to the right initial  position
+                .histogramBarMultiplier(0);        // let's start with no histogram visible
 
         //  Now we are ready to actually launch the box whisker plot
         d3.select('#plot')
@@ -165,16 +331,25 @@
 
 
 
-    $("#outlierRadius").click(function(d,x) {
-        var  integerOutlierRadius = parseInt( $('input:radio[name=outlierRadius]:checked').val());
-        chart.outlierRadius(integerOutlierRadius);
-        d3.select('#plot')
-                .selectAll('svg')
-                .call(chart.boxWhisker);
-    }) ;
+     $("#outlierRadius").click(function(d,x) {
+         var  integerOutlierRadius = parseInt( $('input:radio[name=outlierRadius]:checked').val());
+         chart.outlierRadius(integerOutlierRadius);
+         d3.select('#plot')
+                 .selectAll('svg')
+                 .call(chart.boxWhisker);
+     }) ;
 
 
-    var v=[-10,10];
+     $("#histogramBar").click(function(d,x) {
+         var  histogramBarSize = parseFloat( $('input:radio[name=histogramBar]:checked').val());
+         chart.histogramBarMultiplier(histogramBarSize);
+         d3.select('#plot')
+                 .selectAll('svg')
+                 .call(chart.boxWhisker);
+     }) ;
+
+
+     var v=[-10,10];
     var x=UTILS.distributionMapper(v,20);
     console.log('hi, binMap='+ x.binMap+".'");
 </script>

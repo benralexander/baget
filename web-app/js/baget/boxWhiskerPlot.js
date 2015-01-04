@@ -16,6 +16,7 @@ var baget = baget || {};
             max = -Infinity,  // max y value.  Autoscale if not set
             whiskers = function (d) { return [0, d.length - 1]; }, // function to set the whiskers
             outlierRadius = 2,  // size of outlier dots on screen
+            histogramBarMultiplier = 0.9,  // how big should we make the bars on the histogram? 0 implies no display
 
         // Private variables, which can be surfaced as necessary
             duration = 500,  // How many milliseconds to animations require
@@ -149,8 +150,7 @@ var baget = baget || {};
                     return  arrayOfBars;
                 },
                 reinitialize  = function (){
-
-
+                    arrayOfBars = [];
                 },
                 getLongestBar =   function(){
                     return longestBar;
@@ -497,7 +497,8 @@ var baget = baget || {};
                      *
                      * PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
                      */
-                    if (g.selectAll("g.histogramHolder").empty()){
+//                    if (g.selectAll("g.histogramHolder").empty()){
+                        histogram.reinitialize();
                         histogram.summarizeData(d2,15,function(x){return x.v});
                         histogram.convertToArrayOfBarValues();
 
@@ -516,16 +517,18 @@ var baget = baget || {};
                             .remove();
 
                         // now make the bars
-                        var histogramBars = g.select("g.histogramHolder").selectAll("rect.histogramHolder")
-                            .data(histogram.getArrayOfBars());
+//                    var histogramBars = g.select("g.histogramHolder").selectAll("rect.histogramHolder")
+//                        .data(histogram.getArrayOfBars());
+                    var histogramBars = histogramHolder.selectAll("rect.histogramHolder")
+                        .data(histogram.getArrayOfBars());
 
-                        var barHeight =  ( yScale(histogram.getSummaryData().min)  - yScale(histogram.getSummaryData().max) ) / histogram.getArrayOfBars().length;
+                    var barHeight =  ( yScale(histogram.getSummaryData().min)  - yScale(histogram.getSummaryData().max) ) / histogram.getArrayOfBars().length;
 
                         histogramBars.enter().append("rect")
                             .attr("class", "histogramHolder")
                             .attr("x", centerForBox)
                             .attr("y", function (d,i) {
-                                return yScale((histogram.getSummaryData().binSize*i)+histogram.getSummaryData().min);
+                                return yScale((histogram.getSummaryData().binSize*(i+1))+histogram.getSummaryData().min);
                             })
                             .attr("width", 0)
                             .attr("height", function (d) {
@@ -534,10 +537,12 @@ var baget = baget || {};
 
                         histogramBars.transition()
                             .duration(duration)
-                            .attr("width", function(d){return histogramScale(d)});
+                            .attr("width", function(d){
+                                    return histogramScale(d)*histogramBarMultiplier;
+                                    });
 
                         histogramBars.exit().remove();
-                    }
+//                    }
 
 
 
@@ -754,6 +759,12 @@ var baget = baget || {};
         instance.outlierRadius = function (x) {
             if (!arguments.length) return outlierRadius;
             outlierRadius = x;
+            return instance;
+        };
+
+        instance.histogramBarMultiplier = function (x) {
+            if (!arguments.length) return histogramBarMultiplier;
+            histogramBarMultiplier = x;
             return instance;
         };
 

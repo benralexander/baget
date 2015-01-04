@@ -28,4 +28,9 @@
     stroke-width: 1.25px;
     pointer-events: none;
 }
+.sliderHolder {
+    position: relative;
+    display: block;
+    margin: auto;
+}
 
