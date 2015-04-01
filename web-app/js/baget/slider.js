@@ -189,7 +189,7 @@ var baget = baget || {};
             // slider.call(brush.event);
         };
 
-        right = function (value) {
+        instance.sliderLocation  = function (value) {
             if (!arguments.length) return brush.extent()[0];
            // value = scale.invert(d3.mouse(this)[1]);
             brush.extent([value, value]);

@@ -8,12 +8,15 @@ modules = {
         resource url: 'http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css'
         resource url: 'http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'
     }
+    jquery {
+        resource url: 'js/jquery-1.11.0.min.js'
+    }
     core {
-        dependsOn "bootstrap"
+        dependsOn "jquery,bootstrap"
 
         resource url: 'css/baget/baget.css'
 
-        resource url: 'js/jquery-1.11.0.min.js'
+
         resource url: 'js/d3.min.js'
 
         resource url: 'js/baget/ie10-viewport-bug-workaround.js'
@@ -25,6 +28,10 @@ modules = {
     qqplot {
         resource url: 'css/baget/qqplot.css'
         resource url: 'js/baget/qqplot.js'
+    }
+    manhattan {
+        resource url: 'css/baget/manhattan.css'
+        resource url: 'js/baget/manhattan.js'
     }
 
     barchart {

@@ -30,7 +30,7 @@
    var prepareForUpload  =  function ()  {
        if (d3.select('#uploadButtonHider').style('display')==='block') {
            d3.select('#uploadButtonHider').style('display','none');
-           window.location.href = './baget/returnToDefaultJsonData';
+          // window.location.href = './baget/returnToDefaultJsonData';
        }  else {
            d3.select('#uploadButtonHider').style('display','block');
        }
