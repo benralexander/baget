@@ -18,7 +18,7 @@
 <div class="container">
 
     <div class="starter-template">
-        <h1 style="font-weight: bold">(under construction) Plot</h1>
+        <h1 style="font-weight: bold">Manhattan Plot</h1>
 
     </div>
 
@@ -81,7 +81,8 @@
         <div class="col-md-2"></div>
 
         <div class="col-md-8"><div id="manhattanPlot1"></div>
-            <svg class="chart"></svg>
+            <div id="chart"></div>
+            %{--<svg class="chart"></svg>--}%
 
             <div class="col-md-2"></div>
 
@@ -127,29 +128,19 @@
 
 
 
-    d3.json("${createLink(controller: 'man', action:'manData')}", function (error, json) {
+    d3.json("${createLink(controller: 'man', action:'manData')}", function (error, data) {
+
+        var manhattan = baget.manhattan()
+                .width(width)
+                .height(height)
+                .dataHanger("#chart",data);
+
+        d3.select("#chart").call(manhattan.render);
 
 
-//            y.domain([0, d3.max(json, function(d) { return d.value; })]);
-//
-//            var barWidth = width / json.length;
-//
-//            var bar = chart.selectAll("g")
-//                    .data(json)
-//                    .enter().append("g")
-//                    .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
-//
-//            bar.append("rect")
-//                    .attr("y", function(d) { return y(d.value); })
-//                    .attr("height", function(d) { return height - y(d.value); })
-//                    .attr("width", barWidth - 1);
-//
-//            bar.append("text")
-//                    .attr("x", barWidth / 2)
-//                    .attr("y", function(d) { return y(d.value) + 3; })
-//                    .attr("dy", ".75em")
-//                    .text(function(d) { return d.value; });
-        });
+
+
+    });
 
         function type(d) {
             d.value = +d.value; // coerce to number
