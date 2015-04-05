@@ -1,7 +1,7 @@
 /***
- *               --------------QQplot--------------
+ *               --------------manhattan--------------
  *
- * This JavaScript file should be sufficient for creating a QQplot. Combine this single module with other
+ * This JavaScript file should be sufficient for creating a manhattan. Combine this single module with other
  * modules to create a more fully featured interactive visualization.
  *
  * @type {baget|*|{}}
@@ -56,6 +56,9 @@ var baget = baget || {};  // encapsulating variable
                 {c:'Y',l:57772954,p:99.9}],
             chromosomeToIndex = {},
             genomeLength = 3080419480,
+            tooltipAccessor = function (d) {
+                return d.p;      //    default key name for the JSON field holding tooltip values
+            },
 
 
         // private variables
@@ -98,8 +101,7 @@ var baget = baget || {};  // encapsulating variable
                         (typeof(tooltipAccessor(d)) !== "undefined")){
                         textToPresent = tooltipAccessor(d);
                     }  else {
-                        var number = parseFloat(xAxisAccessor(d));
-                        textToPresent = "Expected p = "+number.toPrecision(3) ;
+                        textToPresent = d.n+'<br/>Chr='+d.c+', loc='+d.x+'<br/>('+convertALocation (""+d.c, d.x)+')' ;
                     }
                 }
                 return "<strong><span>" + textToPresent + "</span></strong> ";
@@ -125,7 +127,7 @@ var baget = baget || {};  // encapsulating variable
                 var rememberExtents = [];
                 var numberOfExtents = allData.length;
                 for ( var i = 0 ; i < numberOfExtents ; i++ ) {
-                    rememberExtents.push (convertALocation (allData[i].c, ""+allData[i].x))
+                    rememberExtents.push (convertALocation (""+allData[i].c, allData[i].x))
                 }
                 maximumExtent =  d3.max(rememberExtents) ;
                 minimumExtent =  d3.min(rememberExtents) ;
@@ -140,26 +142,12 @@ var baget = baget || {};  // encapsulating variable
 
             var x = d3.scale.linear()
                 .domain([minimumExtent, maximumExtent])
-                .range([ 0, width ]);
+                .range([ margin.left, width ]);
 
             var y = d3.scale.linear()
                 .domain([minimumPValue,maximumPValue])
                 .range([ height, 0 ]);
 
-
-            chart.selectAll('.dot')
-                .data(allData)
-                .enter()
-                .append('circle')
-                .attr('class', 'dot')
-                .attr("r", 3.5)
-                .attr("cx", function(d){
-                    return x(convertALocation (d.c, ""+d.x));
-                })
-                .attr("cy", function(d){
-                    return y(d.y);
-                })
-                .style("fill", function(d) { return color(4);})
 
 
             var main = chart.append('g')
@@ -171,11 +159,14 @@ var baget = baget || {};  // encapsulating variable
             // draw the x axis
             var xAxis = d3.svg.axis()
                 .scale(x)
-                .orient('bottom');
+                .orient('bottom')
+                .tickFormat(function(d, i){
+                    return "Year" ;
+                });
 
             main.append('g')
                 .attr('transform', 'translate(0,' + height + ')')
-                .attr('class', 'main axis date')
+                .attr('class', 'main axis')
                 .call(xAxis);
 
             // draw the y axis
@@ -184,20 +175,28 @@ var baget = baget || {};  // encapsulating variable
                 .orient('left');
 
             main.append('g')
-                .attr('transform', 'translate(0,0)')
+                .attr('transform', 'translate(' + margin.left + ',0)')
                 .attr('class', 'main axis date')
                 .call(yAxis);
 
             var g = main.append("svg:g");
 
-            g.selectAll("scatter-dots")
-                .data(data)
-                .enter().append("svg:circle")
-                .attr("cx", function (d,i) { return x(d.x); } )
-                .attr("cy", function (d) { return y(d.y); } )
-                .attr("r", 8);
 
-
+            g.selectAll('.dot')
+                .data(allData)
+                .enter()
+                .append('circle')
+                .attr('class', 'dot')
+                .attr("r", 3.5)
+                .attr("cx", function(d){
+                    return x(convertALocation (""+d.c, d.x));
+                })
+                .attr("cy", function(d){
+                    return y(d.y);
+                })
+                .style("fill", function(d) { return color(4);})
+                .on('mouseover', tip.show)
+                .on('mouseout', tip.hide);
 
 
         } ;
@@ -212,7 +211,8 @@ var baget = baget || {};  // encapsulating variable
                 .append('svg')
                 .attr('class', 'mychart')
                 .attr('width', width*1.5)
-                .attr('height', height*1.4);
+                .attr('height', height*1.4)
+                .call(tip);
             return instance;
         };
 
