@@ -4,7 +4,16 @@
 #
 : ${1?"Usage: $0 version_number"}
 echo 'building prod grails'
+defaultName='bagetProd'
+chosenName=''
+if [ $# -eq 0 ]; then
+    echo "No arguments provided. default name=${defaultName}"
+    chosenName=${defaultName}
+else
+    chosenName=${1}
+fi
 revisionNumber="$(git rev-parse HEAD)"
 echo 'got it'
 echo "${revisionNumber}"
+sed -i "s/app.version.*$/app.version=${chosenName}/g" application.properties
 grails prod war -Dbuild.number=${revisionNumber} -Dapp.version=$1
