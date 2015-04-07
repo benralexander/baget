@@ -66,6 +66,17 @@
 
 
 <script type="text/javascript">
+    /***
+    *   the 'data' parameter provides a fair number of display options.
+     *   Value: how big is the bar.  NOTE: make this 'undefined' to see no bar at all,
+     *          but to continue to take up vertical space
+     *   barname: text to the left of each bar
+     *   barsubname: smaller text underneath the text to the left of each bar
+     *   inbar: should be text in the bar, though the code seems to have lost this ability
+     *   descriptor: text to the right of the number describing the bar
+     *
+    * @type {{value: number, barname: string, barsubname: string, barsubnamelink: string, inbar: string, descriptor: string}[]}
+    */
     var data = [
                 { value: 0.124,
                     barname: 'Have T2D',
@@ -115,32 +126,32 @@
 <script type="text/javascript">
     (function(){
     var data2 = [
-                { value: 0.84,
+                { value: 1.3,
                     position: 2,
                     barname: 'African-American',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: ''},
                 {value: 0.72,
                     position: 4,
                     barname: 'Hispanic',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: ''},
                 { value: 1.62,
                     position: 6,
                     barname: 'East Asian',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: ''},
                 {  value: 4.52,
                     position:  8,
                     barname: 'European',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: ''},
                 { value: 3.91,
@@ -195,7 +206,7 @@
                     position: 1,
                     barname: 'Cases',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: '(total 6253)',
                     inset: 1 },
@@ -203,7 +214,7 @@
                     position: 2,
                     barname: ' ',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: '',
                     legendText: '2 copies (homozygous)'},
@@ -211,7 +222,7 @@
                     position: 3,
                     barname: '  ',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: '',
                     legendText: '1 copy (heterozygous)'},
@@ -219,7 +230,7 @@
                     position: 4,
                     barname: '   ',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: '',
                     legendText: '0 copies'},
@@ -227,7 +238,7 @@
                     position:  6,
                     barname: 'Controls',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: '(total 6498)',
                     inset: 1 },
@@ -235,21 +246,21 @@
                     position:  7,
                     barname: '    ',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: ''},
                 { value: 211,
                     position: 8,
                     barname: '     ',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: ''},
                 { value: 6279,
                     position: 9,
                     barname: '      ',
                     barsubname: '',
-                    barsubnamelink:'http://www.google.com',
+                    barsubnamelink:'',
                     inbar: '',
                     descriptor: ''}
 
@@ -270,7 +281,7 @@
                 .height(height)
                 .margin(margin)
                 .roomForLabels (roomForLabels)
-                .maximumPossibleValue (7000)
+                .maximumPossibleValue (10000)
                 .labelSpacer (labelSpacer)
                 .assignData(data3)
                 .integerValues(1)
