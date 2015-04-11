@@ -239,8 +239,9 @@ var baget = baget || {};  // encapsulating variable
             var g = main.append("svg:g");
 
 
-            g.selectAll('.dot')
-                .data(allData)
+            var dots=g.selectAll('.dot')
+                .data(allData);
+            dots
                 .enter()
                 .append('circle')
                 .attr('class', 'dot')
@@ -249,15 +250,18 @@ var baget = baget || {};  // encapsulating variable
                     return x(chromosomes.convertALocation (""+d.c, d.x));
                 })
                 .attr("cy", function(d){
-                    return y(d.y);
+                    return y(minimumPValue);
                 })
                 .style("fill", function(d,i) {
                     return chromosomes.colorByChromosomeNumber(d.c);
                 })
                 .on('mouseover', tip.show)
                 .on('mouseout', tip.hide);
-
-
+             dots.transition()
+                 .delay(100).duration(1400)
+                 .attr("cy", function(d){
+                     return y(d.y);
+                 });
         } ;
 
 
@@ -272,6 +276,22 @@ var baget = baget || {};  // encapsulating variable
                 .attr('width', width*1.5)
                 .attr('height', height*1.4)
                 .call(tip);
+            return instance;
+        };
+
+
+        instance.dataAppender = function (selectionIdentifier, data) {
+            var  dataRoot = d3.select(selectionIdentifier);
+            var  existingDataHolder = d3.select(selectionIdentifier).selectAll('svg.mychart').data();
+            selection = d3.select(selectionIdentifier)
+                .selectAll('svg.mychart')
+                .data([data],function (d, i){
+                    if (this.length !== 'undefined')
+                    return(existingDataHolder[0].concat(data));
+                })
+                .enter()
+                .append('svg')
+                .attr('class', 'mychart') ;
             return instance;
         };
 

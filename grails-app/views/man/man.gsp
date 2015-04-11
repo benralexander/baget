@@ -132,6 +132,20 @@ text.x {
             .attr("height", height);
 
 
+    var addMoreData = function (d3Object) {
+
+         d3.json("${createLink(controller: 'man', action:'manData1')}", function (error, data) {
+
+             d3Object.dataAppender("#chart",data);
+
+             d3.select("#chart").call(d3Object.render);
+
+         });
+    };
+
+
+
+
 
     d3.json("${createLink(controller: 'man', action:'manData')}", function (error, data) {
 
@@ -142,7 +156,7 @@ text.x {
 
         d3.select("#chart").call(manhattan.render);
 
-
+        addMoreData (manhattan) ;
 
 
     });
