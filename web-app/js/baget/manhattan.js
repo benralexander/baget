@@ -165,6 +165,58 @@ var baget = baget || {};  // encapsulating variable
         };
 
 
+        var createAxes = function (axisGroup,chromosomes,xScale,yScale, width, height, margin){
+            // draw the x axis
+            var v = [];
+            for ( var i = 1 ; i < chromosomes.chromosomeInfo.length ; i++ )  {
+                v.push(((chromosomes.chromosomeInfo[i-1].p+chromosomes.chromosomeInfo[i].p)*chromosomes.genomeLength)/200);
+            }
+            var xAxis = d3.svg.axis()
+                .scale(xScale)
+                .orient('bottom')
+                .tickValues(v)
+                .tickFormat(function(d, i){
+                    return ""+chromosomes.chromosomeInfo[i+1].c ;
+                }) ;
+
+            axisGroup.append("text")
+                .attr("class", "y label")
+                .attr("text-anchor", "middle")
+                .attr("y", 6)
+                .attr("x", -height/2)
+                .attr("dy", ".75em")
+                .attr("transform", "rotate(-90)")
+                .text("-log 10 p");
+
+            axisGroup.append("text")
+                .attr("class", "x label")
+                .attr("text-anchor", "middle")
+                .attr("y", height+margin.bottom)
+                .attr("x", width/2)
+                .attr("dy", ".75em")
+                .text("chromosome number");
+
+            axisGroup.append('g')
+                .attr('transform', 'translate(0,' + height + ')')
+                .attr('class', 'main axis')
+                .call(xAxis);
+
+            // draw the y axis
+            var yAxis = d3.svg.axis()
+                .scale(yScale)
+                .orient('left');
+
+            axisGroup.append('g')
+                .attr('transform', 'translate(' + margin.left + ',0)')
+                .attr('class', 'main axis date')
+                .call(yAxis);
+
+           // return  axisGroup;
+        };
+
+
+
+
         //  private variable
         var tip = d3.tip()
             .attr('class', 'd3-tip scatter-tip')
@@ -192,75 +244,32 @@ var baget = baget || {};  // encapsulating variable
                 , width = 960 - margin.left - margin.right
                 , height = 500 - margin.top - margin.bottom;
 
+            // work in the SVG we created to hold the data
             var chart = currentSelection.select('svg');
 
+            // calculate data extents, allowing for manual overrides
             var dataExtent =  determineDataExtents(chart.data()[0],crossChromosomePlot,
                 overrideXMinimum,overrideXMaximum,overrideYMinimum,overrideYMaximum);
 
-            var expandBeyondDataBounds = (dataExtent.maximumXExtent-dataExtent.minimumXExtent)/50;
-
+            // create the scales
             var x = d3.scale.linear()
-                .domain([dataExtent.minimumXExtent-expandBeyondDataBounds, dataExtent.maximumXExtent])
+                .domain([dataExtent.minimumXExtent-((dataExtent.maximumXExtent-dataExtent.minimumXExtent)/50), dataExtent.maximumXExtent])
                 .range([ margin.left, width ]);
-
             var y = d3.scale.linear()
                 .domain([dataExtent.minimumYExtent,dataExtent.maximumYExtent])
                 .range([ height, 0 ]);
 
+            // create the axes
+            var t = chart
+                .selectAll('g.axesHolder')
+                .data([1])
+                .enter()
+                .append('g')
+                .attr('class', 'axesHolder')
+            .call(createAxes ,chromosomes,x,y,width, height, margin);
 
-
-            var main = chart.append('g')
-                .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-                .attr('width', width)
-                .attr('height', height)
-                .attr('class', 'main');
-
-            // draw the x axis
-            var v = [];
-            for ( var i = 1 ; i < chromosomes.chromosomeInfo.length ; i++ )  {
-                v.push(((chromosomes.chromosomeInfo[i-1].p+chromosomes.chromosomeInfo[i].p)*chromosomes.genomeLength)/200);
-            }
-            var xAxis = d3.svg.axis()
-                .scale(x)
-                .orient('bottom')
-                .tickValues(v)
-                .tickFormat(function(d, i){
-                    return ""+chromosomes.chromosomeInfo[i+1].c ;
-                }) ;
-
-            main.append("text")
-                .attr("class", "y label")
-                .attr("text-anchor", "middle")
-                .attr("y", 6)
-                .attr("x", -height/2)
-                .attr("dy", ".75em")
-                .attr("transform", "rotate(-90)")
-                .text("-log 10 p");
-
-            main.append("text")
-                .attr("class", "x label")
-                .attr("text-anchor", "middle")
-                .attr("y", height+margin.bottom)
-                .attr("x", width/2)
-                .attr("dy", ".75em")
-                .text("chromosome number");
-
-            main.append('g')
-                .attr('transform', 'translate(0,' + height + ')')
-                .attr('class', 'main axis')
-                .call(xAxis);
-
-            // draw the y axis
-            var yAxis = d3.svg.axis()
-                .scale(y)
-                .orient('left');
-
-            main.append('g')
-                .attr('transform', 'translate(' + margin.left + ',0)')
-                .attr('class', 'main axis date')
-                .call(yAxis);
-
-            var g = main.append("svg:g");
+            // add the data elements
+            var g = chart.append("svg");
 
 
             var dots=g.selectAll('.dot')
@@ -305,14 +314,9 @@ var baget = baget || {};  // encapsulating variable
 
 
         instance.dataAppender = function (selectionIdentifier, data) {
-            var  dataRoot = d3.select(selectionIdentifier);
-            var  existingDataHolder = d3.select(selectionIdentifier).selectAll('svg.mychart').data();
             selection = d3.select(selectionIdentifier)
                 .selectAll('svg.mychart')
-                .data([data],function (d, i){
-                    if (this.length !== 'undefined')
-                    return(existingDataHolder[0].concat(data));
-                })
+                .data([data])
                 .enter()
                 .append('svg')
                 .attr('class', 'mychart') ;
