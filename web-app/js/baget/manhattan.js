@@ -214,6 +214,34 @@ var baget = baget || {};  // encapsulating variable
            // return  axisGroup;
         };
 
+        var createDots = function (dotHolder,data,chromosomes, radius, xScale,yScale,dataExtent,tip) {
+            var dots=dotHolder.selectAll('.dot')
+                .data(data,function(d){        // merge data sets so that we hold only unique points
+                    return(""+ d.c+"_"+ d.x+"_"+ d.y);
+                });
+            dots
+                .enter()
+                .append('circle')
+                .attr('class', 'dot')
+                .attr("r", radius)
+                .attr("cx", function(d){
+                    return xScale(chromosomes.convertALocation (""+d.c, d.x));
+                })
+                .attr("cy", function(d){
+                    return yScale(dataExtent.minimumYExtent);
+                })
+                .style("fill", function(d,i) {
+                    return chromosomes.colorByChromosomeNumber(d.c);
+                })
+                .on('mouseover', tip.show)
+                .on('mouseout', tip.hide);
+            dots.transition()
+                .delay(100).duration(1400)
+                .attr("cy", function(d){
+                    return yScale(d.y);
+                });
+
+        };
 
 
 
@@ -259,7 +287,7 @@ var baget = baget || {};  // encapsulating variable
                 .domain([dataExtent.minimumYExtent,dataExtent.maximumYExtent])
                 .range([ height, 0 ]);
 
-            // create the axes
+            // create the axes inside the one and only axis holder
             var t = chart
                 .selectAll('g.axesHolder')
                 .data([1])
@@ -268,33 +296,21 @@ var baget = baget || {};  // encapsulating variable
                 .attr('class', 'axesHolder')
             .call(createAxes ,chromosomes,x,y,width, height, margin);
 
-            // add the data elements
-            var g = chart.append("svg");
-
-
-            var dots=g.selectAll('.dot')
-                .data(chart.data()[0]);
-            dots
+            // create the dots inside the one and only dot holder
+            var dotHolder=chart
+                .selectAll('g.dotHolder')
+                .data([1])
                 .enter()
-                .append('circle')
-                .attr('class', 'dot')
-                .attr("r", 3.5)
-                .attr("cx", function(d){
-                    return x(chromosomes.convertALocation (""+d.c, d.x));
-                })
-                .attr("cy", function(d){
-                    return y(dataExtent.minimumYExtent);
-                })
-                .style("fill", function(d,i) {
-                    return chromosomes.colorByChromosomeNumber(d.c);
-                })
-                .on('mouseover', tip.show)
-                .on('mouseout', tip.hide);
-             dots.transition()
-                 .delay(100).duration(1400)
-                 .attr("cy", function(d){
-                     return y(d.y);
-                 });
+                .append('g')
+                .attr('class', 'dotHolder')
+                .call(createDots,chart.data()[0],chromosomes,3.5,x,y,dataExtent,tip);
+
+            // special workaround-- there is only one dot holder, but we may want to merge in some new data.  In this case force
+            //    createDots to be called again, but depend on the existing holder
+            if(!dotHolder[0][0]){
+                createDots(chart.select('g.dotHolder'),chart.data()[0],chromosomes,3.5,x,y,dataExtent,tip);
+            }
+
         } ;
 
 
