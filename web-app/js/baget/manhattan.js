@@ -29,6 +29,7 @@ var baget = baget || {};  // encapsulating variable
             selectionIdentifier = '',  // string to identify the Dom object that will serve as our route
             data = {},
             color = d3.scale.category10(),
+            overrideXMinimum,overrideXMaximum,overrideYMinimum,overrideYMaximum,
 
             /***
              * Encapsulate functionality directly surrounding chromosomes
@@ -117,6 +118,51 @@ var baget = baget || {};  // encapsulating variable
         // private variables
             instance = {};
 
+        /***
+         * use the data to determine the extents. However we can override with the parameters below
+         *
+         * @param allData
+         * @param crossChromosomePlot -- plot the whole human chromosome. 23 autosomes plus X and Y
+         * @param minimumXValueOverride -- forget the data, forget crossChromosomePlot --> use this X value minimum
+         * @param maximumXValueOverride -- forget the data, forget crossChromosomePlot --> use this X value maximum
+         * @param minimumYValueOverride -- forget the data --> use this Y value minimum
+         * @param maximumYValueOverride -- forget the data --> use this Y value maximum
+         */
+        var determineDataExtents = function (allData, crossChromosomePlot,    // Boolean-- X extent equals entire human chromosome
+                                             minimumXValueOverride,
+                                             maximumXValueOverride,
+                                             minimumYValueOverride,
+                                             maximumYValueOverride) {
+            // first do the X extents, which are much more complicated
+            var minimumExtent, maximumExtent;
+            if (crossChromosomePlot) {  // plot the whole genome, so we know the extents
+                maximumExtent = chromosomes.genomeLength;
+                minimumExtent = 0;
+            } else {
+                (function () {
+                    // we need to know the max and min values. Do this work in an orderly way
+                    //  inside and immediately executed function so that we can cleanup temporary
+                    // variables when the work is done
+                    var rememberExtents = [];
+                    var numberOfExtents = allData.length;
+                    for (var i = 0; i < numberOfExtents; i++) {
+                        rememberExtents.push(chromosomes.convertALocation("" + allData[i].c, allData[i].x))
+                    }
+                    maximumExtent = d3.max(rememberExtents);
+                    minimumExtent = d3.min(rememberExtents);
+                })();
+            }
+            if (typeof minimumXValueOverride !== 'undefined') {
+                minimumExtent =   minimumXValueOverride;
+            }
+            if (typeof maximumXValueOverride !== 'undefined') {
+                maximumExtent =   maximumXValueOverride;
+            }
+            return { minimumXExtent: minimumExtent,
+                maximumXExtent: maximumExtent,
+                minimumYExtent: (typeof minimumYValueOverride !== 'undefined') ? minimumYValueOverride:d3.min(allData, function (d) {return d.y;}),
+                maximumYExtent: (typeof maximumYValueOverride !== 'undefined') ? maximumYValueOverride:d3.max(allData, function (d) {return d.y;})  }
+        };
 
 
         //  private variable
@@ -148,39 +194,17 @@ var baget = baget || {};  // encapsulating variable
 
             var chart = currentSelection.select('svg');
 
-            var allData =  chart.data()[0];
-            var minimumExtent,maximumExtent;
-            if (crossChromosomePlot)  {  // plot the whole genome, so we know the extents
-                maximumExtent =  chromosomes.genomeLength ;
-                minimumExtent =   0;
-            }  else {
-                (function(){
-                    // we need to know the max and min values. Do this work in an orderly way
-                    //  inside and immediately executed function so that we can cleanup temporary
-                    // variables when the work is done
-                    var rememberExtents = [];
-                    var numberOfExtents = allData.length;
-                    for ( var i = 0 ; i < numberOfExtents ; i++ ) {
-                        rememberExtents.push (chromosomes.convertALocation (""+allData[i].c, allData[i].x))
-                    }
-                    maximumExtent =  d3.max(rememberExtents) ;
-                    minimumExtent =  d3.min(rememberExtents) ;
-                }) ();
-            }
-             var maximumPValue  = d3.max( allData, function(d){
-                    return d.y;
-                }),
-             minimumPValue  = d3.min( allData, function(d){
-                 return d.y;
-             });
+            var dataExtent =  determineDataExtents(chart.data()[0],crossChromosomePlot,
+                overrideXMinimum,overrideXMaximum,overrideYMinimum,overrideYMaximum);
 
-            var expandBeyondDataBounds = (maximumExtent-minimumExtent)/50;
+            var expandBeyondDataBounds = (dataExtent.maximumXExtent-dataExtent.minimumXExtent)/50;
+
             var x = d3.scale.linear()
-                .domain([minimumExtent-expandBeyondDataBounds, maximumExtent])
+                .domain([dataExtent.minimumXExtent-expandBeyondDataBounds, dataExtent.maximumXExtent])
                 .range([ margin.left, width ]);
 
             var y = d3.scale.linear()
-                .domain([minimumPValue,maximumPValue])
+                .domain([dataExtent.minimumYExtent,dataExtent.maximumYExtent])
                 .range([ height, 0 ]);
 
 
@@ -240,7 +264,7 @@ var baget = baget || {};  // encapsulating variable
 
 
             var dots=g.selectAll('.dot')
-                .data(allData);
+                .data(chart.data()[0]);
             dots
                 .enter()
                 .append('circle')
@@ -250,7 +274,7 @@ var baget = baget || {};  // encapsulating variable
                     return x(chromosomes.convertALocation (""+d.c, d.x));
                 })
                 .attr("cy", function(d){
-                    return y(minimumPValue);
+                    return y(dataExtent.minimumYExtent);
                 })
                 .style("fill", function(d,i) {
                     return chromosomes.colorByChromosomeNumber(d.c);
@@ -320,6 +344,31 @@ var baget = baget || {};  // encapsulating variable
             yAxisAccessor = x;
             return instance;
         };
+
+        instance.overrideXMinimum = function (x) {
+            if (!arguments.length) return overrideXMinimum;
+            overrideXMinimum = x;
+            return instance;
+        };
+
+        instance.overrideXMaximum = function (x) {
+            if (!arguments.length) return overrideXMaximum
+            overrideXMaximum = x;
+            return instance;
+        };
+
+        instance.overrideYMinimum = function (x) {
+            if (!arguments.length) return overrideYMinimum;
+            overrideYMinimum = x;
+            return instance;
+        };
+
+        instance.overrideYMaximum = function (x) {
+            if (!arguments.length) return overrideYMaximum
+            overrideYMaximum = x;
+            return instance;
+        };
+
 
 
 

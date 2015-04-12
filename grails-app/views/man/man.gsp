@@ -50,8 +50,7 @@ text.x {
     <div class="container">
 
         <div class="btn-toolbar">
-            <div class="pull-left"><a
-                    href="<g:createLink controller='qqPlot' action='fullQqplot'/>">Fully featured example</a></div>
+            <div class="pull-left"></div>
 
             <div class="pull-right">
                 <div class="btn-group">
@@ -136,9 +135,9 @@ text.x {
 
          d3.json("${createLink(controller: 'man', action:'manData1')}", function (error, data) {
 
-             d3Object.dataAppender("#chart",data);
+             d3Object.dataAppender("#manhattanPlot1",data);
 
-             d3.select("#chart").call(d3Object.render);
+             d3.select("#manhattanPlot1").call(d3Object.render);
 
          });
     };
@@ -152,9 +151,11 @@ text.x {
         var manhattan = baget.manhattan()
                 .width(width)
                 .height(height)
-                .dataHanger("#chart",data);
+                .dataHanger("#manhattanPlot1",data)
+                .overrideYMinimum (0)
+                .overrideYMaximum (10);
 
-        d3.select("#chart").call(manhattan.render);
+        d3.select("#manhattanPlot1").call(manhattan.render);
 
         addMoreData (manhattan) ;
 
