@@ -23,11 +23,10 @@ var baget = baget || {};  // encapsulating variable
         var
             width = 1,
             height = 1,
+            dotRadius = 3.5,
+            blockColoringThreshold,
             xAxisAccessor = {},
             yAxisAccessor = {},
-            margin = {},
-            selectionIdentifier = '',  // string to identify the Dom object that will serve as our route
-            data = {},
             color = d3.scale.category10(),
             overrideXMinimum,overrideXMaximum,overrideYMinimum,overrideYMaximum,
 
@@ -210,8 +209,6 @@ var baget = baget || {};  // encapsulating variable
                 .attr('transform', 'translate(' + margin.left + ',0)')
                 .attr('class', 'main axis date')
                 .call(yAxis);
-
-           // return  axisGroup;
         };
 
         var createDots = function (dotHolder,data,chromosomes, radius, xScale,yScale,dataExtent,tip) {
@@ -240,6 +237,25 @@ var baget = baget || {};  // encapsulating variable
                 .attr("cy", function(d){
                     return yScale(d.y);
                 });
+
+        };
+
+
+        var createSolidBlock = function (blockGroup, yValueThreshold, chromosomes, xScale, yScale, dataExtent) {
+            // draw the x axis
+            if (typeof yValueThreshold !== 'undefined')  {
+                for (var i = 1; i < chromosomes.chromosomeInfo.length; i++) {
+                    blockGroup.append("rect")
+                        .attr("x", xScale(((chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 100) )
+                        .attr("y", yScale(dataExtent.minimumYExtent))
+                        .attr("width", xScale(((chromosomes.chromosomeInfo[i].p-chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 100))
+                        .attr("height", yScale(yValueThreshold))
+                        .style("fill", function(d,i) {
+                            return chromosomes.colorByChromosomeNumber(chromosomes.chromosomeInfo[i].c);
+                        });
+                }
+
+            }
 
         };
 
@@ -303,13 +319,26 @@ var baget = baget || {};  // encapsulating variable
                 .enter()
                 .append('g')
                 .attr('class', 'dotHolder')
-                .call(createDots,chart.data()[0],chromosomes,3.5,x,y,dataExtent,tip);
+                .call(createDots,chart.data()[0],chromosomes,dotRadius,x,y,dataExtent,tip);
 
             // special workaround-- there is only one dot holder, but we may want to merge in some new data.  In this case force
             //    createDots to be called again, but depend on the existing holder
             if(!dotHolder[0][0]){
-                createDots(chart.select('g.dotHolder'),chart.data()[0],chromosomes,3.5,x,y,dataExtent,tip);
+                createDots(chart.select('g.dotHolder'),chart.data()[0],chromosomes,dotRadius,x,y,dataExtent,tip);
             }
+
+
+            // create a solid block to cover the area where we know dots should be.
+            if (typeof blockColoringThreshold !== 'undefined') {
+                chart
+                    .selectAll('g.blockHolder')
+                    .data([1])
+                    .enter()
+                    .append('g')
+                    .attr('class', 'blockHolder')
+                    .call(createSolidBlock,blockColoringThreshold,chromosomes,x,y,dataExtent);
+            }
+
 
         } ;
 
@@ -384,8 +413,20 @@ var baget = baget || {};  // encapsulating variable
         };
 
         instance.overrideYMaximum = function (x) {
-            if (!arguments.length) return overrideYMaximum
+            if (!arguments.length) return overrideYMaximum;
             overrideYMaximum = x;
+            return instance;
+        };
+
+        instance.dotRadius = function (x) {
+            if (!arguments.length) return dotRadius;
+            dotRadius = x;
+            return instance;
+        };
+
+        instance.blockColoringThreshold = function (x) {
+            if (!arguments.length) return blockColoringThreshold;
+            blockColoringThreshold = x;
             return instance;
         };
 
