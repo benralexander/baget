@@ -24,6 +24,7 @@ var baget = baget || {};  // encapsulating variable
             width = 1,
             height = 1,
             dotRadius = 3.5,
+            significanceThreshold = 7.5,
             blockColoringThreshold,
             xAxisAccessor = {},
             yAxisAccessor = {},
@@ -191,23 +192,24 @@ var baget = baget || {};  // encapsulating variable
                 .attr("class", "x label")
                 .attr("text-anchor", "middle")
                 .attr("y", height+margin.bottom)
-                .attr("x", width/2)
+                .attr("x", width)
                 .attr("dy", ".75em")
                 .text("chromosome number");
 
             axisGroup.append('g')
-                .attr('transform', 'translate(0,' + height + ')')
+                .attr('transform', 'translate(0,' + height +')')
                 .attr('class', 'main axis')
                 .call(xAxis);
 
             // draw the y axis
             var yAxis = d3.svg.axis()
                 .scale(yScale)
+                .innerTickSize(-width)
                 .orient('left');
 
             axisGroup.append('g')
                 .attr('transform', 'translate(' + margin.left + ',0)')
-                .attr('class', 'main axis date')
+                .attr('class', 'main axis pValue')
                 .call(yAxis);
         };
 
@@ -247,10 +249,12 @@ var baget = baget || {};  // encapsulating variable
                 for (var i = 1; i < chromosomes.chromosomeInfo.length; i++) {
                     blockGroup.append("rect")
                         .attr("x", xScale(((chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 100) )
-                        .attr("y", yScale(dataExtent.minimumYExtent))
-                        .attr("width", xScale(((chromosomes.chromosomeInfo[i].p-chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 100))
-                        .attr("height", yScale(yValueThreshold))
-                        .style("fill", function(d,i) {
+                        .attr("y",  yScale(yValueThreshold))
+                       // .attr("width", xScale(((chromosomes.chromosomeInfo[i].p-chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 200))
+                        .attr("width", xScale(((chromosomes.chromosomeInfo[i].p) * chromosomes.genomeLength) / 100) -
+                                        xScale(((chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 100) )
+                        .attr("height",    yScale(dataExtent.minimumYExtent)-yScale(yValueThreshold))
+                        .style("fill", function(d) {
                             return chromosomes.colorByChromosomeNumber(chromosomes.chromosomeInfo[i].c);
                         });
                 }
@@ -326,7 +330,6 @@ var baget = baget || {};  // encapsulating variable
             if(!dotHolder[0][0]){
                 createDots(chart.select('g.dotHolder'),chart.data()[0],chromosomes,dotRadius,x,y,dataExtent,tip);
             }
-
 
             // create a solid block to cover the area where we know dots should be.
             if (typeof blockColoringThreshold !== 'undefined') {
@@ -427,6 +430,12 @@ var baget = baget || {};  // encapsulating variable
         instance.blockColoringThreshold = function (x) {
             if (!arguments.length) return blockColoringThreshold;
             blockColoringThreshold = x;
+            return instance;
+        };
+
+        instance.significanceThreshold = function (x) {
+            if (!arguments.length) return significanceThreshold;
+            significanceThreshold = x;
             return instance;
         };
 

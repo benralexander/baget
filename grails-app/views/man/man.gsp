@@ -155,8 +155,8 @@ text.x {
                 .dataHanger("#manhattanPlot1",data)
                 .overrideYMinimum (0)
                 .overrideYMaximum (10)
-                .dotRadius(3) ;
-            //    .blockColoringThreshold(3);
+                .dotRadius(3)
+                .blockColoringThreshold(0.3);
 
         d3.select("#manhattanPlot1").call(manhattan.render);
 
