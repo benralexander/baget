@@ -63,7 +63,7 @@
                 <li class="active"><a href="<g:createLink controller='boxWhisker' action ='index'/>">Box Whisker</a></li>
             </ul>
             <ul class="nav navbar-nav">
-                <li class="active"><a href="<g:createLink controller='man' action ='manhattanPlot'/>">(not finished) Plot</a></li>
+                <li class="active"><a href="<g:createLink controller='man' action ='manhattanPlot'/>">Manhattan Plot</a></li>
             </ul>
 
         </div>

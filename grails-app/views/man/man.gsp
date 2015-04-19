@@ -26,7 +26,7 @@ text.x {
 <div class="container">
 
     <div class="starter-template">
-        <h1 style="font-weight: bold">(incomplete) Manhattan Plot</h1>
+        <h1 style="font-weight: bold">Manhattan Plot</h1>
 
     </div>
 
