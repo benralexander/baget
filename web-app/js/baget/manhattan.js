@@ -179,7 +179,7 @@ var baget = baget || {};  // encapsulating variable
             //  (if for example, y minimum  === 0) go to sleep
             var yAxis = d3.svg.axis()
                 .scale(yScale)
-                .innerTickSize(-width)
+                .tickSize(-((xScale(chromosomes.genomeLength)-xScale(0))+margin.right))
                 .orient('left');
 
             axisGroup.append('g')
@@ -219,7 +219,7 @@ var baget = baget || {};  // encapsulating variable
 
           };
 
-        var createDots = function (dotHolder,data,chromosomes, radius, xScale,yScale,dataExtent,tip) {
+        var createDots = function (dotHolder,data,chromosomes, radius, xScale,yScale,dataExtent,c,tip) {
             var dots=dotHolder.selectAll('.dot')
                 .data(data,function(d){        // merge data sets so that we hold only unique points
                     return(""+ d.c+"_"+ d.x+"_"+ d.y);
@@ -236,7 +236,11 @@ var baget = baget || {};  // encapsulating variable
                     return yScale(dataExtent.minimumYExtent);
                 })
                 .style("fill", function(d,i) {
-                    return chromosomes.colorByChromosomeNumber(d.c);
+                    if (d.y > significanceThreshold)  {
+                        return color(9);
+                    } else {
+                        return chromosomes.colorByChromosomeNumber(d.c);
+                    }
                 })
                 .on('mouseover', tip.show)
                 .on('mouseout', tip.hide);
@@ -256,7 +260,6 @@ var baget = baget || {};  // encapsulating variable
                     blockGroup.append("rect")
                         .attr("x", xScale(((chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 100) )
                         .attr("y",  yScale(yValueThreshold))
-                       // .attr("width", xScale(((chromosomes.chromosomeInfo[i].p-chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 200))
                         .attr("width", xScale(((chromosomes.chromosomeInfo[i].p) * chromosomes.genomeLength) / 100) -
                                         xScale(((chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 100) )
                         .attr("height",    yScale(dataExtent.minimumYExtent)-yScale(yValueThreshold))
@@ -271,23 +274,38 @@ var baget = baget || {};  // encapsulating variable
 
 
 
-        var addSignificanceIndicator = function (selection, significanceThreshold ) {
-            if (typeof yValueThreshold !== 'undefined')  {
-                for (var i = 1; i < chromosomes.chromosomeInfo.length; i++) {
-                    blockGroup.append("rect")
-                        .attr("x", xScale(((chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 100) )
-                        .attr("y",  yScale(yValueThreshold))
-                        // .attr("width", xScale(((chromosomes.chromosomeInfo[i].p-chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 200))
-                        .attr("width", xScale(((chromosomes.chromosomeInfo[i].p) * chromosomes.genomeLength) / 100) -
-                            xScale(((chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 100) )
-                        .attr("height",    yScale(dataExtent.minimumYExtent)-yScale(yValueThreshold))
-                        .style("fill", function(d) {
-                            return chromosomes.colorByChromosomeNumber(chromosomes.chromosomeInfo[i].c);
-                        });
-                }
-
+        var addSignificanceIndicator = function (significanceHolder, significanceThreshold, chromosomes,  xScale, yScale ) {
+            if (typeof significanceThreshold === 'undefined')   {
+                return ;
             }
-
+            var significanceIndicator=significanceHolder.selectAll('line.significanceIndicator')
+            .data([significanceThreshold],function(d){        // merge data sets so that we hold only unique points
+                return(""+ d);
+            });
+            significanceIndicator
+                .enter()
+                .append('line')
+                .attr('class', 'significanceIndicator')
+                .attr("x1", function (d) {
+                    return xScale(0)
+                })
+                .attr("y1",function (d) {
+                    return yScale(significanceThreshold)
+                })
+                .attr("x2",  function (d) {
+                    return xScale(chromosomes.genomeLength)-margin.right;
+                })
+                .attr("y2",  function (d) {
+                    return yScale(significanceThreshold)
+                })
+                .attr("stroke-width", 0);
+            significanceIndicator.transition()
+                .delay(100).duration(1400)
+                .attr("stroke-width", 1);
+            significanceIndicator.exit()
+                .transition()
+                .attr("stroke-width", 0)
+                .remove();
         };
 
 
@@ -361,22 +379,14 @@ var baget = baget || {};  // encapsulating variable
                 .attr('class', 'axesHolder')
             .call(createAxes ,chromosomes,x,y,width, height, margin);
 
-
-
-            // create the dots inside the one and only dot holder
-            var dotHolder=chart
-                .selectAll('g.dotHolder')
-                .data([1])
+            chart
+                .selectAll('g.significanceHolder')
+                .data([significanceThreshold],function(d){return (""+d)})
                 .enter()
                 .append('g')
-                .attr('class', 'dotHolder')
-                .call(createDots,chart.data()[0],chromosomes,dotRadius,x,y,dataExtent,tip);
+                .attr('class', 'significanceHolder')
+                .call(addSignificanceIndicator ,significanceThreshold,chromosomes,x,y);
 
-            // special workaround-- there is only one dot holder, but we may want to merge in some new data.  In this case force
-            //    createDots to be called again, but depend on the existing holder
-            if(!dotHolder[0][0]){
-                createDots(chart.select('g.dotHolder'),chart.data()[0],chromosomes,dotRadius,x,y,dataExtent,tip);
-            }
 
             // create a solid block to cover the area where we know dots should be.
             if (typeof blockColoringThreshold !== 'undefined') {
@@ -389,6 +399,21 @@ var baget = baget || {};  // encapsulating variable
                     .call(createSolidBlock,blockColoringThreshold,chromosomes,x,y,dataExtent);
             }
 
+            // create the dots inside the one and only dot holder
+            var dotHolder=chart
+                .selectAll('g.dotHolder')
+                .data([1])
+                .enter()
+                .append('g')
+                .attr('class', 'dotHolder')
+                .call(createDots,chart.data()[0],chromosomes,dotRadius,x,y,dataExtent,significanceThreshold,tip);
+
+            // special workaround-- there is only one dot holder, but we may want to merge in some new data.  In this case force
+            //    createDots to be called again, but depend on the existing holder
+            if(!dotHolder[0][0]){
+                createDots(chart.select('g.dotHolder'),chart.data()[0],chromosomes,dotRadius,x,y,dataExtent,significanceThreshold,tip);
+            }
+
 
         } ;
 
@@ -397,7 +422,7 @@ var baget = baget || {};  // encapsulating variable
 
             selection = d3.select(selectionIdentifier)
                 .selectAll('svg.mychart')
-                .data([data])
+                .data([data],function(){return ""+data.toString()})
                 .enter()
                 .append('svg')
                 .attr('class', 'mychart')
@@ -409,12 +434,14 @@ var baget = baget || {};  // encapsulating variable
 
 
         instance.dataAppender = function (selectionIdentifier, data) {
+
             selection = d3.select(selectionIdentifier)
                 .selectAll('svg.mychart')
-                .data([data])
+                .data([data],function(){return ""+data.toString()})
                 .enter()
                 .append('svg')
-                .attr('class', 'mychart') ;
+                .attr('class', 'mychart')
+              ;
             return instance;
         };
 
