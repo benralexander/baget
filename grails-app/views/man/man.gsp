@@ -135,8 +135,7 @@ text.x {
 
          d3.json("${createLink(controller: 'man', action:'manData1')}", function (error, data) {
 
-             d3Object.dataAppender("#manhattanPlot1",data)
-                     .dotRadius(3);
+             d3Object.dataAppender("#manhattanPlot1",data);
 
              d3.select("#manhattanPlot1").call(d3Object.render);
 
@@ -153,10 +152,14 @@ text.x {
                 .width(width)
                 .height(height)
                 .dataHanger("#manhattanPlot1",data)
+                .crossChromosomePlot(true)
                 .overrideYMinimum (0)
                 .overrideYMaximum (10)
+//                .overrideXMinimum (0)
+//                .overrideXMaximum (1000000000)
                 .dotRadius(3)
-                .blockColoringThreshold(0.3);
+                .blockColoringThreshold(0.3) ;
+//                .initialize();
 
         d3.select("#manhattanPlot1").call(manhattan.render);
 

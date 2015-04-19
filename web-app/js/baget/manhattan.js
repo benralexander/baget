@@ -30,6 +30,8 @@ var baget = baget || {};  // encapsulating variable
             yAxisAccessor = {},
             color = d3.scale.category10(),
             overrideXMinimum,overrideXMaximum,overrideYMinimum,overrideYMaximum,
+            selection,
+            dataExtent,
 
             /***
              * Encapsulate functionality directly surrounding chromosomes
@@ -171,6 +173,20 @@ var baget = baget || {};  // encapsulating variable
             for ( var i = 1 ; i < chromosomes.chromosomeInfo.length ; i++ )  {
                 v.push(((chromosomes.chromosomeInfo[i-1].p+chromosomes.chromosomeInfo[i].p)*chromosomes.genomeLength)/200);
             }
+
+            // draw the y axis first, so that the
+            //  X axis will overdraw it IF the two happen to coincide
+            //  (if for example, y minimum  === 0) go to sleep
+            var yAxis = d3.svg.axis()
+                .scale(yScale)
+                .innerTickSize(-width)
+                .orient('left');
+
+            axisGroup.append('g')
+                .attr('transform', 'translate(' + margin.left + ',0)')
+                .attr('class', 'main axis pValue')
+                .call(yAxis);
+
             var xAxis = d3.svg.axis()
                 .scale(xScale)
                 .orient('bottom')
@@ -198,20 +214,10 @@ var baget = baget || {};  // encapsulating variable
 
             axisGroup.append('g')
                 .attr('transform', 'translate(0,' + height +')')
-                .attr('class', 'main axis')
+                .attr('class', 'main axis chromosome')
                 .call(xAxis);
 
-            // draw the y axis
-            var yAxis = d3.svg.axis()
-                .scale(yScale)
-                .innerTickSize(-width)
-                .orient('left');
-
-            axisGroup.append('g')
-                .attr('transform', 'translate(' + margin.left + ',0)')
-                .attr('class', 'main axis pValue')
-                .call(yAxis);
-        };
+          };
 
         var createDots = function (dotHolder,data,chromosomes, radius, xScale,yScale,dataExtent,tip) {
             var dots=dotHolder.selectAll('.dot')
@@ -265,6 +271,29 @@ var baget = baget || {};  // encapsulating variable
 
 
 
+        var addSignificanceIndicator = function (selection, significanceThreshold ) {
+            if (typeof yValueThreshold !== 'undefined')  {
+                for (var i = 1; i < chromosomes.chromosomeInfo.length; i++) {
+                    blockGroup.append("rect")
+                        .attr("x", xScale(((chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 100) )
+                        .attr("y",  yScale(yValueThreshold))
+                        // .attr("width", xScale(((chromosomes.chromosomeInfo[i].p-chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 200))
+                        .attr("width", xScale(((chromosomes.chromosomeInfo[i].p) * chromosomes.genomeLength) / 100) -
+                            xScale(((chromosomes.chromosomeInfo[i - 1].p) * chromosomes.genomeLength) / 100) )
+                        .attr("height",    yScale(dataExtent.minimumYExtent)-yScale(yValueThreshold))
+                        .style("fill", function(d) {
+                            return chromosomes.colorByChromosomeNumber(chromosomes.chromosomeInfo[i].c);
+                        });
+                }
+
+            }
+
+        };
+
+
+
+
+
         //  private variable
         var tip = d3.tip()
             .attr('class', 'd3-tip scatter-tip')
@@ -284,6 +313,15 @@ var baget = baget || {};  // encapsulating variable
             });
 
 
+        instance.initialize  = function()  {
+            // calculate data extents, allowing for manual overrides
+            dataExtent =  determineDataExtents(selection.data()[0],crossChromosomePlot,
+                overrideXMinimum,overrideXMaximum,overrideYMinimum,overrideYMaximum);
+            return instance;
+        } ;
+
+
+
         // Now walk through the DOM and create the enrichment plot
         instance.render = function (currentSelection) {
 
@@ -295,9 +333,16 @@ var baget = baget || {};  // encapsulating variable
             // work in the SVG we created to hold the data
             var chart = currentSelection.select('svg');
 
-            // calculate data extents, allowing for manual overrides
-            var dataExtent =  determineDataExtents(chart.data()[0],crossChromosomePlot,
-                overrideXMinimum,overrideXMaximum,overrideYMinimum,overrideYMaximum);
+            chart
+                .selectAll('g.extentHolder')
+                .data([1])
+                .enter()
+                .append('g')
+                .attr('class', 'extentHolder')
+                .style('display','none')
+                .call(instance.initialize);
+
+
 
             // create the scales
             var x = d3.scale.linear()
@@ -308,13 +353,15 @@ var baget = baget || {};  // encapsulating variable
                 .range([ height, 0 ]);
 
             // create the axes inside the one and only axis holder
-            var t = chart
+            chart
                 .selectAll('g.axesHolder')
                 .data([1])
                 .enter()
                 .append('g')
                 .attr('class', 'axesHolder')
             .call(createAxes ,chromosomes,x,y,width, height, margin);
+
+
 
             // create the dots inside the one and only dot holder
             var dotHolder=chart
@@ -397,45 +444,100 @@ var baget = baget || {};  // encapsulating variable
             return instance;
         };
 
+        /***
+         * you can explicitly restrict the extent of the data to be handled. The default is to expand the x-axis to handle all available
+         * data (exception: if  crossChromosomePlot is specified than the x-axis expands to entire human genome)
+         * @param x
+         * @returns {*}
+         */
         instance.overrideXMinimum = function (x) {
             if (!arguments.length) return overrideXMinimum;
             overrideXMinimum = x;
             return instance;
         };
 
+        /***
+         * you can explicitly restrict the extent of the data to be handled. The default is to expand the x-axis to handle all available
+         * data (exception: if  crossChromosomePlot is specified than the x-axis expands to entire human genome)
+         * @param x
+         * @returns {*}
+         */
         instance.overrideXMaximum = function (x) {
             if (!arguments.length) return overrideXMaximum
             overrideXMaximum = x;
             return instance;
         };
 
+
+        /***
+         *  explicitly set the minimum value along the vertical axis (the P value in a Manhattan plot).  If no minimum is set, then
+         * the minimum will be derived from the data.  NOTE; If you plan to add data to the plotafter it is initially created
+         * using the dataAppender followed by render then you must explicitly specify the y minimum (at least if
+         * the max/min data extents are going to change -- the issue is that the axes are only drawn once.)
+         * @param x
+         * @returns {*}
+         */
         instance.overrideYMinimum = function (x) {
             if (!arguments.length) return overrideYMinimum;
             overrideYMinimum = x;
             return instance;
         };
 
+        /***
+         * explicitly set the maximum value along the vertical axis (the P value in a Manhattan plot).  If no maximum is set, then
+         * the maximum will be derived from the data.  NOTE; If you plan to add data to the plotafter it is initially created
+         * using the dataAppender followed by render then you must explicitly specify the y maximum (at least if
+         * the max/min data extents are going to change -- the issue is that the axes are only drawn once. )
+         * @param x
+         * @returns {*}
+         */
         instance.overrideYMaximum = function (x) {
             if (!arguments.length) return overrideYMaximum;
             overrideYMaximum = x;
             return instance;
         };
 
+        /***
+         * size of the dots on the plot. There is a default.
+         * @param x
+         * @returns {*}
+         */
         instance.dotRadius = function (x) {
             if (!arguments.length) return dotRadius;
             dotRadius = x;
             return instance;
         };
 
+        /***
+         * Rather than marking millions of high value points we will instead summarize them with a block of color.  If undefined than no drama blocks.
+         * @param x
+         * @returns {*}
+         */
         instance.blockColoringThreshold = function (x) {
             if (!arguments.length) return blockColoringThreshold;
             blockColoringThreshold = x;
             return instance;
         };
 
+        /***
+         * This number determines where a line will be drawn to indicate significance. If the value is undefined then draw no line
+         * @param x
+         * @returns {*}
+         */
         instance.significanceThreshold = function (x) {
             if (!arguments.length) return significanceThreshold;
             significanceThreshold = x;
+            return instance;
+        };
+
+        /***
+         * Boolean: plot the whole human chromosome, or conform the x-axis to the available data
+         * @param x
+         * @returns {*}
+         */
+        instance.crossChromosomePlot = function (x) {
+            if (!arguments.length) return crossChromosomePlot;
+            crossChromosomePlot = x;
             return instance;
         };
 
