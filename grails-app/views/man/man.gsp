@@ -62,7 +62,7 @@ text.x {
                         <li class="btn"
                             onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/sharedMethods.js')">sharedMethods.js</li>
                         <li class="btn"
-                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/qqplot.js')">qqplot.js</li>
+                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/manhattan.js')">manhattan.js</li>
                     </ul>
                 </div>
 
@@ -73,7 +73,7 @@ text.x {
                     </a>
                     <ul class="dropdown-menu">
                         <li class="btn"
-                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'css/baget/baget.css')">baget.css</li>
+                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'css/baget/manhattan.css')">manhattan.css</li>
                     </ul>
                 </div>
             </div>
