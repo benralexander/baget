@@ -120,32 +120,32 @@ var baget = baget || {};  // encapsulating variable
                 return y(yAxisAccessor(d));
             });
 
-            selection.selectAll(".significanceLine").attr("x1",function(d,i) {
-                return x(x.domain()[0]);
-            })
-            .attr("x2",function(d,i) {
-                return x(x.domain()[1]);
-            })
-            .attr("y1",function(d,i) {
-                return y(d);
-            })
-            .attr("y2",function(d,i) {
-                return y(d);
-            });
-
-            selection.select('#identityLine')
-                .attr("x1", function (d) {
-                    return x(d.min)
-                })
-                .attr("y1",function (d) {
-                    return y(d.min)
-                })
-                .attr("x2",  function (d) {
-                    return x(d.max)
-                })
-                .attr("y2",  function (d) {
-                    return y(d.max)
-                });
+//            selection.selectAll(".significanceLine").attr("x1",function(d,i) {
+//                return x(x.domain()[0]);
+//            })
+//            .attr("x2",function(d,i) {
+//                return x(x.domain()[1]);
+//            })
+//            .attr("y1",function(d,i) {
+//                return y(d);
+//            })
+//            .attr("y2",function(d,i) {
+//                return y(d);
+//            });
+//
+//            selection.select('#identityLine')
+//                .attr("x1", function (d) {
+//                    return x(d.min)
+//                })
+//                .attr("y1",function (d) {
+//                    return y(d.min)
+//                })
+//                .attr("x2",  function (d) {
+//                    return x(d.max)
+//                })
+//                .attr("y2",  function (d) {
+//                    return y(d.max)
+//                });
         }
 
 

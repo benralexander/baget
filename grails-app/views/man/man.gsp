@@ -161,12 +161,20 @@ text.x {
 //                .overrideXMaximum (1000000000)
                 .dotRadius(3)
                 .blockColoringThreshold(0.5)
-                .significanceThreshold(6.5) ;
+                .significanceThreshold(6.5)
+                .xAxisAccessor(function (d){return d.x})
+                .yAxisAccessor(function (d){ return d.y})
+                .nameAccessor(function (d){return d.n})
+                .chromosomeAccessor(function (d){return d.c})
+                .includeXChromosome(true)
+                .includeYChromosome(true)
+                .dotClickLink('http://www.ncbi.nlm.nih.gov/gap/?term=')
+                ;
 
 
         d3.select("#manhattanPlot1").call(manhattan.render);
 
-        addMoreData (manhattan) ;
+    //    addMoreData (manhattan) ;
 
 
     });
