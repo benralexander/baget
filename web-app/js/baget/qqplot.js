@@ -112,40 +112,41 @@ var baget = baget || {};  // encapsulating variable
 
         function zoomed() {
 
-            selection.select(".x.axis").call(xAxis);
-            selection.select(".y.axis").call(yAxis);
+            d3.select(".x.axis").call(xAxis);
+            d3.select(".y.axis").call(yAxis);
+           // selection.select(".y.axis").call(yAxis);
             selection.selectAll(".dot").attr("cx",function(d,i) {
                 return x(xAxisAccessor(d));
             }).attr("cy",function(d,i) {
                 return y(yAxisAccessor(d));
             });
 
-//            selection.selectAll(".significanceLine").attr("x1",function(d,i) {
-//                return x(x.domain()[0]);
-//            })
-//            .attr("x2",function(d,i) {
-//                return x(x.domain()[1]);
-//            })
-//            .attr("y1",function(d,i) {
-//                return y(d);
-//            })
-//            .attr("y2",function(d,i) {
-//                return y(d);
-//            });
-//
-//            selection.select('#identityLine')
-//                .attr("x1", function (d) {
-//                    return x(d.min)
-//                })
-//                .attr("y1",function (d) {
-//                    return y(d.min)
-//                })
-//                .attr("x2",  function (d) {
-//                    return x(d.max)
-//                })
-//                .attr("y2",  function (d) {
-//                    return y(d.max)
-//                });
+            selection.selectAll(".significanceLine").attr("x1",function(d,i) {
+                return x(x.domain()[0]);
+            })
+            .attr("x2",function(d,i) {
+                return x(x.domain()[1]);
+            })
+            .attr("y1",function(d,i) {
+                return y(d);
+            })
+            .attr("y2",function(d,i) {
+                return y(d);
+            });
+
+            selection.select('#identityLine')
+                .attr("x1", function (d) {
+                    return x(d.min)
+                })
+                .attr("y1",function (d) {
+                    return y(d.min)
+                })
+                .attr("x2",  function (d) {
+                    return x(d.max)
+                })
+                .attr("y2",  function (d) {
+                    return y(d.max)
+                });
         }
 
 

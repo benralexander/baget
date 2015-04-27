@@ -218,8 +218,7 @@ var baget = baget || {};  // encapsulating variable
 
         var zoomed = function () {
 
-            chart
-                .selectAll('g.axesHolder').select(".main.axis.pValue").call(xAxis);
+            d3.select("#xaxis").call(xAxis);
             d3.select("#yaxis").call(yAxis);
             d3.selectAll(".dot").attr("cx",function(d,i) {
                 return x(chromosomes.convertALocation (""+chromosomeAccessor (d), xAxisAccessor (d)));
@@ -227,36 +226,37 @@ var baget = baget || {};  // encapsulating variable
                 return y(yAxisAccessor (d));
             });
 
-//            selection.selectAll(".significanceLine").attr("x1",function(d,i) {
-//                return x(x.domain()[0]);
-//            })
-//                .attr("x2",function(d,i) {
-//                    return x(x.domain()[1]);
-//                })
-//                .attr("y1",function(d,i) {
-//                    return y(d);
-//                })
-//                .attr("y2",function(d,i) {
-//                    return y(d);
-//                });
-//
-//            selection.select('#identityLine')
-//                .attr("x1", function (d) {
-//                    return x(d.min)
-//                })
-//                .attr("y1",function (d) {
-//                    return y(d.min)
-//                })
-//                .attr("x2",  function (d) {
-//                    return x(d.max)
-//                })
-//                .attr("y2",  function (d) {
-//                    return y(d.max)
-//                });
+            selection.selectAll(".significanceIndicator")
+                .attr("x1", function (d) {
+                    return x(0)
+                })
+                .attr("y1",function (d) {
+                    return y(significanceThreshold)
+                })
+                .attr("x2",  function (d) {
+                    return x(chromosomes.activeGenomeLength())-margin.right;
+                })
+                .attr("y2",  function (d) {
+                    return y(significanceThreshold)
+                });
+
         };
 
 
 
+        var defineBodyClip = function (bodyClip,id,xStart,yStart,xEnd,yEnd) {
+
+            var defHolder = bodyClip.append("defs");
+
+            defHolder.append("clipPath")
+                .attr("id", id)
+                .append("rect")
+                .attr("x", xStart)
+                .attr("y", yStart)
+                .attr("width", xEnd)
+                .attr("height", yEnd);
+
+        };
 
 
         var createAxes = function (axisGroup,chromosomes,xScale,yScale, width, height, margin){
@@ -281,6 +281,7 @@ var baget = baget || {};  // encapsulating variable
                 .orient('left');
 
             axisGroup.append('g')
+                .attr('id','yaxis')
                 .attr('transform', 'translate(' + margin.left + ',0)')
                 .attr('class', 'main axis pValue')
                 .call(yAxis);
@@ -311,9 +312,10 @@ var baget = baget || {};  // encapsulating variable
                 .text("chromosome");
 
             axisGroup.append('g')
-                .attr('id','yaxis')
+                .attr('id','xaxis')
                 .attr('transform', 'translate(5,' + height +')')
                 .attr('class', 'main axis chromosome')
+                .attr("clip-path", "url(#axisClip)")
                 .call(xAxis);
 
         };
@@ -403,7 +405,9 @@ var baget = baget || {};  // encapsulating variable
                 .attr("y2",  function (d) {
                     return yScale(significanceThreshold)
                 })
-                .attr("stroke-width", 0);
+                .attr("stroke-width", 0)
+                .attr("clip-path", "url(#bodyClip)")
+            ;
             significanceIndicator.transition()
                 .delay(100).duration(1400)
                 .attr("stroke-width", 1);
@@ -500,6 +504,22 @@ var baget = baget || {};  // encapsulating variable
                 .attr('class', 'significanceHolder')
                 .call(addSignificanceIndicator ,significanceThreshold,chromosomes,x,y,margin);
 
+            chart
+                .selectAll('g.bodyClip')
+                .data([1])
+                .enter()
+                .append('g')
+                .attr('class', 'bodyClip')
+                .call(defineBodyClip ,"bodyClip",margin.left,margin.top,width-margin.left,height-margin.top);
+
+            chart
+                .selectAll('g.axisClip')
+                .data([1])
+                .enter()
+                .append('g')
+                .attr('class', 'axisClip')
+                .call(defineBodyClip ,"axisClip",margin.left,0,width-margin.left,margin.bottom);
+
 
             // create a solid block to cover the area where we know dots should be.
             if (typeof blockColoringThreshold !== 'undefined') {
@@ -519,6 +539,7 @@ var baget = baget || {};  // encapsulating variable
                 .enter()
                 .append('g')
                 .attr('class', 'dotHolder')
+                .attr("clip-path", "url(#bodyClip)")
                 .call(createDots,chart.data()[0],chromosomes,dotRadius,x,y,dataExtent,significanceThreshold,tip);
 
             // special workaround-- there is only one dot holder, but we may want to merge in some new data.  In this case force
@@ -526,20 +547,6 @@ var baget = baget || {};  // encapsulating variable
             if(!dotHolder[0][0]){
                 createDots(chart.select('g.dotHolder'),chart.data()[0],chromosomes,dotRadius,x,y,dataExtent,significanceThreshold,tip);
             }
-
-
-
-
-
-            $(document.body).on('click', 'clickable', function () {
-
-
-
-                console.log(' hooray');
-
-
-                return "http://www.google.com";
-            });
 
 
 
@@ -558,6 +565,7 @@ var baget = baget || {};  // encapsulating variable
                 .attr('width', width*1.5)
                 .attr('height', height*1.4)
                 .call(tip);
+
             return instance;
         };
 
