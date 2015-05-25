@@ -44,7 +44,7 @@ var baget = baget || {};  // encapsulating variable
             oddColorSignificant = d3.rgb('#FA5858'),
             evenColorSignificant = d3.rgb('#FA5858'),
 
-            // private variables
+        // private variables
             xAxis,
             yAxis,
             x,

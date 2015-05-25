@@ -1,14 +1,15 @@
 package baget
 
-class ManController {
+class CrossMapController {
 
-    def index() {
-        render(view:'man',model:[dataFileBased:0])
-    }
+
+        def index() {
+            render(view:'man',model:[dataFileBased:0])
+        }
 
 
 // c=  chromosome number, y=-1og P, x= location in chromosome, n= name
-    def rawJson = """
+        def rawJson = """
 [{"x":100,"y":1,"c":1,"n":"rs1234567"},
 {"x":10000000,"y":3,"c":1,"n":"rs1234567"},
 {"x":90000000,"y":2,"c":1,"n":"rs1234567"},
@@ -66,7 +67,7 @@ class ManController {
 {"x":1290000,"y":3,"c":"X","n":"rsXX1234567"}]""".toString()
 
 
-    def rawJson1 = """
+        def rawJson1 = """
 [{"x":100,"y":0.5,"c":1,"n":"rs1234567"},
 {"x":1000000,"y":0.5,"c":1,"n":"rs1234567"},
 {"x":9000000,"y":0.5,"c":1,"n":"rs1234567"},
@@ -127,9 +128,12 @@ class ManController {
 
 
 
+        def crossTrait() {
+            render(view:'crossMapper',model:[dataFileBased:0])
+        }
 
-    def manData3(){
-        String fileLocation = grailsApplication.mainContext.getResource("/WEB-INF/resources/manhattan.json").file.toString()
+    def crossData(){
+        String fileLocation = grailsApplication.mainContext.getResource("/WEB-INF/resources/crossTrait.json").file.toString()
         File file = new File(fileLocation)
         response.setHeader "Content-disposition", "attachment; filename=${file.name}"
         response.contentType = 'text/json'
@@ -140,25 +144,21 @@ class ManController {
 
 
 
-    def manhattanPlot() {
-        render(view:'man',model:[dataFileBased:0])
-    }
 
 
+        def manData(){
+            String dataFileBased = params.id
+            response.setContentType("application/json")
+            render(rawJson.toString()) ;
 
-    def manData(){
-        String dataFileBased = params.id
-        response.setContentType("application/json")
-        render(rawJson.toString()) ;
-
-    }
+        }
 
 
-    def manData1(){
-        String dataFileBased = params.id
-        response.setContentType("application/json")
-        render(rawJson1.toString()) ;
+        def manData1(){
+            String dataFileBased = params.id
+            response.setContentType("application/json")
+            render(rawJson1.toString()) ;
+
+        }
 
     }
-
-}

@@ -65,6 +65,9 @@
             <ul class="nav navbar-nav">
                 <li class="active"><a href="<g:createLink controller='man' action ='manhattanPlot'/>">Manhattan Plot</a></li>
             </ul>
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="<g:createLink controller='crossMap' action ='crossTrait'/>">Cross Map</a></li>
+            </ul>
 
         </div>
     </div>

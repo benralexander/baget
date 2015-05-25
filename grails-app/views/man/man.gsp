@@ -133,7 +133,7 @@ text.x {
 
     var addMoreData = function (d3Object) {
 
-         d3.json("${createLink(controller: 'man', action:'manData1')}", function (error, data) {
+         d3.json("${createLink(controller: 'man', action:'manData3')}", function (error, data) {
 
              d3Object.dataAppender("#manhattanPlot1",data)
                      .overrideYMinimum (0)
@@ -148,12 +148,12 @@ text.x {
 
 
 
-    d3.json("${createLink(controller: 'man', action:'manData')}", function (error, data) {
+    d3.json("${createLink(controller: 'man', action:'manData3')}", function (error, data) {
 
         var manhattan = baget.manhattan()
                 .width(width)
                 .height(height)
-                .dataHanger("#manhattanPlot1",data)
+                .dataHanger("#manhattanPlot1",data.variants)
                 .crossChromosomePlot(true)
 //                .overrideYMinimum (0)
 //                .overrideYMaximum (10)
@@ -162,12 +162,20 @@ text.x {
                 .dotRadius(3)
 //                .blockColoringThreshold(0.5)
                 .significanceThreshold(6.5)
-                .xAxisAccessor(function (d){return d.x})
-                .yAxisAccessor(function (d){ return d.y})
-                .nameAccessor(function (d){return d.n})
-                .chromosomeAccessor(function (d){return d.c})
-                .includeXChromosome(true)
-                .includeYChromosome(true)
+//                .xAxisAccessor(function (d){return d.x})
+//                .yAxisAccessor(function (d){ return d.y})
+//                .nameAccessor(function (d){return d.n})
+//                .chromosomeAccessor(function (d){return d.c})
+                        .xAxisAccessor(function (d){return d.POS})
+                        .yAxisAccessor(function (d){if (d.PVALUE>0){
+                            return (0-Math.log10(d.PVALUE));
+                        } else{
+                            return 0}
+                        })
+                        .nameAccessor(function (d){return d.DBSNP_ID})
+                        .chromosomeAccessor(function (d){return d.CHROM})
+                .includeXChromosome(false)
+                .includeYChromosome(false)
                 .dotClickLink('http://www.ncbi.nlm.nih.gov/gap/?term=')
                 ;
 

@@ -33,6 +33,10 @@ modules = {
         resource url: 'css/baget/manhattan.css'
         resource url: 'js/baget/manhattan.js'
     }
+    crossMap {
+        resource url: 'css/baget/crossMap.css'
+        resource url: 'js/baget/crossMap.js'
+    }
 
     barchart {
           resource url: 'css/baget/barchart.css'
