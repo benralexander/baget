@@ -38,7 +38,12 @@
 </head>
 
 <body>
-
+<script type="text/javascript" src="js/bootstrap/bootstrap-dropdown.js"></script>
+<script>
+    $(document).ready(function(){
+        $('.dropdown-toggle').dropdown()
+    });
+</script>
 <r:layoutResources/>
 <div id="spinner" class="spinner" style="display:none;">
 </div>
@@ -55,18 +60,22 @@
         <div class="collapse navbar-collapse navigationControls">
             <ul class="nav navbar-nav">
                 <li class="active"><a href="<g:createLink controller='qqPlot' action ='index'/>">QQ Plot</a></li>
-            </ul>
-            <ul class="nav navbar-nav">
+
                 <li class="active"><a href="<g:createLink controller='barChart' action ='index'/>">Bar Chart</a></li>
-            </ul>
-            <ul class="nav navbar-nav">
+
                 <li class="active"><a href="<g:createLink controller='boxWhisker' action ='index'/>">Box Whisker</a></li>
-            </ul>
-            <ul class="nav navbar-nav">
+
                 <li class="active"><a href="<g:createLink controller='man' action ='manhattanPlot'/>">Manhattan Plot</a></li>
-            </ul>
-            <ul class="nav navbar-nav">
+
                 <li class="active"><a href="<g:createLink controller='crossMap' action ='crossTrait'/>">Cross Map</a></li>
+
+                <li class="dropdown navbar-right" style="margin-left:200px">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">More examples<span class="caret"></span></a>
+                    <ul class="pull-right dropdown-menu" role="menu">
+                        <li><a href="http://graphicscow.com/">test code</a></li>
+                        <li><a href="http://bovinecontemplation.org">bovine contemplation</a></li>
+                    </ul>
+                </li>
             </ul>
 
         </div>

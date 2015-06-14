@@ -28,8 +28,8 @@
             <div class="col-md-2"></div>
             <div class="col-md-8">
                 <p>
-                    Last decade's predominant model was 'desktop software', each with a native user interfaces written from scratch.  Software of this sort often needed
-                    to be substantially rewritten in order to make the software usable on both Mac and Windows, with other subsequent rewrites for Linux and other operating
+                    Last decade's predominant model was 'desktop software', in which native user interfaces were written from scratch for each application.  Software of this sort often needed
+                    to be substantially rewritten in order to operate across Mac, Windows, Linux and other operating
                     systems. The modern answer to this maintenance morass is the web-based application with a  browser-based interface,
                     with all its attendant advantages in terms of flexibility, scalability, maintainability and much else. Early browser-based interfaces suffered, however,
                     because browser-based graphics could not measure up to their native desktop counterparts. With the recent explosion in JavaScript-based graphics, however,
@@ -41,9 +41,9 @@
 
                 <p style="margin-top:10px">
                     This approach to graphical code reuse is different than the bargain implicit in most graphical packages, which is this: learn my package, and
-                    you won't need to depend on anything else. This bargain is irretrievably flawed, of course, since all users have different requirements
+                    you won't need to depend on anything else. This bargain is deeply flawed, of course, since all users have different requirements
                     and all packages have different capabilities, and therefore no package  can offer all things to all people. The goal of the BAGET project,
-                    and of open source more generally, is different in kind. Provide users with  both working software and the code that defines, and thereby
+                    and of open source more generally, is different in kind. Provide users with  both working software and the code that defines it, and thereby
                     give  people the opportunity to re-factor, extend, and  to otherwise adapt software to their purposes. D3 is particularly well-suited to
                     supporting this role since it allows users to leverage the knowledge they already possess, depending as it does on an understanding
                     of HTML, CSS, the DOM, JavaScript, and JQuery.  This approach fails without a knowledgeable user base, of course, but many people  do possess
