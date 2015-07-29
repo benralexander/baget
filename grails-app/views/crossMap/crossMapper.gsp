@@ -27,16 +27,6 @@
 </div>
 <style>
 
-.chart rect {
-    fill: steelblue;
-}
-
-.chart text {
-    fill: white;
-    font: 10px sans-serif;
-    text-anchor: middle;
-}
-
 </style>
 
 

@@ -3,6 +3,10 @@ modules = {
     tooltip{
         resource url: 'js/baget/d3tooltip.js'
     }
+    d3tooltip {
+        resource url: 'js/baget/d3tooltip.js'
+        resource url: 'css/baget/d3tooltip.css'
+    }
     bootstrap {
         resource url: 'http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'
         resource url: 'http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css'
@@ -34,6 +38,8 @@ modules = {
         resource url: 'js/baget/manhattan.js'
     }
     crossMap {
+        dependsOn "d3tooltip"
+
         resource url: 'css/baget/crossMap.css'
         resource url: 'js/baget/crossMap.js'
     }
