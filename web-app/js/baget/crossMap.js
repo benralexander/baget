@@ -1,9 +1,22 @@
 /***
- *               --------------manhattan--------------
+ *               --------------cross trait--------------
  *
- * This JavaScript file should be sufficient for creating a manhattan plot.
+ * This JavaScript file should be sufficient for creating a cross trait plot.    The idea is to take
+ * a number of different phenotypes, and for each one display all variants  for which we have P value
+ * information describing the impact on a phenotype.  Presumably the information we are given
+ * to display will already have been filtered down, so that we don't receive huge numbers of
+ * variants with P values close to 1.
  *
- * @type {baget|*|{}}
+ * From a technical perspective the chief challenge to confront in the construction of this plot
+ * is that we are given long lists of variants which will be categorized as describing a particular
+ * phenotype.  Since we are looking for a plot in the end which has genomic position along one axis
+ * and phenotype along another, we are therefore required to invert the data twice.  That is, identify
+ * all of the unique phenotypes, then identify all of the unique genomic positions, and use these two
+ * variables to build the axes. With the axes in place we can then run through the list and drop
+ * the variants onto the resulting two-dimensional matrix one by one.  This manipulation takes place
+ * in a method below called "buildInternalRepresentation", and most of the processing/looping
+ * is done with the D3 nest command.
+ *
  */
 
 
@@ -13,20 +26,13 @@ var baget = baget || {};  // encapsulating variable
 (function () {
     "use strict";
 
-    /***
-     * The
-     * @returns {{}}
-     */
-
     baget.crossMap = function () {
 
         // the variables we intend to surface
         var
-            width = 1,
             height = 1,
             margin = { top: 250, right: 100, bottom: 100, left: 100 },
                width = 1080 - margin.left - margin.right,
-            spaceForVariantLabel = 60,
             variantLinkUrl = '',
             phenotypeArray = [],
             spaceForPhenotypeLabels  = 100;
@@ -58,7 +64,7 @@ var baget = baget || {};  // encapsulating variable
         };
 
         // indicate direction of effect with color
-        var circle_class = function (assoc) {
+        var iconClass = function (assoc) {
             var c = '';
             if (assoc.d == 'down') c += 'assoc-down';
             else if (assoc.d == 'up') c += 'assoc-up';
@@ -74,15 +80,18 @@ var baget = baget || {};  // encapsulating variable
         } ;
 
 
-
+        /***
+         * Take our input data and convert it into a form that we can use to build the graphic.  We are forced to run through
+         * the data twice:  the first time to pull out all of the variants and traits, which we then use to determine the extents
+         * of the axes.  With these extents in hand we then run through the data again, and in the second run we can place the
+         * individual variants where they should go with respect to row and column. The first run is performed with a
+         * method called "extractUniqueLists", while the second run uses a method called "extractCompoundList".
+         * @param inArray
+         * @returns {{variantNameArray: *, traitNameArray: *, variantArrayOfArrayVariantPointers: *, positionExtent: {max: undefined, min: undefined}, getTraitNameByTraitNumber: getTraitNameByTraitNumber}}
+         */
         var buildInternalRepresentation = function (inArray) {
-            var traitMap;  // given a trait, give me a number
-            var inverseTraitMap = {};  // given a number, give me a trait
-            var variantArrayOfArrays; // arrays of each trait, all pointed to by the elements of an array
-            var variantArrayOfArrayVariantPointers; // arrays of each trait, all pointed to by the elements of an array
-            var variantMap;
             var positionExtent = {max: undefined, min: undefined} ;
-            var inverseVariantMap = {};  // given a number, give me a trait
+            // determine the genomic positions and traits
             var extractUniqueLists = function (dd) {
                 var uniqueVariants=d3.nest()
                     .key(function(d) {
@@ -94,45 +103,30 @@ var baget = baget || {};  // encapsulating variable
                     .rollup(function(d) {return d[0].DBSNP_ID;})
                     .entries(dd)
                     .map(function(d){
-                       return {'id':d.key,
+                        return {'id':d.key,
                             'rsname':d.values}
                     });
                 var uniqueTraits=d3.nest()
                     .key(function(d) {return d.TRAIT;})
                     .sortKeys(d3.ascending)
-                    .rollup(function(d) {return phenotypeMap.phenotypeMap[d[0].TRAIT];})
+                    .rollup(function(d) {
+                        return phenotypeMap.phenotypeMap[d[0].TRAIT];
+                    })
                     .entries(dd)
                     .map(function(d){
                         return {'id':d.key,
                             'name':d.values}
                     });
-
                 return {traits: uniqueTraits,
                     variants: uniqueVariants};
             };
-            var createAMap = function (allTraitsArray) {
-                var retval = {};
-                for (var i = 0; i < allTraitsArray.length; i++) {
-                    retval[allTraitsArray[i]] = i;
-                }
-                return retval;
-            };
-            var createArrayOfArrays = function (incoming, traitMap) {
-                var variantArrayOfArrays = [];
-                variantArrayOfArrayVariantPointers = [];
-                var ddLength = incoming.length;
-                for (var key in traitMap) {
-                    if (traitMap.hasOwnProperty(key)) {
-                        variantArrayOfArrays.push([]);
-                        variantArrayOfArrayVariantPointers.push([]);
-                    }
-                }
-                // create my array of arrays with all the variants
-                for (var i = 0; i < ddLength; i++) {
-                    var variant = incoming [i];
-                    var variantIdPointer = variantMap[variant.ID];
-                    variantArrayOfArrays [traitMap [variant.TRAIT]].push(variant);
-                    variantArrayOfArrayVariantPointers[traitMap [variant.TRAIT]].push({v: variantIdPointer,
+            // create an array of arrays where the first array describes the trait (1 per row),
+            //  and the second array describes individual variants within that trait
+            var extractCompoundList = function (dd,traitMap,variantMap) {
+                var storeVariant = function(variant){
+                    return (
+                    {
+                        v: variantMap[variant.ID],
                         t: traitMap [variant.TRAIT],
                         p: variant.PVALUE,
                         d: variant.DIR,
@@ -143,43 +137,53 @@ var baget = baget || {};  // encapsulating variable
                         b: variant.BETA,
                         z: variant.ZSCORE
                     });
+                } ;
+                var variantsPerTrait=d3.nest()
+                    .key(function(d) {return d.TRAIT;})
+                    .sortKeys(d3.ascending)
+                    .rollup(function(d) {
+                        return (d.map(storeVariant));
+                    })
+                    .entries(dd)
+                    .map(function(d){
+                        return {'id':d.key,
+                            'name':d.values}
+                    });
+
+                return {
+                    variantsPerTrait:variantsPerTrait};
+            };
+            var createAMap = function (allTraitsArray) {
+                var retval = {};
+                for (var i = 0; i < allTraitsArray.length; i++) {
+                    retval[allTraitsArray[i]] = i;
                 }
-                // and now for each of those arrays of arrays, create an array of pointers so that I can step through the variants in order
-                return  variantArrayOfArrays;
-            };
-            var getVariantsByTraitNumber = function (traitNumber) {
-                return  variantArrayOfArrays[traitNumber];
-            };
-            var getTraitNameByTraitNumber = function (traitNumber) {
-                return phenotypeMap.phenotypeMap[inverseTraitMap[traitNumber]];
+                return retval;
             };
 
-
-            //ctor
-            var uniqueArrays = extractUniqueLists(inArray);
-            var  variantIdArray =  uniqueArrays.variants.map(function (d){return d.id});
-            var  variantNameArray = uniqueArrays.variants.map(function (d){return d.rsname});
-            var  traitIdArray =  uniqueArrays.traits.map(function (d){return d.id});
-            var  traitNameArray = uniqueArrays.traits.map(function (d){return d.name});
-            traitMap = createAMap(traitIdArray);
-            variantMap = createAMap(variantIdArray);
-            for (var key in traitMap) {
-                if (traitMap.hasOwnProperty(key)) {
-                    inverseTraitMap[traitMap[key]] = key;
-                }
-            }
-            variantArrayOfArrays = createArrayOfArrays(inArray, traitMap);
+            //  Here are the steps that actually process the data, and therefore serve as the
+            //   constructor for the graphic.
+            var uniqueArrays = extractUniqueLists(inArray),
+              variantIdArray =  uniqueArrays.variants.map(function (d){return d.id}),
+              variantNameArray = uniqueArrays.variants.map(function (d){return d.rsname}),
+              traitIdArray =  uniqueArrays.traits.map(function (d){return d.id}),
+              traitNameArray = uniqueArrays.traits.map(function (d){return d.name}),
+              traitMap = createAMap(traitIdArray),
+              variantMap = createAMap(variantIdArray),
+              compoundArrays = extractCompoundList(inArray,traitMap,variantMap),
+              variantArrayOfArrayVariantPointers =  compoundArrays.variantsPerTrait.map(function (d){return d.name}),
+              getTraitNameByTraitNumber = function (traitNumber) {
+                return traitNameArray[traitNumber];
+            };
 
             return {
+                //  public variables
                 variantNameArray:  variantNameArray,
-                variantIDArray:  variantIdArray,
                 traitNameArray:  traitNameArray,
-                traitIDArray:  traitIdArray,
-                getVariantsByTraitNumber: getVariantsByTraitNumber,
-                getTraitNameByTraitNumber: getTraitNameByTraitNumber,
                 variantArrayOfArrayVariantPointers: variantArrayOfArrayVariantPointers,
-                variantMap: variantMap,
-                positionExtent:positionExtent
+                positionExtent:positionExtent,
+                // public methods
+                getTraitNameByTraitNumber: getTraitNameByTraitNumber
             }
 
         };
@@ -453,7 +457,7 @@ var baget = baget || {};  // encapsulating variable
                 })
                 .attr('stroke-width', 1)
                 .attr('class', function (d, i) {
-                    return circle_class(d);
+                    return iconClass(d);
                 })
                 .on("mouseover", function (d) {
                     onMouseOver(d);
@@ -491,10 +495,9 @@ var baget = baget || {};  // encapsulating variable
             var grid_size = Math.floor((height-margin.top-margin.bottom) / 25);
 
             orgData = buildInternalRepresentation(data);
-            var traitName = orgData.getTraitNameByTraitNumber;
 
             var expandedWidth = orgData.variantNameArray.length * grid_size;
-            var expandedHeight = orgData.traitIDArray.length * grid_size;
+            var expandedHeight = orgData.traitNameArray.length * grid_size;
 
 
             // create the scales
@@ -503,7 +506,7 @@ var baget = baget || {};  // encapsulating variable
                 .range([ margin.left, width-spaceForPhenotypeLabels ]);
 
             yScale = d3.scale.ordinal()
-                .domain([0,orgData.traitIDArray])
+                .domain([0,orgData.traitNameArray])
                 .range([ 0,(height-margin.top-margin.bottom)]);
 
             var zoom = d3.behavior.zoom()
@@ -550,13 +553,6 @@ var baget = baget || {};  // encapsulating variable
                 .attr('class', 'legend')
                 .call(drawLegend,legCol1,  25,3,20, legCol2);
 
-
-
-//            var group = svg.attr("width", expandedWidth + margin.top + margin.bottom)
-//                           .append("g")
-//                           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-//
-
             //label variant down the right side
             group.append('g')
                 .selectAll(".row-g")
@@ -584,7 +580,7 @@ var baget = baget || {};  // encapsulating variable
                 .attr('class', 'dataHolder');
 
 
-            // All the traits for a single variant
+            // All variants for each trait
             var rows = dataHolder.selectAll('g.cellr')
                 .data(orgData.variantArrayOfArrayVariantPointers)
                 .enter()
@@ -600,7 +596,6 @@ var baget = baget || {};  // encapsulating variable
                 .attr("x", 0)
                 .attr("y",  function (d, i) {
                     var row=parseInt(this.parentNode.classList[1].split('_')[1]);
-                   // return row * grid_size + 15;
                     return row * grid_size;
                 })
                 .attr("width", width-spaceForPhenotypeLabels)
