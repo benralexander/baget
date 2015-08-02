@@ -89,23 +89,41 @@ var baget = baget || {};  // encapsulating variable
          * @param inArray
          * @returns {{variantNameArray: *, traitNameArray: *, variantArrayOfArrayVariantPointers: *, positionExtent: {max: undefined, min: undefined}, getTraitNameByTraitNumber: getTraitNameByTraitNumber}}
          */
-        var buildInternalRepresentation = function (inArray) {
-            var positionExtent = {max: undefined, min: undefined} ;
+        var buildInternalRepresentation = function (inArray,sortChoice) {
+            var positionExtent = {max: d3.max(inArray,function(d){return d.POS}),
+                                  min: d3.min(inArray,function(d){return d.POS})} ;
             // determine the genomic positions and traits
+            var uniqueVariants;
             var extractUniqueLists = function (dd) {
-                var uniqueVariants=d3.nest()
-                    .key(function(d) {
-                        positionExtent.max = d3.max([positionExtent.max,d.POS]);
-                        positionExtent.min = d3.min([positionExtent.min,d.POS]);
-                        return d.ID;
-                    })
-                    .sortKeys(function(a,b) { return a.POS - b.POS; })
-                    .rollup(function(d) {return d[0].DBSNP_ID;})
-                    .entries(dd)
-                    .map(function(d){
-                        return {'id':d.key,
-                            'rsname':d.values}
-                    });
+                if (sortChoice>-1)  {
+                    uniqueVariants=d3.nest()
+                        .key(function(d) {
+                            return d.ID;
+                        })
+//                        .sortValues(function(a,b) {
+//                            return a.PVALUE - b.PVALUE;
+//                         })
+                        .rollup(function(d) {return d[0].DBSNP_ID;})
+                        .entries(dd)
+                        .map(function(d){
+                            return {'id':d.key,
+                                'rsname':d.values}
+                        });
+                } else {
+                    uniqueVariants=d3.nest()
+                        .key(function(d) {
+                            return d.ID;
+                        })
+                        .sortKeys(function(a,b) {
+                            return a.POS - b.POS;
+                        })
+                        .rollup(function(d) {return d[0].DBSNP_ID;})
+                        .entries(dd)
+                        .map(function(d){
+                            return {'id':d.key,
+                                'rsname':d.values}
+                        });
+                }
                 var uniqueTraits=d3.nest()
                     .key(function(d) {return d.TRAIT;})
                     .sortKeys(d3.ascending)
@@ -128,6 +146,7 @@ var baget = baget || {};  // encapsulating variable
                     {
                         v: variantMap[variant.ID],
                         t: traitMap [variant.TRAIT],
+                        i: variant.ID,
                         p: variant.PVALUE,
                         d: variant.DIR,
                         o: variant.ODDS_RATIO,
@@ -138,16 +157,19 @@ var baget = baget || {};  // encapsulating variable
                         z: variant.ZSCORE
                     });
                 } ;
-                var variantsPerTrait=d3.nest()
-                    .key(function(d) {return d.TRAIT;})
+                var variantsPerTrait;
+                variantsPerTrait = d3.nest()
+                    .key(function (d) {
+                        return d.TRAIT;
+                    })
                     .sortKeys(d3.ascending)
-                    .rollup(function(d) {
+                    .rollup(function (d) {
                         return (d.map(storeVariant));
                     })
                     .entries(dd)
-                    .map(function(d){
-                        return {'id':d.key,
-                            'name':d.values}
+                    .map(function (d) {
+                        return {'id': d.key,
+                            'name': d.values}
                     });
 
                 return {
@@ -332,7 +354,7 @@ var baget = baget || {};  // encapsulating variable
 
 
 
-        var createAxes = function (axisGroup,orgData,gridSize,xScale,yScale, width, height, margin) {
+        var createAxes = function (axisGroup,orgData,gridSize,xScale,yScale, width, sortChoice) {
             // draw the x axis
 
             yAxis = d3.svg.axis()
@@ -352,20 +374,23 @@ var baget = baget || {};  // encapsulating variable
                 .ticks(4);
 
 
-            axisGroup.append('g')
+            var xAxisDecoration = axisGroup.append('g')
                 .attr('id', 'xaxis')
                 .attr('transform', 'translate(0,0)')
                 .attr('class', 'main axis chromosome')
                 .call(xAxis);
 
-//
-//                .selectAll("text")
-//                    .attr("dx", "0.5em")
-//                    .attr("dy", "0em")
-//                    .style("text-anchor", "start")
-//                    .attr("transform", function(d) {
-//                        return "rotate(-65)"
-//                    });
+            if (sortChoice !== -1){
+                xAxisDecoration
+                    .selectAll("text")
+                    .attr("dx", "0.5em")
+                    .attr("dy", "0em")
+                    .style("text-anchor", "start")
+                    .attr("transform", function(d) {
+                        return "rotate(-65)"
+                    });
+            }
+
         };
 
 
@@ -440,37 +465,47 @@ var baget = baget || {};  // encapsulating variable
 
 
 
-        var drawIcon  = function(parent){
+        var drawIcon  = function(parent,sortChoice){
             var grid_size = Math.floor((height-margin.top-margin.bottom) / 25);
-            parent
+            var drawnIcon = parent
                 .attr("x1", function (d, i) {
-                    return xScale(d.pos);
+                    if (sortChoice > -1)   {
+                        return xScale(d.dbsnp);
+                    }   else {
+                        return xScale(d.pos);
+                    }
                 })
                 .attr("y1", function (d, i) {
                     return (maximumArrowSize/2)+(d.t * grid_size)-(arrowSize(d)/2) ;
                 })
                 .attr("x2", function (d, i) {
-                    return xScale(d.pos);
-                })
+                    if (sortChoice > -1)   {
+                        return xScale(d.dbsnp);
+                    }   else {
+                        return xScale(d.pos);
+                    }                    })
                 .attr("y2", function (d, i) {
                     return (maximumArrowSize/2)+(d.t * grid_size)+arrowSize(d) ;
                 })
                 .attr('stroke-width', 1)
                 .attr('class', function (d, i) {
                     return iconClass(d);
-                })
-                .on("mouseover", function (d) {
+                });
+            if (typeof sortChoice > -1){
+                drawnIcon.on("mouseover", function (d) {
                     onMouseOver(d);
                 })
-                .on("mouseout", function (d) {
-                    d3.select("#tooltip").classed("hidden", true);
-                    d3.selectAll(".traitlabel").classed("text-highlight", false);
-                    d3.selectAll(".variantlabel").classed("text-highlight", false).text('');
-                })
-                .on("click", function (d) {
-                    onClick(d);
-                })
-            ;
+                    .on("mouseout", function (d) {
+                        d3.select("#tooltip").classed("hidden", true);
+                        d3.selectAll(".traitlabel").classed("text-highlight", false);
+                        d3.selectAll(".variantlabel").classed("text-highlight", false).text('');
+                    })
+                    .on("click", function (d) {
+                        onClick(d);
+                    })
+
+            }
+             ;
         };
 
 
@@ -488,33 +523,47 @@ var baget = baget || {};  // encapsulating variable
 
 
 
-        instance.render = function () {
+        instance.render = function (sortChoice) {
+
+            if (typeof sortChoice === 'undefined') {
+                sortChoice = -1; // Mark as ordered by genomic position
+            }
             var data = svg.data()[0].variants;
 
 
             var grid_size = Math.floor((height-margin.top-margin.bottom) / 25);
 
-            orgData = buildInternalRepresentation(data);
-
-            var expandedWidth = orgData.variantNameArray.length * grid_size;
-            var expandedHeight = orgData.traitNameArray.length * grid_size;
-
+            //orgData = buildInternalRepresentation(data,sortChoice);
+            orgData = buildInternalRepresentation(data,-1);
 
             // create the scales
-            xScale = d3.scale.linear()
-                .domain([orgData.positionExtent.min,orgData.positionExtent.max])
-                .range([ margin.left, width-spaceForPhenotypeLabels ]);
+            if ((sortChoice === -1)||(true)) {
+                xScale = d3.scale.linear()
+                    .domain([orgData.positionExtent.min,orgData.positionExtent.max])
+                    .range([ margin.left, width-spaceForPhenotypeLabels ]);
+            }  else {
+                if (typeof orgData.variantArrayOfArrayVariantPointers[sortChoice] !== 'undefined')  {
+                    var variantArray =  orgData.variantArrayOfArrayVariantPointers[sortChoice].sort(function(a,b){return (b.p-a.p)}).map(function(d){return d.dbsnp});
+                        xScale = d3.scale.ordinal()
+                            .domain(variantArray)
+                            .rangeBands([ margin.left, width-spaceForPhenotypeLabels ]);
+
+                }
+            }
+
 
             yScale = d3.scale.ordinal()
                 .domain([0,orgData.traitNameArray])
                 .range([ 0,(height-margin.top-margin.bottom)]);
 
-            var zoom = d3.behavior.zoom()
-                .x(xScale)
-                .scaleExtent([1, 100])
-                .on("zoom", zoomed);
+            if ((sortChoice === -1)||(true)) {
+                var zoom = d3.behavior.zoom()
+                    .x(xScale)
+                    .scaleExtent([1, 100])
+                    .on("zoom", zoomed);
 
-            svg.call(zoom, drawIcon);
+                svg.call(zoom, drawIcon);
+            }
 
             svg
                 .selectAll('g.bodyClip')
@@ -527,12 +576,12 @@ var baget = baget || {};  // encapsulating variable
 
             var group = svg
                 .selectAll('g.axesHolder')
-                .data([1])
-                .enter()
+                 .data([1]);
+            group.enter()
                 .append('g')
                 .attr('class', 'axesHolder')
                 .attr('transform', 'translate('+margin.left+','+margin.top+')')
-                .call(createAxes ,orgData,grid_size,xScale,yScale,width-spaceForPhenotypeLabels, height, margin);
+                .call(createAxes ,orgData,grid_size,xScale,yScale,width-spaceForPhenotypeLabels, -1);
 
             var legCol1 = [{legendText:''},
                 {legendText:'positive'},
@@ -544,7 +593,10 @@ var baget = baget || {};  // encapsulating variable
                 {legendText:'p< 10E-8=big'}
             ] ;
 
-
+            var wig=function(d,i){
+                console.log("d"+d+","+i);
+                instance.render(i) ;
+            }
             svg
                 .selectAll('g.legend')
                 .data([1])
@@ -553,13 +605,13 @@ var baget = baget || {};  // encapsulating variable
                 .attr('class', 'legend')
                 .call(drawLegend,legCol1,  25,3,20, legCol2);
 
-            //label variant down the right side
-            group.append('g')
+            //label traits down the right side
+            var traitLabels = group.append('g')
                 .selectAll(".row-g")
                 .data(orgData.traitNameArray)
-                .enter()
-                .append('text')
-                .attr("class", function (d, i) {
+                .enter();
+
+            traitLabels.append('text').attr("class", function (d, i) {
                     return "traitlabel  r" + i;
                 })
                 .text(function (d) {
@@ -569,8 +621,7 @@ var baget = baget || {};  // encapsulating variable
                 .attr("y", function (d, i) {
                     return i * grid_size + 15;
                 })
-                .style("text-anchor", "start");
-
+                .style("text-anchor", "start").on("click", wig);
 
             var dataHolder = group
                 .selectAll('g.dataHolder')
@@ -589,8 +640,9 @@ var baget = baget || {};  // encapsulating variable
                     return 'cellr b_'+i;
                 }) ;
 
-            rows.selectAll('rect.bg').data([1])
-                .enter()
+            var allRows = rows.selectAll('rect.bg').data([1]);
+
+            allRows.enter()
                 .append('rect')
                 .attr('class','bg')
                 .attr("x", 0)
@@ -600,16 +652,38 @@ var baget = baget || {};  // encapsulating variable
                 })
                 .attr("width", width-spaceForPhenotypeLabels)
                 .attr("height", grid_size);
+
+
             // Now draw something for each trait
-            rows.selectAll('line.cg')
+            var eachRow = rows.selectAll('line.cg')
                 .data(function (d, i) {
                     return d
-                })
-                .enter()
+                });
+
+            eachRow.enter()
                 .append('line')
                 .attr('class','cg')
                 .attr("clip-path", "url(#bodyClip)")
-                .call(drawIcon);
+                .call(drawIcon,-1);
+
+
+                if (sortChoice !== -1){
+                    if (typeof orgData.variantArrayOfArrayVariantPointers[sortChoice] !== 'undefined')  {
+                        var variantArray =  orgData.variantArrayOfArrayVariantPointers[sortChoice].sort(function(a,b){return (b.p-a.p)}).map(function(d){return d.dbsnp});
+                        xScale = d3.scale.ordinal()
+                            .domain(variantArray)
+                            .rangeBands([ margin.left, width-spaceForPhenotypeLabels ]);
+
+                    }
+
+
+                    eachRow.transition()
+                        .delay(2000)
+                        .duration(3000)
+                        .call(drawIcon,sortChoice);
+
+                }
+
 
         };
 

@@ -134,7 +134,7 @@
                 .phenotypeArray (phenotypeMap.phenotypeArray);
 
         crossMap.dataHanger("#vis",data)
-                .render();
+                .render(-1);
     }
 
 </script>
