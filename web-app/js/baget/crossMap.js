@@ -470,8 +470,10 @@ var baget = baget || {};  // encapsulating variable
             var drawnIcon = parent
                 .attr("x1", function (d, i) {
                     if (sortChoice > -1)   {
+                        console.log('snp='+d.dbsnp)
                         return xScale(d.dbsnp);
                     }   else {
+                        console.log('pos='+d.pos)
                         return xScale(d.pos);
                     }
                 })
@@ -557,12 +559,12 @@ var baget = baget || {};  // encapsulating variable
                 .range([ 0,(height-margin.top-margin.bottom)]);
 
             if ((sortChoice === -1)||(true)) {
-                var zoom = d3.behavior.zoom()
-                    .x(xScale)
-                    .scaleExtent([1, 100])
-                    .on("zoom", zoomed);
-
-                svg.call(zoom, drawIcon);
+//                var zoom = d3.behavior.zoom()
+//                    .x(xScale)
+//                    .scaleExtent([1, 100])
+//                    .on("zoom", zoomed);
+//
+//                svg.call(zoom, drawIcon);
             }
 
             svg
@@ -581,7 +583,7 @@ var baget = baget || {};  // encapsulating variable
                 .append('g')
                 .attr('class', 'axesHolder')
                 .attr('transform', 'translate('+margin.left+','+margin.top+')')
-                .call(createAxes ,orgData,grid_size,xScale,yScale,width-spaceForPhenotypeLabels, -1);
+                .call(createAxes ,orgData,grid_size,xScale,yScale,width-spaceForPhenotypeLabels, sortChoice);
 
             var legCol1 = [{legendText:''},
                 {legendText:'positive'},
@@ -594,7 +596,7 @@ var baget = baget || {};  // encapsulating variable
             ] ;
 
             var wig=function(d,i){
-                console.log("d"+d+","+i);
+                d3.selectAll('g.cellr').selectAll('line').remove() ;
                 instance.render(i) ;
             }
             svg
@@ -625,16 +627,16 @@ var baget = baget || {};  // encapsulating variable
 
             var dataHolder = group
                 .selectAll('g.dataHolder')
-                .data([1])
-                .enter()
+                .data([1]);
+            dataHolder.enter()
                 .append('g')
                 .attr('class', 'dataHolder');
 
 
             // All variants for each trait
             var rows = dataHolder.selectAll('g.cellr')
-                .data(orgData.variantArrayOfArrayVariantPointers)
-                .enter()
+                .data(orgData.variantArrayOfArrayVariantPointers);
+            rows.enter()
                 .append('g')
                 .attr('class', function(d,i){
                     return 'cellr b_'+i;
@@ -667,13 +669,22 @@ var baget = baget || {};  // encapsulating variable
                 .call(drawIcon,-1);
 
 
+
                 if (sortChoice !== -1){
                     if (typeof orgData.variantArrayOfArrayVariantPointers[sortChoice] !== 'undefined')  {
                         var variantArray =  orgData.variantArrayOfArrayVariantPointers[sortChoice].sort(function(a,b){return (b.p-a.p)}).map(function(d){return d.dbsnp});
                         xScale = d3.scale.ordinal()
                             .domain(variantArray)
                             .rangeBands([ margin.left, width-spaceForPhenotypeLabels ]);
-
+                        d3.select('#xaxis').selectAll('.tick').remove();
+                        var group = svg
+                            .selectAll('g.axesHolder')
+                            .data([1]);
+                        group.enter()
+                            .append('g')
+                            .attr('class', 'axesHolder')
+                            .attr('transform', 'translate('+margin.left+','+margin.top+')')
+                            .call(createAxes ,orgData,grid_size,xScale,yScale,width-spaceForPhenotypeLabels, sortChoice);
                     }
 
 
@@ -681,7 +692,6 @@ var baget = baget || {};  // encapsulating variable
                         .delay(2000)
                         .duration(3000)
                         .call(drawIcon,sortChoice);
-
                 }
 
 

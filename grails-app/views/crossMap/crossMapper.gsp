@@ -135,6 +135,8 @@
 
         crossMap.dataHanger("#vis",data)
                 .render(-1);
+
+
     }
 
 </script>
