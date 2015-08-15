@@ -373,15 +373,30 @@ var baget = baget || {};  // encapsulating variable
                 .orient('top')
                 .ticks(4);
 
+            // remove old ticks, if any
+            axisGroup.select('g#xaxis').selectAll('g').remove() ;
 
-            var xAxisDecoration = axisGroup.append('g')
+            // create an xaxis if none exists.  Grab the old one if it exists already, aand draw the axis ticks on it.
+            var axisBuildUpdater = axisGroup
+                .selectAll('g#xaxis')
+                .data([1]);
+             axisBuildUpdater.enter().append('g')
                 .attr('id', 'xaxis')
                 .attr('transform', 'translate(0,0)')
-                .attr('class', 'main axis chromosome')
-                .call(xAxis);
+                .attr('class', 'main axis chromosome');
+            axisBuildUpdater.call(xAxis);
 
+//
+//            var xax = axisGroup.select('g#xaxis').selectAll('g').remove() ;
+//
+//            var xAxisDecoration = axisGroup.append('g')
+//                .attr('id', 'xaxis')
+//                .attr('transform', 'translate(0,0)')
+//                .attr('class', 'main axis chromosome')
+//                .call(xAxis);
+//
             if (sortChoice !== -1){
-                xAxisDecoration
+                axisBuildUpdater
                     .selectAll("text")
                     .attr("dx", "0.5em")
                     .attr("dy", "0em")
@@ -470,10 +485,8 @@ var baget = baget || {};  // encapsulating variable
             var drawnIcon = parent
                 .attr("x1", function (d, i) {
                     if (sortChoice > -1)   {
-                        console.log('snp='+d.dbsnp)
                         return xScale(d.dbsnp);
                     }   else {
-                        console.log('pos='+d.pos)
                         return xScale(d.pos);
                     }
                 })
@@ -584,6 +597,7 @@ var baget = baget || {};  // encapsulating variable
                 .attr('class', 'axesHolder')
                 .attr('transform', 'translate('+margin.left+','+margin.top+')')
                 .call(createAxes ,orgData,grid_size,xScale,yScale,width-spaceForPhenotypeLabels, sortChoice);
+            group.exit().remove();
 
             var legCol1 = [{legendText:''},
                 {legendText:'positive'},
@@ -676,15 +690,16 @@ var baget = baget || {};  // encapsulating variable
                         xScale = d3.scale.ordinal()
                             .domain(variantArray)
                             .rangeBands([ margin.left, width-spaceForPhenotypeLabels ]);
-                        d3.select('#xaxis').selectAll('.tick').remove();
+                      //  d3.select('#xaxis').selectAll('.tick').remove();
                         var group = svg
                             .selectAll('g.axesHolder')
                             .data([1]);
                         group.enter()
                             .append('g')
                             .attr('class', 'axesHolder')
-                            .attr('transform', 'translate('+margin.left+','+margin.top+')')
-                            .call(createAxes ,orgData,grid_size,xScale,yScale,width-spaceForPhenotypeLabels, sortChoice);
+                            .attr('transform', 'translate('+margin.left+','+margin.top+')');
+                        group.call(createAxes ,orgData,grid_size,xScale,yScale,width-spaceForPhenotypeLabels, sortChoice);
+                        group.exit().remove();
                     }
 
 
