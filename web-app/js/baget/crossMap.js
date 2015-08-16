@@ -355,48 +355,43 @@ var baget = baget || {};  // encapsulating variable
 
 
         var createAxes = function (axisGroup,orgData,gridSize,xScale,yScale, width, sortChoice) {
-            // draw the x axis
-
+            //let's make the y axis
             yAxis = d3.svg.axis()
                 .scale(yScale)
                 .orient('right')
                 .tickFormat(d3.requote(""));
 
-            axisGroup.append('g')
+            // create an xaxis if none exists.  Grab the old one if it exists already, aand draw the axis ticks on it.
+            var yaxisBuildUpdater = axisGroup
+                .selectAll('g#yaxis')
+                .data([1]);
+            yaxisBuildUpdater.enter().append('g')
                 .attr('id', 'yaxis')
-              .attr('transform', 'translate(' + (width) + ',0)')
+                .attr('transform', 'translate(' + (width) + ',0)')
                 .attr('class', 'main axis pValue')
                 .call(yAxis);
 
+            // let's make an x-axis
             xAxis = d3.svg.axis()
                 .scale(xScale)
                 .orient('top')
                 .ticks(4);
 
-            // remove old ticks, if any
+            // remove old ticks, because sometimes we're switching to different axis types
             axisGroup.select('g#xaxis').selectAll('g').remove() ;
 
             // create an xaxis if none exists.  Grab the old one if it exists already, aand draw the axis ticks on it.
-            var axisBuildUpdater = axisGroup
+            var xaxisBuildUpdater = axisGroup
                 .selectAll('g#xaxis')
                 .data([1]);
-             axisBuildUpdater.enter().append('g')
+            xaxisBuildUpdater.enter().append('g')
                 .attr('id', 'xaxis')
                 .attr('transform', 'translate(0,0)')
                 .attr('class', 'main axis chromosome');
-            axisBuildUpdater.call(xAxis);
+            xaxisBuildUpdater.call(xAxis);
 
-//
-//            var xax = axisGroup.select('g#xaxis').selectAll('g').remove() ;
-//
-//            var xAxisDecoration = axisGroup.append('g')
-//                .attr('id', 'xaxis')
-//                .attr('transform', 'translate(0,0)')
-//                .attr('class', 'main axis chromosome')
-//                .call(xAxis);
-//
             if (sortChoice !== -1){
-                axisBuildUpdater
+                xaxisBuildUpdater
                     .selectAll("text")
                     .attr("dx", "0.5em")
                     .attr("dy", "0em")
@@ -561,7 +556,7 @@ var baget = baget || {};  // encapsulating variable
                     var variantArray =  orgData.variantArrayOfArrayVariantPointers[sortChoice].sort(function(a,b){return (b.p-a.p)}).map(function(d){return d.dbsnp});
                         xScale = d3.scale.ordinal()
                             .domain(variantArray)
-                            .rangeBands([ margin.left, width-spaceForPhenotypeLabels ]);
+                            .range([ margin.left, width-spaceForPhenotypeLabels ]);
 
                 }
             }
@@ -689,7 +684,7 @@ var baget = baget || {};  // encapsulating variable
                         var variantArray =  orgData.variantArrayOfArrayVariantPointers[sortChoice].sort(function(a,b){return (b.p-a.p)}).map(function(d){return d.dbsnp});
                         xScale = d3.scale.ordinal()
                             .domain(variantArray)
-                            .rangeBands([ margin.left, width-spaceForPhenotypeLabels ]);
+                            .rangePoints([ margin.left, width-spaceForPhenotypeLabels ]);
                       //  d3.select('#xaxis').selectAll('.tick').remove();
                         var group = svg
                             .selectAll('g.axesHolder')
