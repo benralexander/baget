@@ -39,7 +39,7 @@
             <div class="pull-right">
                 <div class="btn-group">
                     <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                        JavaScript
+                        JavaScript                                                         mean
                         <span class="caret"></span>
                     </a>
                     <ul class="dropdown-menu">
@@ -122,7 +122,7 @@
     var  phenotypeMap =  phenotypeListConstructor (decodeURIComponent("T2D%3Atype+2+diabetes%2CFastGlu%3Afasting+glucose%2CFastIns%3Afasting+insulin%2CProIns%3Afasting+proinsulin%2C2hrGLU_BMIAdj%3Atwo-hour+glucose%2C2hrIns_BMIAdj%3Atwo-hour+insulin%2CHOMAIR%3AHOMA-IR%2CHOMAB%3AHOMA-B%2CHbA1c%3AHbA1c%2CBMI%3ABMI%2CWHR%3Awaist-hip+ratio%2CHeight%3Aheight%2CTC%3Atotal+cholesterol%2CHDL%3AHDL+cholesterol%2CLDL%3ALDL+cholesterol%2CTG%3ATriglycerides%2CCAD%3Acoronary+artery+disease%2CCKD%3Achronic+kidney+disease%2CeGFRcrea%3AeGFR-creat+%28serum+creatinine%29%2CeGFRcys%3AeGFR-cys+%28serum+cystatin+C%29%2CUACR%3Aurinary+albumin-to-creatinine+ratio%2CMA%3Amicroalbuminuria%2CBIP%3Abipolar+disorder%2CSCZ%3Aschizophrenia%2CMDD%3Amajor+depressive+disorder" )) ;
     function fillTraitVariantCross (data)  {
         var margin = { top: 175, right: 100, bottom: 25, left: 10 },
-                width = 1080 - margin.left - margin.right,
+                width = 1180 - margin.left - margin.right,
                 height = 1050 - margin.top - margin.bottom;
 
 

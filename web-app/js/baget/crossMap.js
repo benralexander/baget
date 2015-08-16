@@ -35,7 +35,7 @@ var baget = baget || {};  // encapsulating variable
                width = 1080 - margin.left - margin.right,
             variantLinkUrl = '',
             phenotypeArray = [],
-            spaceForPhenotypeLabels  = 100;
+            spaceForPhenotypeLabels  = 170;
 
 
 
@@ -500,11 +500,12 @@ var baget = baget || {};  // encapsulating variable
                 .attr('stroke-width', 1)
                 .attr('class', function (d, i) {
                     return iconClass(d);
-                });
-            if (typeof sortChoice > -1){
-                drawnIcon.on("mouseover", function (d) {
-                    onMouseOver(d);
-                })
+                }) ;
+            if (typeof drawnIcon.id === 'undefined')   {
+                drawnIcon
+                    .on("mouseover", function (d) {
+                        onMouseOver(d);
+                    })
                     .on("mouseout", function (d) {
                         d3.select("#tooltip").classed("hidden", true);
                         d3.selectAll(".traitlabel").classed("text-highlight", false);
@@ -513,8 +514,9 @@ var baget = baget || {};  // encapsulating variable
                     .on("click", function (d) {
                         onClick(d);
                     })
-
             }
+
+
              ;
         };
 
@@ -546,33 +548,24 @@ var baget = baget || {};  // encapsulating variable
             //orgData = buildInternalRepresentation(data,sortChoice);
             orgData = buildInternalRepresentation(data,-1);
 
-            // create the scales
-            if ((sortChoice === -1)||(true)) {
-                xScale = d3.scale.linear()
-                    .domain([orgData.positionExtent.min,orgData.positionExtent.max])
-                    .range([ margin.left, width-spaceForPhenotypeLabels ]);
-            }  else {
-                if (typeof orgData.variantArrayOfArrayVariantPointers[sortChoice] !== 'undefined')  {
-                    var variantArray =  orgData.variantArrayOfArrayVariantPointers[sortChoice].sort(function(a,b){return (b.p-a.p)}).map(function(d){return d.dbsnp});
-                        xScale = d3.scale.ordinal()
-                            .domain(variantArray)
-                            .range([ margin.left, width-spaceForPhenotypeLabels ]);
-
-                }
-            }
+            // create the X scale.  We can always start off with something linear/numerical
+            xScale = d3.scale.linear()
+                .domain([orgData.positionExtent.min,orgData.positionExtent.max])
+                .range([ margin.left, width-spaceForPhenotypeLabels ]);
 
 
             yScale = d3.scale.ordinal()
                 .domain([0,orgData.traitNameArray])
                 .range([ 0,(height-margin.top-margin.bottom)]);
 
-            if ((sortChoice === -1)||(true)) {
-//                var zoom = d3.behavior.zoom()
-//                    .x(xScale)
-//                    .scaleExtent([1, 100])
-//                    .on("zoom", zoomed);
-//
-//                svg.call(zoom, drawIcon);
+            // we have to insist that the range doesn't change while looking at an ordinal x-axis
+            if (sortChoice === -1) {
+                var zoom = d3.behavior.zoom()
+                    .x(xScale)
+                    .scaleExtent([1, 100])
+                    .on("zoom", zoomed);
+
+                svg.call(zoom, drawIcon);
             }
 
             svg
@@ -622,17 +615,40 @@ var baget = baget || {};  // encapsulating variable
                 .data(orgData.traitNameArray)
                 .enter();
 
+            // I'm going to for some Y labels right here
             traitLabels.append('text').attr("class", function (d, i) {
-                    return "traitlabel  r" + i;
-                })
+                return "traitlabel  r" + i;
+            })
                 .text(function (d) {
                     return d;
                 })
-                .attr("x", width-spaceForPhenotypeLabels+8 )
+                .attr("x", width-spaceForPhenotypeLabels+6 )
                 .attr("y", function (d, i) {
                     return i * grid_size + 15;
                 })
-                .style("text-anchor", "start").on("click", wig);
+                .style("text-anchor", "start");
+
+            traitLabels.append("rect")
+                .attr("x", width+90)
+                .attr("y", function (d, i) {
+                    return i * grid_size + 5;
+                })
+                 .attr("width", 15)
+                .attr("height", 10)
+                .attr("fill", "grey")
+                .on("click", wig);
+
+//            traitLabels.append('text').attr("class", function (d, i) {
+//                return "traitlabel  r" + i;
+//            })
+//                .text(function (d) {
+//                    return d;
+//                })
+//                .attr("x", width-spaceForPhenotypeLabels+6 )
+//                .attr("y", function (d, i) {
+//                    return i * grid_size + 15;
+//                })
+//                .style("text-anchor", "start").on("click", wig);
 
             var dataHolder = group
                 .selectAll('g.dataHolder')
@@ -699,7 +715,7 @@ var baget = baget || {};  // encapsulating variable
 
 
                     eachRow.transition()
-                        .delay(2000)
+                        .delay(1000)
                         .duration(3000)
                         .call(drawIcon,sortChoice);
                 }
