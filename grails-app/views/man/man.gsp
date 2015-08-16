@@ -27,7 +27,10 @@ text.x {
 
     <div class="starter-template">
         <h1 style="font-weight: bold">Manhattan Plot</h1>
+    </div>
 
+    <div class="starter-template">
+        <h2>Plot made with manhattan.js</h2>
     </div>
 
 </div>

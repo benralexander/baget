@@ -21,7 +21,26 @@
 
     <div class="starter-template">
         <h1 style="font-weight: bold">Cross trait map</h1>
+    </div>
 
+
+    <div class="starter-template">
+        <h2>Plot made with crossMap.js</h2>
+    </div>
+
+    <div>
+        <h5>Author's note: that I'm currently experimenting, and trying to work out an alternate method for imposing a sort on the SNPs in
+            the below graphic.   I've put a little gray rectangle to the right of each of the phenotype descriptions, and if you click that rectangle
+            then all of the SNPs ( across all 25 phenotypes) will be sorted by the magnitude of the chosen phenotype.  I'm imagining
+            that biologists might wish to easily identify a lead SNP, and to see if it tracks with other SNPs.  The problem is that by
+            sorting on the basis of P value, I have to ignore the default sort (which is based on each SNP's genomic location).  Both
+            methods of sorting are potentially useful, but going back and forth between them seems disruptive and confusing. What would be a better approach?
+            Maybe using another graphics channel ( size, shape, color, direction)? or am I instead simply trying to take this graphic in an
+            unnatural direction?  Any ideas or comments are welcome, and could come through the feedback mechanisms
+            on my <a href="http://bovinecontemplation.org">bovinecontemplation.org</a> website.
+
+
+        </h5>
     </div>
 
 </div>
