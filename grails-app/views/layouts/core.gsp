@@ -34,7 +34,7 @@
         ga('send', 'pageview');
 
     </script>
-
+    <meta name="wot-verification" content="44f810adf1432de3ec6b"/>
 </head>
 
 <body>
