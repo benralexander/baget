@@ -17,6 +17,17 @@ var baget = baget || {};
             whiskers = function (d) { return [0, d.length - 1]; }, // function to set the whiskers
             outlierRadius = 2,  // size of outlier dots on screen
             histogramBarMultiplier = 0.9,  // how big should we make the bars on the histogram? 0 implies no display
+            boxAndWhiskerWidthMultiplier = 1,  // how big should we make the bars on the histogram? 0 implies no display
+            explicitlySpecifiedHistogram, // if anything other than undefined then try to set the horizontal bars explicitly, rather than calculating a histogram of the data
+            tooltipTextFunction = function(nodeData){
+                var valueToDisplay = nodeData.v;
+                if ($.isNumeric(valueToDisplay)){
+                    return "<span> value: " + valueToDisplay.toPrecision(3) + "</span>";
+                } else {
+                    return "<span>" + valueToDisplay + "</span>";
+                }
+
+            },
 
         // Private variables, which can be surfaced as necessary
             duration = 500,  // How many milliseconds to animations require
@@ -107,14 +118,18 @@ var baget = baget || {};
 
         //  Handle the tooltip pop-ups.
         var tip = (function () {
+            if (typeof d3.tip === 'undefined') {
+                immedTip();// kludge.  Why am I forced to re-initialize this library in the presence of LZ?  I don't want to
+                // stop to figure out the problem right now, but something is going on
+                // that I don't understand.
+            }
             return d3.tip()
                 .attr('class', 'd3-tip')
                 .offset([-10, 0])
                 .html(function (d) {
                     var nodeData = d3.select(this.parentNode).data()[0].data[d];
                     var valueToDisplay = new Number(nodeData.v);
-                    return "<strong></strong> <span style='color:#00ff00'>Gene: " + nodeData.d + "<br/>" +
-                        "Correlation: " + valueToDisplay.toPrecision(3) + "</span>";
+                    return tooltipTextFunction(nodeData);
                 });
         })();
 
@@ -149,6 +164,22 @@ var baget = baget || {};
                     }
                     return  arrayOfBars;
                 },
+
+                explicitBarValues = function(explicitBinCounts){
+                    if (( typeof explicitBinCounts !== 'undefined')   &&
+                        ( explicitBinCounts.length  >  0)  )   {
+                        var minVal = d3.min(explicitBinCounts, function(d){return d.start});
+                        var maxVal = d3.max(explicitBinCounts, function(d){return d.end});
+                        summaryData = {min: minVal,
+                                       max: maxVal,
+                                       binSize:(maxVal-minVal)/explicitBinCounts.length };
+                        arrayOfBars = explicitBinCounts.map(function (d){return d.count});
+                        longestBar = d3.max(arrayOfBars);
+                    }
+                    return  arrayOfBars;//min,max,binSize
+                },
+
+
                 reinitialize  = function (){
                     arrayOfBars = [];
                 },
@@ -164,12 +195,12 @@ var baget = baget || {};
 
             return {
                 // public methods
-
                 reinitialize: reinitialize,
                 summarizeData: summarizeData,
                 getLongestBar:getLongestBar,
                 getSummaryData: getSummaryData,
                 getArrayOfBars: getArrayOfBars,
+                explicitBarValues: explicitBarValues,
                 convertToArrayOfBarValues:convertToArrayOfBarValues
             };
 
@@ -201,14 +232,21 @@ var baget = baget || {};
                      * tthat should be executed exactly once ( such as axis definitions)    and put it
                      * in a separate place from the code  that needs to be reexecuted for each box whisker?
                      */
+                    centerForBox =  (boxWidth/2)*((3*i)+2.5) ;
+                    leftEdgeOfBox =  centerForBox-(boxAndWhiskerWidthMultiplier*(boxWidth/2)) ;
+                    rightEdgeOfBox = centerForBox+(boxAndWhiskerWidthMultiplier*(boxWidth/2));
 
-                    leftEdgeOfBox =  boxWidth*(1.5*(i +0.5)) ;
-                    centerForBox =  leftEdgeOfBox+(boxWidth/2) ;
-                    rightEdgeOfBox = leftEdgeOfBox+boxWidth;
+                    histogram.reinitialize();
+                     if (typeof explicitlySpecifiedHistogram !== 'undefined') {
+                        histogram.explicitBarValues(explicitlySpecifiedHistogram);
+                        min = histogram.getSummaryData().min; // if you are explicitly setting your bar chart then you cannot override min for your plot
+                        max = histogram.getSummaryData().max; // if you are explicitly setting your bar chart then you cannot override max for your plot
+                    }
+
 
                     var g = d3.select(boxWhiskerObjects[0][i]);
 
-                        g.call(tip);//.class('boxHolder',true);
+                    g.call(tip);//.class('boxHolder',true);
                     var d2 = d.data.sort(function (a, b) {
                         return a.v - b.v;
                     });
@@ -320,7 +358,7 @@ var baget = baget || {};
                         .attr("y", function (d) {
                             return yScaleOld(d[2]);
                         })
-                        .attr("width", boxWidth)
+                        .attr("width", rightEdgeOfBox-leftEdgeOfBox)
                         .attr("height", function (d) {
                             return yScaleOld(d[0]) - yScaleOld(d[2]);
                         })
@@ -489,60 +527,52 @@ var baget = baget || {};
                         .text(format)
                         .attr("y", yScale);
 
-                    /***
-                     *
-                     *
-                     *
-                     *
-                     *
-                     * PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
-                     */
-//                    if (g.selectAll("g.histogramHolder").empty()){
-                        histogram.reinitialize();
+
+                    // No explicit the specification of the bar chart. Therefore derive a histogram from the data in d2
+                    if (typeof explicitlySpecifiedHistogram === 'undefined') {
                         histogram.summarizeData(d2,15,function(x){return x.v});
                         histogram.convertToArrayOfBarValues();
+                    }
 
-                        var histogramScale = d3.scale.linear()
-                            .domain([0,histogram.getLongestBar ()])
-                            .range([0,(rightEdgeOfBox-centerForBox)*0.9]);     // cover up to 90% of the box whisker box
 
-                        //   first we unconditionally create a group to hold the bars
-                        var histogramHolder = g.selectAll("g.histogramHolder")
-                            .data([histogram.getSummaryData()]);
+                    var histogramScale = d3.scale.linear()
+                        .domain([0,histogram.getLongestBar ()])
+                        .range([0,(boxWidth/2)*0.9]);     // cover up to 90% of the box whisker box
 
-                        histogramHolder.enter().append("g")
-                            .attr("class", "histogramHolder");
+                    //   first we unconditionally create a group to hold the bars
+                    var histogramHolder = g.selectAll("g.histogramHolder")
+                        .data([histogram.getSummaryData()]);
 
-                        histogramHolder.exit()
-                            .remove();
+                    histogramHolder.enter().append("g")
+                        .attr("class", "histogramHolder");
 
-                        // now make the bars
-//                    var histogramBars = g.select("g.histogramHolder").selectAll("rect.histogramHolder")
-//                        .data(histogram.getArrayOfBars());
+                    histogramHolder.exit()
+                        .remove();
+
+                    // now make the bars
                     var histogramBars = histogramHolder.selectAll("rect.histogramHolder")
                         .data(histogram.getArrayOfBars());
 
                     var barHeight =  ( yScale(histogram.getSummaryData().min)  - yScale(histogram.getSummaryData().max) ) / histogram.getArrayOfBars().length;
 
-                        histogramBars.enter().append("rect")
-                            .attr("class", "histogramHolder")
-                            .attr("x", centerForBox)
-                            .attr("y", function (d,i) {
-                                return yScale((histogram.getSummaryData().binSize*(i+1))+histogram.getSummaryData().min);
-                            })
-                            .attr("width", 0)
-                            .attr("height", function (d) {
-                                return barHeight;
-                            });
+                    histogramBars.enter().append("rect")
+                        .attr("class", "histogramHolder")
+                        .attr("x", centerForBox)
+                        .attr("y", function (d,i) {
+                            return yScale(histogram.getSummaryData().min)-(barHeight*(i+1));
+                        })
+                        .attr("width", 0)
+                        .attr("height", function (d) {
+                            return barHeight;
+                        });
 
-                        histogramBars.transition()
-                            .duration(duration)
-                            .attr("width", function(d){
-                                    return histogramScale(d)*histogramBarMultiplier;
-                                    });
+                    histogramBars.transition()
+                        .duration(duration)
+                        .attr("width", function(d){
+                            return histogramScale(d)*histogramBarMultiplier;
+                        });
 
-                        histogramBars.exit().remove();
-//                    }
+                    histogramBars.exit().remove();
 
 
 
@@ -641,8 +671,8 @@ var baget = baget || {};
          ***/
 
 
-        // Note:  this method will assign data to the DOM
-        instance.initData = function (x) {
+            // Note:  this method will assign data to the DOM
+        instance.initData = function (x,width,height) {
             if (!arguments.length) return boxWhiskerData;
             boxWhiskerData = x;
             var bwHolderLength,
@@ -650,8 +680,8 @@ var baget = baget || {};
             var bwPlot = selection
                 .append("svg")
                 .attr("class", "box")
-                .attr("width", "470px")
-                .attr("height", "500px")
+                .attr("width", width+"px")
+                .attr("height", height+"px")
                 .selectAll("g")
                 .data(boxWhiskerData)
                 .enter()
@@ -765,6 +795,24 @@ var baget = baget || {};
         instance.histogramBarMultiplier = function (x) {
             if (!arguments.length) return histogramBarMultiplier;
             histogramBarMultiplier = x;
+            return instance;
+        };
+
+        instance.boxAndWhiskerWidthMultiplier = function (x) {
+            if (!arguments.length) return boxAndWhiskerWidthMultiplier;
+            boxAndWhiskerWidthMultiplier = x;
+            return instance;
+        };
+
+        instance.explicitlySpecifiedHistogram = function (x) { // expecting data of the form  [{"start": 15.1,"end": 17.8, "count": 3 },{"start": 17.8,"end": 20.5,"count": 13 },...]
+            if (!arguments.length) return explicitlySpecifiedHistogram;
+            explicitlySpecifiedHistogram = x;
+            return instance;
+        };
+
+        instance.tooltipTextFunction = function (x) {
+            if (!arguments.length) return tooltipTextFunction;
+            tooltipTextFunction = x;
             return instance;
         };
 
