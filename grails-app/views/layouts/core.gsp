@@ -68,6 +68,8 @@
 
                 <li class="active"><a href="<g:createLink controller='crossMap' action ='crossTrait'/>">Cross Map</a></li>
 
+                <li class="active"><a href="<g:createLink controller='funcData' action ='functionalData'/>">Functional data</a></li>
+
                 <li class="dropdown navbar-right" style="margin-left:200px">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">More examples<span class="caret"></span></a>
                     <ul class="pull-right dropdown-menu" role="menu">

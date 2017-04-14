@@ -326,30 +326,30 @@ text.whisker{
 
 
         chart.selectionIdentifier('#plot') // the Dom element from which we will hang the plot
-                .initData(data,width,height)            // the information that goes into the plot
+                .initData([{data:[{d:'j',v:0.0}]}],width,height)            // the information that goes into the plot
                 .whiskers(chart.iqr(defaultInterquartileMultiplier))  // adjust the whiskers so that they go to the right initial  position
                 .histogramBarMultiplier(0)        // let's start with no histogram visible
                 .boxAndWhiskerWidthMultiplier(.9)  // 0 to skip the box whisker presentation, 1 for default box size
-//                .explicitlySpecifiedHistogram( [{   "start": -3,
-//                                                    "end": -1,
-//                                                    "count": 3 },
-//                                                {   "start": -1,
-//                                                    "end": 1,
-//                                                    "count": 10 },
-//                                                {   "start": 1,
-//                                                    "end": 3,
-//                                                    "count": 18 },
-//                                                {   "start": 3,
-//                                                    "end": 5,
-//                                                    "count": 13 },
-//                                                {   "start": 5,
-//                                                    "end": 7,
-//                                                    "count": 3 },
-//                                                {   "start": 7,
-//                                                    "end": 9,
-//                                                    "count": 1 }
-//                ]
-//                                                 );
+                .explicitlySpecifiedHistogram( [{   "start": -3,
+                                                    "end": -1,
+                                                    "count": 3 },
+                                                {   "start": -1,
+                                                    "end": 1,
+                                                    "count": 10 },
+                                                {   "start": 1,
+                                                    "end": 3,
+                                                    "count": 18 },
+                                                {   "start": 3,
+                                                    "end": 5,
+                                                    "count": 13 },
+                                                {   "start": 5,
+                                                    "end": 7,
+                                                    "count": 3 },
+                                                {   "start": 7,
+                                                    "end": 9,
+                                                    "count": 1 }
+                ]
+                                                 );
 
         //  Now we are ready to actually launch the box whisker plot
         d3.select('#plot')

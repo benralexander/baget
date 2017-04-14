@@ -33,6 +33,10 @@ modules = {
         resource url: 'css/baget/qqplot.css'
         resource url: 'js/baget/qqplot.js'
     }
+    matrix {
+        //resource url: 'css/baget/qqplot.css'
+        resource url: 'js/baget/simpleBinHeatmap.js'
+    }
     manhattan {
         resource url: 'css/baget/manhattan.css'
         resource url: 'js/baget/manhattan.js'
