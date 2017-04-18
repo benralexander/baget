@@ -28,6 +28,8 @@ var baget = baget || {};  // encapsulating variable
             data = options.data,
             container = options.container,
             labelsData = options.labels,
+            xlabelsData = options.xlabels,
+            ylabelsData = options.ylabels,
             startColor = options.start_color,
             endColor = options.end_color,
             widthLegend = 100;
@@ -134,7 +136,7 @@ var baget = baget || {};  // encapsulating variable
                 .attr('class', "labels");
 
             var columnLabels = labels.selectAll(".column-label")
-                .data(labelsData)
+                .data(xlabelsData)
                 .enter().append("g")
                 .attr("class", "column-label")
                 .attr("transform", function(d, i) { return "translate(" + x(i) + "," + height + ")"; });
@@ -156,7 +158,7 @@ var baget = baget || {};  // encapsulating variable
                 .text(function(d, i) { return d; });
 
             var rowLabels = labels.selectAll(".row-label")
-                .data(labelsData)
+                .data(ylabelsData)
                 .enter().append("g")
                 .attr("class", "row-label")
                 .attr("transform", function(d, i) { return "translate(" + 0 + "," + y(i) + ")"; });
@@ -259,6 +261,12 @@ var baget = baget || {};  // encapsulating variable
         instance.height = function (x) {
             if (!arguments.length) return height;
             height = x;
+            return instance;
+        };
+
+        instance.margin = function (x) {
+            if (!arguments.length) return margin;
+            margin = x;
             return instance;
         };
 

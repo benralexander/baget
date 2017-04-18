@@ -63,17 +63,45 @@
             [0.75, 0, 0.3, 0.9, 0.7, 0.1, 1, 0.4, 0.6, 1]
         ];
 
+        var xlabels = ['Adipose',
+            'AnteriorCaudate',
+            'CD34-PB',
+            'CingulateGyrus',
+            'ColonicMucosa',
+            'DuodenumMucosa',
+            'ES-HUES6',
+            'ES-HUES64',
+            'GM12878',
+            'H1',
+            'hASC-t1',
+            'hASC-t2'];
+        var ylabels = ['1_Active_TSS',
+            '2_Weak_TSS',
+            '3_Flanking_TSS',
+            '5_Strong_transcription',
+            '6_Weak_transcription',
+            '8_Genic_enhancer',
+            '9_Active_enhancer_1',
+            '10_Active_enhancer_2',
+            '11_Weak_enhancer',
+            '14_Bivalent/poised_TSS',
+            '16_Repressed_polycomb'];
         var labels = ['Var 1', 'Var 2', 'Var 3', 'Var 4', 'Var 5', 'Var 6', 'Var 7', 'Var 8', 'Var 9', 'Var 10'];
-        var margin = {top: 0, right: 20, bottom: 0, left: 70},
-            width = 800 - margin.left - margin.right,
-            height = 150 - margin.top - margin.bottom;
+        var margin = {top: 50, right: 50, bottom: 100, left: 150},
+            width = 550 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
         var matrix = baget.matrix({
             container: '#container',
             data: correlationMatrix,
             labels: labels,
+            xlabels:xlabels,
+            ylabels:ylabels,
             start_color: '#ffffff',
             end_color: '#3498db'
-        }).dataHanger("#chart1", correlationMatrix);
+        }).height(height)
+            .width(width)
+            .margin(margin)
+            .dataHanger("#chart1", correlationMatrix);
         d3.select("#chart1").call(matrix.render);
     });
 

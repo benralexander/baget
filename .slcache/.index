@@ -8323,3 +8323,5 @@ n:641:org/codehaus/groovy/runtime/dgm$811
 n:2055:org/codehaus/groovy/grails/commons/GrailsApplication$getArtefacts
 n:1928:org/codehaus/groovy/grails/commons/GrailsApplication$getParentContext$0
 n:2470:org/codehaus/groovy/grails/web/pages/GroovyPage$evaluate$5
+n:11683:org/springframework/uaa/client/protobuf/UaaClient$UaaEnvelope$Builder
+n:2511:org/springframework/uaa/client/util/Base64$OutputStream
