@@ -1,8 +1,10 @@
 /***
- *               --------------QQplot--------------
+ *               --------------simpleHeatMap--------------
  *
- * This JavaScript file should be sufficient for creating a QQplot. Combine this single module with other
+ * This JavaScript file should be sufficient for creating a simple heat map. Combine this single module with other
  * modules to create a more fully featured interactive visualization.
+ *
+ * See also Arpit Narechania's blog: https://bl.ocks.org/arpitnarechania/caeba2e6579900ea12cb2a4eb157ce74
  *
  * @type {baget|*|{}}
  */
@@ -25,17 +27,79 @@ var baget = baget || {};  // encapsulating variable
             margin = {top: 50, right: 50, bottom: 100, left: 100},
             width = 350,
             height = 350,
-            data = options.data,
-            container = options.container,
-            labelsData = options.labels,
-            xlabelsData = options.xlabels,
-            ylabelsData = options.ylabels,
-            startColor = options.start_color,
-            endColor = options.end_color,
-            widthLegend = 100;
+            data,// array of arrays of real values
+            container, // text for a CSS selector
+            xlabelsData,// dataform = ['xlab1','xlab2'],
+            ylabelsData,// dataform = ['ylab1','ylab2'],
+            startColor = '#ffffff',
+            endColor = '#3498db',
+            widthLegend = 100,
+            renderLegend = 1,
+            renderCellText = 1;
 
             // private variables
-            instance = {};
+            var instance = {};
+
+        // build a legend
+       var renderLegendNow = function ( legendSelector,
+                                        widthLegend,
+                                        height,
+                                        margin,
+                                        startColor,
+                                        endColor,
+                                        minValue,
+                                        maxValue )  {
+           var key = d3.select("#legend")
+               .append("svg")
+               .attr("width", widthLegend)
+               .attr("height", height + margin.top + margin.bottom);
+
+           var legend = key
+               .append("defs")
+               .append("svg:linearGradient")
+               .attr("id", "gradient")
+               .attr("x1", "100%")
+               .attr("y1", "0%")
+               .attr("x2", "100%")
+               .attr("y2", "100%")
+               .attr("spreadMethod", "pad");
+
+           legend
+               .append("stop")
+               .attr("offset", "0%")
+               .attr("stop-color", endColor)
+               .attr("stop-opacity", 1);
+
+           legend
+               .append("stop")
+               .attr("offset", "100%")
+               .attr("stop-color", startColor)
+               .attr("stop-opacity", 1);
+
+           key.append("rect")
+               .attr("width", widthLegend/2-10)
+               .attr("height", height)
+               .style("fill", "url(#gradient)")
+               .attr("transform", "translate(0," + margin.top + ")");
+
+           var y = d3.scale.linear()
+               .range([height, 0])
+               .domain([minValue, maxValue]);
+
+           var yAxis = d3.svg.axis()
+               .scale(y)
+               .orient("right");
+
+           key.append("g")
+               .attr("class", "y axis")
+               .attr("transform", "translate(41," + margin.top + ")")
+               .call(yAxis)
+
+       };
+
+
+
+
 
 
         //  private variable
@@ -62,9 +126,7 @@ var baget = baget || {};  // encapsulating variable
         // Now walk through the DOM and create the enrichment plot
         instance.render = function (currentSelection) {
 
-           // svg = currentSelection.select('svg'); // get main holding DOM element
-           // data = svg.selectAll('g.allGroups').data();   // get all data sets
-           // var insideScatterGroup = svg.select('g.scatter');   // get all data sets
+            /// check the data
             if(!data){
                 throw new Error('Please pass data');
             }
@@ -73,17 +135,40 @@ var baget = baget || {};  // encapsulating variable
                 throw new Error('It should be a 2-D array');
             }
 
-            var maxValue = d3.max(data, function(layer) { return d3.max(layer, function(d) { return d; }); });
-            var minValue = d3.min(data, function(layer) { return d3.min(layer, function(d) { return d; }); });
-
             var numrows = data.length;
             var numcols = data[0].length;
+
+            if (typeof xlabelsData !== 'undefined')  {
+                if (!Array.isArray(xlabelsData)) {
+                    throw new Error('Problem: xlabelsData must be an array');
+                }
+                else if(numcols != xlabelsData.length){
+                    throw new Error('Problem: length of X axis labels = '+xlabelsData.length+','+
+                    ' but the number of columns in the data matrix is '+numcols+'.');
+                }
+            }
+
+            if (typeof ylabelsData !== 'undefined')  {
+                if (!Array.isArray(ylabelsData)) {
+                    throw new Error('Problem: ylabelsData must be an array');
+                }
+                else if(numrows != ylabelsData.length){
+                    throw new Error('Problem: length of Y axis labels = '+ylabelsData.length+','+
+                        ' but the number of rows in the data matrix is '+numrows+'.');
+                }
+            }
+
+
+
+            var maxValue = d3.max(data, function(layer) { return d3.max(layer, function(d) { return d; }); });
+            var minValue = d3.min(data, function(layer) { return d3.min(layer, function(d) { return d; }); });
 
             var svg = d3.select(container).append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                .call(tip)
 
             var background = svg.append("rect")
                 .style("stroke", "black")
@@ -120,13 +205,15 @@ var baget = baget || {};  // encapsulating variable
                 .attr("height", y.rangeBand())
                 .style("stroke-width", 0);
 
-            cell.append("text")
-                .attr("dy", ".32em")
-                .attr("x", x.rangeBand() / 2)
-                .attr("y", y.rangeBand() / 2)
-                .attr("text-anchor", "middle")
-                .style("fill", function(d, i) { return d >= maxValue/2 ? 'white' : 'black'; })
-                .text(function(d, i) { return d; });
+            if (renderCellText){
+                cell.append("text")
+                    .attr("dy", ".32em")
+                    .attr("x", x.rangeBand() / 2)
+                    .attr("y", y.rangeBand() / 2)
+                    .attr("text-anchor", "middle")
+                    .style("fill", function(d, i) { return d >= maxValue/2 ? 'white' : 'black'; })
+                    .text(function(d, i) { return d; });
+            }
 
             row.selectAll(".cell")
                 .data(function(d, i) { return data[i]; })
@@ -135,94 +222,64 @@ var baget = baget || {};  // encapsulating variable
             var labels = svg.append('g')
                 .attr('class', "labels");
 
-            var columnLabels = labels.selectAll(".column-label")
-                .data(xlabelsData)
-                .enter().append("g")
-                .attr("class", "column-label")
-                .attr("transform", function(d, i) { return "translate(" + x(i) + "," + height + ")"; });
+            if (typeof xlabelsData !== 'undefined'){
+                var columnLabels = labels.selectAll(".column-label")
+                    .data(xlabelsData)
+                    .enter().append("g")
+                    .attr("class", "column-label")
+                    .attr("transform", function(d, i) { return "translate(" + x(i) + "," + height + ")"; });
 
-            columnLabels.append("line")
-                .style("stroke", "black")
-                .style("stroke-width", "1px")
-                .attr("x1", x.rangeBand() / 2)
-                .attr("x2", x.rangeBand() / 2)
-                .attr("y1", 0)
-                .attr("y2", 5);
+                columnLabels.append("line")
+                    .style("stroke", "black")
+                    .style("stroke-width", "1px")
+                    .attr("x1", x.rangeBand() / 2)
+                    .attr("x2", x.rangeBand() / 2)
+                    .attr("y1", 0)
+                    .attr("y2", 5);
 
-            columnLabels.append("text")
-                .attr("x", 0)
-                .attr("y", y.rangeBand() / 2)
-                .attr("dy", ".82em")
-                .attr("text-anchor", "end")
-                .attr("transform", "rotate(-60)")
-                .text(function(d, i) { return d; });
+                columnLabels.append("text")
+                    .attr("x", 0)
+                    .attr("y", y.rangeBand() / 2)
+                    .attr("dy", ".82em")
+                    .attr("text-anchor", "end")
+                    .attr("transform", "rotate(-60)")
+                    .text(function(d, i) { return d; });
+            }
 
-            var rowLabels = labels.selectAll(".row-label")
-                .data(ylabelsData)
-                .enter().append("g")
-                .attr("class", "row-label")
-                .attr("transform", function(d, i) { return "translate(" + 0 + "," + y(i) + ")"; });
+            if (typeof ylabelsData !== 'undefined'){
+                var rowLabels = labels.selectAll(".row-label")
+                    .data(ylabelsData)
+                    .enter().append("g")
+                    .attr("class", "row-label")
+                    .attr("transform", function(d, i) { return "translate(" + 0 + "," + y(i) + ")"; });
 
-            rowLabels.append("line")
-                .style("stroke", "black")
-                .style("stroke-width", "1px")
-                .attr("x1", 0)
-                .attr("x2", -5)
-                .attr("y1", y.rangeBand() / 2)
-                .attr("y2", y.rangeBand() / 2);
+                rowLabels.append("line")
+                    .style("stroke", "black")
+                    .style("stroke-width", "1px")
+                    .attr("x1", 0)
+                    .attr("x2", -5)
+                    .attr("y1", y.rangeBand() / 2)
+                    .attr("y2", y.rangeBand() / 2);
 
-            rowLabels.append("text")
-                .attr("x", -8)
-                .attr("y", y.rangeBand() / 2)
-                .attr("dy", ".32em")
-                .attr("text-anchor", "end")
-                .text(function(d, i) { return d; });
+                rowLabels.append("text")
+                    .attr("x", -8)
+                    .attr("y", y.rangeBand() / 2)
+                    .attr("dy", ".32em")
+                    .attr("text-anchor", "end")
+                    .text(function(d, i) { return d; });
+            }
 
-            var key = d3.select("#legend")
-                .append("svg")
-                .attr("width", widthLegend)
-                .attr("height", height + margin.top + margin.bottom);
 
-            var legend = key
-                .append("defs")
-                .append("svg:linearGradient")
-                .attr("id", "gradient")
-                .attr("x1", "100%")
-                .attr("y1", "0%")
-                .attr("x2", "100%")
-                .attr("y2", "100%")
-                .attr("spreadMethod", "pad");
-
-            legend
-                .append("stop")
-                .attr("offset", "0%")
-                .attr("stop-color", endColor)
-                .attr("stop-opacity", 1);
-
-            legend
-                .append("stop")
-                .attr("offset", "100%")
-                .attr("stop-color", startColor)
-                .attr("stop-opacity", 1);
-
-            key.append("rect")
-                .attr("width", widthLegend/2-10)
-                .attr("height", height)
-                .style("fill", "url(#gradient)")
-                .attr("transform", "translate(0," + margin.top + ")");
-
-            var y = d3.scale.linear()
-                .range([height, 0])
-                .domain([minValue, maxValue]);
-
-            var yAxis = d3.svg.axis()
-                .scale(y)
-                .orient("right");
-
-            key.append("g")
-                .attr("class", "y axis")
-                .attr("transform", "translate(41," + margin.top + ")")
-                .call(yAxis)
+            if (renderLegend){
+                renderLegendNow('#legend',
+                                widthLegend,
+                                height,
+                                margin,
+                                startColor,
+                                endColor,
+                                minValue,
+                                maxValue);
+            }
 
         };
 
@@ -250,6 +307,26 @@ var baget = baget || {};  // encapsulating variable
             return instance;
         };
 
+        instance.xlabelsData = function (x) {
+            if (!arguments.length) return xlabelsData;
+            xlabelsData = x;
+            return instance;
+        };
+        instance.ylabelsData = function (x) {
+            if (!arguments.length) return ylabelsData;
+            ylabelsData = x;
+            return instance;
+        };
+        instance.startColor = function (x) {
+            if (!arguments.length) return startColor;
+            startColor = x;
+            return instance;
+        };
+        instance.endColor = function (x) {
+            if (!arguments.length) return endColor;
+            endColor = x;
+            return instance;
+        };
 
 
         instance.width = function (x) {
@@ -267,6 +344,12 @@ var baget = baget || {};  // encapsulating variable
         instance.margin = function (x) {
             if (!arguments.length) return margin;
             margin = x;
+            return instance;
+        };
+
+        instance.renderLegend = function (x) {
+            if (!arguments.length) return renderLegend;
+            renderLegend = x;
             return instance;
         };
 
@@ -289,48 +372,15 @@ var baget = baget || {};  // encapsulating variable
             return instance;
         };
 
+        instance.renderCellText = function (x) {
+            if (!arguments.length) return renderCellText;
+            renderCellText = x;
+            return instance;
+        };
+
         instance.clickCallback = function (x) {
             if (!arguments.length) return clickCallback;
             clickCallback = x;
-            return instance;
-        };
-
-        instance.displayIdentityLine = function (x) {
-            if (!arguments.length) return displayIdentityLine;
-            displayIdentityLine = x;
-            return instance;
-        };
-
-        instance.displaySignificanceLine = function (x) {
-            if (!arguments.length) return displaySignificanceLine;
-            displaySignificanceLine = x;
-            var newSignificanceValue;
-            if (displaySignificanceLine) {
-                newSignificanceValue =  (y.domain()[0] +  y.domain()[1])/2.0;
-            }  else {
-                newSignificanceValue =  undefined;
-            }
-            instance.significanceLineValue (newSignificanceValue); //significanceLineValue
-            return instance;
-        };
-
-        instance.significanceLineValue = function (x) {
-            if (!arguments.length) return significanceLineValue;
-            significanceLineValue = x;
-            return instance;
-        };
-
-        instance.selectionIdentifier = function (x) {
-            if (!arguments.length) return selectionIdentifier;
-            selectionIdentifier = x;
-            selection = d3.select(selectionIdentifier);
-            return instance;
-        };
-
-        // assign data to the DOM
-        instance.assignData = function (x) {
-            if (!arguments.length) return data;
-            data = x;
             return instance;
         };
 
@@ -341,19 +391,10 @@ var baget = baget || {};  // encapsulating variable
          * @param x
          * @returns {*}
          */
-        instance.dataHanger = function (selectionIdentifier, data) {
+        instance.dataHanger = function (selectionIdentifier, dataPasser) {
 
-
-            selection = d3.select(selectionIdentifier)
-                .append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("class", "scatter")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-                .call(tip)
-
-
+            container = selectionIdentifier;
+            data = dataPasser;
             return instance;
         };
 
