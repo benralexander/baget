@@ -93,14 +93,14 @@ var baget = baget || {};  // encapsulating variable
                 .call(yAxis)
 
         };
-        
+
 
         // Now walk through the DOM and create the enrichment plot
         instance.render = function (currentSelection) {
 
             /// check the data
             if(!data){
-                throw new Error('Please pass data');
+                throw new Error('multiTrack expects data');
             }
 
             if( !Array.isArray(data) ){
@@ -115,6 +115,7 @@ var baget = baget || {};  // encapsulating variable
             var svg = d3.select(container).append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
+                .attr('class','trackHolder')
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -126,13 +127,14 @@ var baget = baget || {};  // encapsulating variable
                 .attr("width", width)
                 .attr("height", height)
 
-
+            var xDomain = [minValue,maxValue];
             var x = d3.scale.linear()
-                .domain([minValue,maxValue])
+                .domain(xDomain)
                 .range([0, width]);
 
+            var yDomain = d3.range(numrows);
             var y = d3.scale.ordinal()
-                .domain(d3.range(numrows))
+                .domain(yDomain)
                 .rangeBands([0, height]);
 
             var colorMap = d3.scale.linear()
@@ -153,11 +155,19 @@ var baget = baget || {};  // encapsulating variable
                 .attr("width", function(v){
                     return x(v.STOP)-x(v.START);})
                 .attr("height", y.rangeBand()/2)
-                .style("stroke-width", 0)
+                .style("stroke-width", 1)
+                .style("stroke", "black")
                 .style("fill",endColor)
 
             var labels = svg.append('g')
                 .attr('class', "labels");
+
+            var label = labels.append("text")
+                .attr("x", width - 5)
+                .attr("y", height - 5)
+                .attr("class", "mouseReporter")
+                .style("text-anchor", "end");
+
 
             var xAxis = d3.svg.axis().scale(x).orient("bottom");
             // x-axis
@@ -171,13 +181,6 @@ var baget = baget || {};  // encapsulating variable
                 .attr("text-anchor", "start")
                 .attr("transform", "rotate(60)");
 
-                // .append("text")
-                // .attr("class", "label")
-                // .attr("x", width)
-                // .attr("y", -6)
-                // .style("text-anchor", "end")
-                // .text("Calories");
-
 
 
             if (typeof ylabelsData !== 'undefined'){
@@ -188,7 +191,6 @@ var baget = baget || {};  // encapsulating variable
                     .attr("transform", function(d, i) { return "translate(" + 0 + "," + y(i) + ")"; });
 
                 rowLabels.append("line")
-                    .style("stroke", "black")
                     .style("stroke-width", "1px")
                     .attr("x1", 0)
                     .attr("x2", -5)
@@ -203,6 +205,35 @@ var baget = baget || {};  // encapsulating variable
                     .text(function(d, i) { return d; });
             }
 
+            var xScale = x;
+            var crosshair = svg.append("g")
+                .attr("class", "line");
+            crosshair.append("line")
+                .attr("id", "crosshairX")
+                .attr("class", "crosshair");
+            svg.append("rect")
+                .attr("class", "overlay")
+                .attr("width", width)
+                .attr("height", height)
+                .on("mouseover", function() {
+                    crosshair.style("display", null);
+                })
+                .on("mouseout", function() {
+                    crosshair.style("display", "none");
+                    label.text("");
+                })
+                .on("mousemove", function() {
+                    var mouse = d3.mouse(this);
+                    var x = mouse[0];
+                    crosshair.select("#crosshairX")
+                        .attr("x1", mouse[0])
+                        .attr("y1", 0)
+                        .attr("x2", mouse[0])
+                        .attr("y2", height);
+                    label.text(function() {
+                        return "position = "+Math.round(xScale.invert(mouse[0]));
+                    });
+                });
 
             if (renderLegend){
                 renderLegendNow('#legend',

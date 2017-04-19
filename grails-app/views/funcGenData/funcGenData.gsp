@@ -23,7 +23,31 @@
     <div  id="legend"></div>
     <div  id="chart1"></div>
 </div>
+<style>
+svg {
+    font: 11px sans-serif;
+}
+.line .crosshair {
+    fill: none;
+    stroke-width: 1px;
+}
+.line #crosshairX {
+    stroke: red;
+}
+.line #crosshairY {
+    stroke: blue;
+}
+.overlay {
+    fill: none;
+    stroke: black;
+    pointer-events: all;
+    stroke-width: 1px;
+}
+svg {
+    shape-rendering: crispEdges;
+}
 
+</style>
 
 
 <script type="text/javascript">
