@@ -24,75 +24,16 @@ var baget = baget || {};  // encapsulating variable
             margin = {top: 50, right: 50, bottom: 100, left: 100},
             width = 350,
             height = 350,
-            data,// array of arrays of real values
+            data,// array of arrays of objects
             container, // text for a CSS selector
             xlabelsData,// dataform = ['xlab1','xlab2'],
             ylabelsData,// dataform = ['ylab1','ylab2'],
             startColor = '#ffffff',
             endColor = '#3498db',
-            widthLegend = 100,
-            renderLegend = 1,
             renderCellText = 1;
 
         // private variables
         var instance = {};
-
-        // build a legend
-        var renderLegendNow = function ( legendSelector,
-                                         widthLegend,
-                                         height,
-                                         margin,
-                                         startColor,
-                                         endColor,
-                                         minValue,
-                                         maxValue )  {
-            var key = d3.select("#legend")
-                .append("svg")
-                .attr("width", widthLegend)
-                .attr("height", height + margin.top + margin.bottom);
-
-            var legend = key
-                .append("defs")
-                .append("svg:linearGradient")
-                .attr("id", "gradient")
-                .attr("x1", "100%")
-                .attr("y1", "0%")
-                .attr("x2", "100%")
-                .attr("y2", "100%")
-                .attr("spreadMethod", "pad");
-
-            legend
-                .append("stop")
-                .attr("offset", "0%")
-                .attr("stop-color", endColor)
-                .attr("stop-opacity", 1);
-
-            legend
-                .append("stop")
-                .attr("offset", "100%")
-                .attr("stop-color", startColor)
-                .attr("stop-opacity", 1);
-
-            key.append("rect")
-                .attr("width", widthLegend/2-10)
-                .attr("height", height)
-                .style("fill", "url(#gradient)")
-                .attr("transform", "translate(0," + margin.top + ")");
-
-            var y = d3.scale.linear()
-                .range([height, 0])
-                .domain([minValue, maxValue]);
-
-            var yAxis = d3.svg.axis()
-                .scale(y)
-                .orient("right");
-
-            key.append("g")
-                .attr("class", "y axis")
-                .attr("transform", "translate(41," + margin.top + ")")
-                .call(yAxis)
-
-        };
 
 
         // Now walk through the DOM and create the enrichment plot
@@ -109,8 +50,8 @@ var baget = baget || {};  // encapsulating variable
 
             var numrows = data.length;
 
-            var minValue = d3.min(data, function(d) { return d.START; });
-            var maxValue = d3.max(data, function(d) { return d.STOP; });
+            var minValue = d3.min(data, function(layer) { return d3.max(layer, function(f) { return f.START; }); });
+            var maxValue = d3.max(data, function(layer) { return d3.max(layer, function(f) { return f.STOP; }); });
 
             var svg = d3.select(container).append("svg")
                 .attr("width", width + margin.left + margin.right)
@@ -119,7 +60,7 @@ var baget = baget || {};  // encapsulating variable
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-
+            // gives us an outline around the drawing area
             var background = svg.append("rect")
                 .style("stroke", "black")
                 .style("stroke-width", "1px")
@@ -137,21 +78,19 @@ var baget = baget || {};  // encapsulating variable
                 .domain(yDomain)
                 .rangeBands([0, height]);
 
-            var colorMap = d3.scale.linear()
-                .domain([minValue,maxValue])
-                .range([startColor, endColor]);
-
             var row = svg.selectAll(".row")
                 .data(data)
                 .enter().append("g")
                 .attr("class", "row")
                 .attr("transform", function(d, i) { return "translate(0," + y(i) + ")"; });
 
-            row.append('rect')
-                .attr("x", function(v){
-                    return x(v.START);
-                })
-                .attr("y", 0)
+            var element = row.selectAll(".element")
+                .data(function(d) { return d; })
+                .enter().append("g")
+                .attr("class", "element")
+                .attr("transform", function(d, i) { return "translate(" + x(d.START) + ", 0)"; });
+
+            element.append('rect')
                 .attr("width", function(v){
                     return x(v.STOP)-x(v.START);})
                 .attr("height", y.rangeBand()/2)
@@ -162,15 +101,8 @@ var baget = baget || {};  // encapsulating variable
             var labels = svg.append('g')
                 .attr('class', "labels");
 
-            var label = labels.append("text")
-                .attr("x", width - 5)
-                .attr("y", height - 5)
-                .attr("class", "mouseReporter")
-                .style("text-anchor", "end");
-
-
-            var xAxis = d3.svg.axis().scale(x).orient("bottom");
             // x-axis
+            var xAxis = d3.svg.axis().scale(x).orient("bottom");
             svg.append("g")
                 .attr("class", "x axis")
                 .attr("transform", "translate(0," + height + ")")
@@ -182,7 +114,7 @@ var baget = baget || {};  // encapsulating variable
                 .attr("transform", "rotate(60)");
 
 
-
+            // label those tissues on the y-axis
             if (typeof ylabelsData !== 'undefined'){
                 var rowLabels = labels.selectAll(".row-label")
                     .data(ylabelsData)
@@ -205,6 +137,12 @@ var baget = baget || {};  // encapsulating variable
                     .text(function(d, i) { return d; });
             }
 
+            // build a crosshair attached to the pointer
+            var label = labels.append("text")
+                .attr("x", width - 5)
+                .attr("y", height - 5)
+                .attr("class", "mouseReporter")
+                .style("text-anchor", "end");
             var xScale = x;
             var crosshair = svg.append("g")
                 .attr("class", "line");
@@ -234,17 +172,6 @@ var baget = baget || {};  // encapsulating variable
                         return "position = "+Math.round(xScale.invert(mouse[0]));
                     });
                 });
-
-            if (renderLegend){
-                renderLegendNow('#legend',
-                    widthLegend,
-                    height,
-                    margin,
-                    startColor,
-                    endColor,
-                    minValue,
-                    maxValue);
-            }
 
         };
 
@@ -311,13 +238,6 @@ var baget = baget || {};  // encapsulating variable
             margin = x;
             return instance;
         };
-
-        instance.renderLegend = function (x) {
-            if (!arguments.length) return renderLegend;
-            renderLegend = x;
-            return instance;
-        };
-
 
         instance.xAxisLabel = function (x) {
             if (!arguments.length) return xAxisLabel;

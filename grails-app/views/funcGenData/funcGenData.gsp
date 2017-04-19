@@ -53,26 +53,31 @@ svg {
 <script type="text/javascript">
     $( document ).ready(function() {
         var correlationMatrix = [
-            {'CHROM':'8',
+            [{'CHROM':'8',
                 'START':117951200,
                 'STOP':118295000,
                 'source':'DuodenumMucosa',
-                'element':'Quiescent-low_signal'},
-            {'CHROM':'8',
+                'element':'Quiescent-low_signal'}],
+            [{'CHROM':'8',
                 'START':118075200,
                 'STOP':118499000,
                 'source':'ColonicMucosa',
-                'element':'Quiescent-low_signal'},
-            {'CHROM':'8',
+                'element':'Quiescent-low_signal'}],
+            [{'CHROM':'8',
                 'START':118184600,
                 'STOP':118185000,
                 'source':'ES-HUES6',
                 'element':'Weak_enhancer'},
-            {'CHROM':'8',
+                {'CHROM':'8',
+                    'START':118075200,
+                    'STOP':118095200,
+                    'source':'ES-HUES6',
+                    'element':'Weak_enhancer'}],
+            [{'CHROM':'8',
                 'START':118155000,
                 'STOP':118198200,
                 'source':'Islets',
-                'element':'Active_enhancer_'}
+                'element':'Active_enhancer_'}]
         ];
         var xlabels = [];
         var ylabels = ['DuodenumMucosa',
@@ -86,7 +91,6 @@ svg {
             .height(height)
             .width(width)
             .margin(margin)
-            .renderLegend(0)
             .renderCellText(0)
             .xlabelsData(xlabels)
             .ylabelsData(ylabels)
