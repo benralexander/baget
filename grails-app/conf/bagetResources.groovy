@@ -37,6 +37,9 @@ modules = {
         //resource url: 'css/baget/qqplot.css'
         resource url: 'js/baget/simpleBinHeatmap.js'
     }
+    multiTrack {
+        resource url: 'js/baget/multiTrack.js'
+    }
     manhattan {
         resource url: 'css/baget/manhattan.css'
         resource url: 'js/baget/manhattan.js'

@@ -11,7 +11,7 @@
 <div class="container">
 
     <div class="starter-template">
-        <h1>Simple binary heat map</h1>
+        <h1>Simple heat map</h1>
         <h1 >
             <a onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/simpleBinHeatmap.js')">simpleHeatMap.js</a>
         </h1>
@@ -20,7 +20,7 @@
 </div>
 <p class="standardEmphasisFont">
 <div>
-    <div style="display:inline-block;" id="legend"></div>
+    <div  id="legend"></div>
     <div  id="chart1"></div>
 </div>
 

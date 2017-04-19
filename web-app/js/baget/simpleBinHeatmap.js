@@ -4,7 +4,7 @@
  * This JavaScript file should be sufficient for creating a simple heat map. Combine this single module with other
  * modules to create a more fully featured interactive visualization.
  *
- * See also Arpit Narechania's blog: https://bl.ocks.org/arpitnarechania/caeba2e6579900ea12cb2a4eb157ce74
+ *
  *
  * @type {baget|*|{}}
  */
