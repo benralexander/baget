@@ -55,6 +55,10 @@ modules = {
           resource url: 'css/baget/barchart.css'
           resource url: 'js/baget/barchart.js'
     }
+    dynaline{
+        resource url: 'js/baget/dynamicLine.js'
+        resource url: 'css/baget/dynaline.css'
+    }
     boxwhisker {
         resource url: 'css/baget/boxWhiskerPlot.css'
         resource url: 'css/baget/clickablePopUp.css'
