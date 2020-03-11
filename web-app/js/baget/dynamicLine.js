@@ -195,11 +195,11 @@ baget.dynamicLine = (function () {
 
 
 
-    const buildDynamicLinePlot = function (data,geneName) {
+    const buildDynamicLinePlot = function (data,geneName,dataForGene) {
 
-        height = 720;
+        height = 600;
         width = 1000;
-        margin = ({top: 20, right: 30, bottom: 30, left: 40});
+        margin = ({top: 100, right: 30, bottom: 30, left: 40});
         x = d3.scaleLinear()
             .domain(d3.extent(data, d => d.x)).nice()
             .range([margin.left, width - margin.right]);
@@ -211,7 +211,7 @@ baget.dynamicLine = (function () {
             .call(d3.axisBottom(x).ticks(width / 80))
             .call(g => g.select(".domain").remove())
             .call(g => g.selectAll(".tick line").clone()
-                .attr("y2", -height)
+                .attr("y2", -height+margin.top)
                 .attr("stroke-opacity", 0.1))
             .call(g => g.append("text")
                 .attr("x", width - 4)
@@ -247,13 +247,27 @@ baget.dynamicLine = (function () {
 
         const l = length(line(data));
 
+        // svg.append("g")
+        //     .append("text")
+        //     .attr("font-family", "sans-serif")
+        //     .attr("font-size", 16)
+        //     .attr("x", 100)
+        //     .attr("y", 30)
+        //     .text("hello");
         svg.append("g")
+            .selectAll("text")
+            .data([geneName,"pValue: "+dataForGene.pValue,"beta: "+dataForGene.beta,"std. err: "+dataForGene.se])
+            .enter()
             .append("text")
             .attr("font-family", "sans-serif")
-            .attr("font-size", 10)
-            .attr("x", 100)
-            .attr("y", -10)
-            .text("hello");
+            .attr("font-size", 12)
+            .attr("x", function(d,i){
+                return ((width-margin.right-margin.left)/4)*i;
+            })
+            .attr("y", 30)
+            .text(function(d){
+                return d;
+            });
 
         svg.append("g")
             .call(xAxis);

@@ -87,7 +87,7 @@ mpgSoftware.dynaLineLauncher = (function () {
                     const numericBeta = parseFloat(dataForGene.beta);
                     const numericpValue = parseFloat(dataForGene.pValue);
                     const arrayOfPlotElements = priorPosteriorArray(numericBeta,numericSE,priorAllelicVariance)
-                    var dynaline = baget.dynamicLine.buildDynamicLinePlot(arrayOfPlotElements,geneName);
+                    var dynaline = baget.dynamicLine.buildDynamicLinePlot(arrayOfPlotElements,geneName,dataForGene);
                     d3.select(window).on('resize', baget.dynamicLine.resize);
                 }
 

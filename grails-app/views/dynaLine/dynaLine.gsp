@@ -73,9 +73,9 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li class="btn"
-                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/sharedMethods.js')">sharedMethods.js</li>
+                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/dynaLineLauncher.js')">dynaLineLauncher.js</li>
                         <li class="btn"
-                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/manhattan.js')">manhattan.js</li>
+                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/dynamicLine.js')">dynamicLine.js</li>
                     </ul>
                 </div>
 
@@ -86,10 +86,13 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li class="btn"
-                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'css/baget/manhattan.css')">manhattan.css</li>
+                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'css/baget/dynaLine.css')">dynaLine.css</li>
                     </ul>
                 </div>
             </div>
+
+
+
         </div>
 
     </div>
@@ -98,10 +101,15 @@
 
     <div class="row">
 
-        <div class="col-md-2"></div>
+        <div class="col-md-2">
 
-        <div class="col-md-8"><div id="dynamicLine"></div>
-            <div id="chart"></div>
+
+        </div>
+
+        <div class="col-md-8">
+
+            <div id="dynamicLine"></div>
+
             %{--<svg class="chart"></svg>--}%
 
             <div class="col-md-2"></div>
