@@ -73,11 +73,12 @@ mpgSoftware.dynaLineLauncher = (function () {
 
     const prepareDisplay = function(dataUrl, geneName,priorAllelicVarianceVar, window){
         try{
+            const geneNameUpperCase = geneName.toUpperCase();
             var promise =  $.ajax({
                 cache: false,
                 type: "post",
                 url: dataUrl,
-                data: { gene: geneName },
+                data: { gene: geneNameUpperCase },
                 async: true
             });
             const priorAllelicVariance = priorAllelicVarianceVar || 0.18;
@@ -87,7 +88,7 @@ mpgSoftware.dynaLineLauncher = (function () {
                     const numericBeta = parseFloat(dataForGene.beta);
                     const numericpValue = parseFloat(dataForGene.pValue);
                     const arrayOfPlotElements = priorPosteriorArray(numericBeta,numericSE,priorAllelicVariance)
-                    var dynaline = baget.dynamicLine.buildDynamicLinePlot(arrayOfPlotElements,geneName,dataForGene);
+                    var dynaline = baget.dynamicLine.buildDynamicLinePlot(arrayOfPlotElements,geneNameUpperCase,dataForGene);
                     d3.select(window).on('resize', baget.dynamicLine.resize);
                 }
 

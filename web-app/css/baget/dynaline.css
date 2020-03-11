@@ -1,0 +1,8 @@
+text.labelEachGene  {
+    font-family: 'Lato';
+    font-weight: 300;
+    font-size: 12pt;
+}
+text.labelEachGene:first-of-type{
+    font-weight: bold;
+}

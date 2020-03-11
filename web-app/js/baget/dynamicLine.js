@@ -128,6 +128,9 @@ baget.dynamicLine = (function () {
 
 
     function hover(svg, path) {
+        const straightLine = d3.line()
+            .x(d => x(d.x))
+            .y(d => y(d.y));
 
         if ("ontouchstart" in document) svg
             .style("-webkit-tap-highlight-color", "transparent")
@@ -139,45 +142,87 @@ baget.dynamicLine = (function () {
             .on("mouseenter", entered)
             .on("mouseleave", left);
 
-        const dot = svg.append("g")
-            .attr("display", "none");
+        const dotHolder = svg.append("g")
+            //.attr("display", "none")
+            // .attr("class", "movingDot");
 
-        dot.append("circle")
-            .attr("r", 2.5);
+        const dot = dotHolder.append("circle")
+            .attr("r", 3)
+            .attr("fill", "red")
+            .attr("class", "movingDot");
 
-        dot.append("text")
+        const crosshairsVertical = dotHolder.append("line")
+            .attr("class", "crosshairs")
+            .style("stroke", "red")
+            .style("stroke-width", 0.5);
+        const crosshairsHorizontal = dotHolder.append("line")
+            .attr("class", "crosshairs")
+            .style("stroke", "red")
+            .style("stroke-width", 0.5);
+
+
+        const movingDotDescription = dotHolder.append("text")
+            .attr("class", "movingDotDescription")
             .style("font", "10px sans-serif")
             .attr("text-anchor", "middle")
-            .attr("y", -8);
+            .attr("y", 8)
+            .attr("text-anchor", "left").attr("dy", "1.8em").attr("dx", "1.4em");
 
         function moved() {
             d3.event.preventDefault();
             const ym = y.invert(d3.event.layerY);
             const xm = x.invert(d3.event.layerX);
             const path = d3.select(this).select('path');
-            _.forEach(path.datum(),function(d){
-                console.log(' garbage truck');
+            let closestIndex;
+            _.forEach(path.datum(),function(d,i){
+                if (d.x < xm){
+                    console.log('d.x ='+d.x +", xm="+xm);
+                } else {
+                    closestIndex = i;
+                    return false;
+                }
             });
+            const closestDataPoint = path.datum()[closestIndex];
+            if ( typeof closestDataPoint !== 'undefined'){
+                dot
+                    .attr("cx", d => x(closestDataPoint.x))
+                    .attr("cy", d => y(closestDataPoint.y))
+                    .attr("display",  null );
+                movingDotDescription
+                    .attr("dx", d => x(closestDataPoint.x))
+                    .attr("dy", d => y(closestDataPoint.y))
+                    .attr("display",  null )
+                    .text('prior:'+closestDataPoint.x+', post prob:'+d3.format(".2f")(closestDataPoint.y));
+                crosshairsVertical
+                    .attr("x1", d => x(closestDataPoint.x))
+                    .attr("y1", d => y(0))
+                    .attr("x2", d => x(closestDataPoint.x))
+                    .attr("y2", d => y(1))
+                    .attr("display",  null );
+                crosshairsHorizontal
+                    .attr("x1", d => x(0))
+                    .attr("y1", d => y(closestDataPoint.y))
+                    .attr("x2", d => x(1))
+                    .attr("y2", d => y(closestDataPoint.y))
+                    .attr("display",  null );
+            }
 
-            // const i1 = d3.bisectLeft(data.dates, xm, 1);
-            // const i0 = i1 - 1;
-            // const i = xm - data.dates[i0] > data.dates[i1] - xm ? i1 : i0;
-            // const s = data.series.reduce((a, b) => Math.abs(a.values[i] - ym) < Math.abs(b.values[i] - ym) ? a : b);
-            // path.attr("stroke", d => d === s ? null : "#ddd").filter(d => d === s).raise();
-            // dot.attr("transform", `translate(${x(data.dates[i])},${y(s.values[i])})`);
-            // dot.select("text").text(s.name);
         }
 
         function entered() {
             const path = $(this).find('path');
             //path.style("mix-blend-mode", null).attr("stroke", "#ddd");
             dot.attr("display", null);
+            console.log('entered');
         }
 
         function left() {
             const path = $(this).find('path');
             //path.style("mix-blend-mode", "multiply").attr("stroke", null);
             dot.attr("display", "none");
+            movingDotDescription.attr("display", "none");
+            crosshairsVertical.attr("display", "none");
+            crosshairsHorizontal.attr("display", "none");
         }
     };
 
@@ -247,20 +292,12 @@ baget.dynamicLine = (function () {
 
         const l = length(line(data));
 
-        // svg.append("g")
-        //     .append("text")
-        //     .attr("font-family", "sans-serif")
-        //     .attr("font-size", 16)
-        //     .attr("x", 100)
-        //     .attr("y", 30)
-        //     .text("hello");
         svg.append("g")
             .selectAll("text")
             .data([geneName,"pValue: "+dataForGene.pValue,"beta: "+dataForGene.beta,"std. err: "+dataForGene.se])
             .enter()
             .append("text")
-            .attr("font-family", "sans-serif")
-            .attr("font-size", 12)
+            .attr("class", 'labelEachGene')
             .attr("x", function(d,i){
                 return ((width-margin.right-margin.left)/4)*i;
             })
@@ -279,13 +316,13 @@ baget.dynamicLine = (function () {
             .datum(data)
             .attr("fill", "none")
             .attr("stroke", "black")
-            .attr("stroke-width", 2.5)
+            .attr("stroke-width", 1)
             .attr("stroke-linejoin", "round")
             .attr("stroke-linecap", "round")
             .attr("stroke-dasharray", `0,${l}`)
             .attr("d", line)
             .transition()
-            .duration(500)
+            .duration(800)
             .ease(d3.easeLinear)
             .attr("stroke-dasharray", `${l},${l}`);
 
