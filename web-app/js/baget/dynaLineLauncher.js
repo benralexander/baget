@@ -81,14 +81,14 @@ mpgSoftware.dynaLineLauncher = (function () {
                 data: { gene: geneNameUpperCase },
                 async: true
             });
-            const priorAllelicVariance = priorAllelicVarianceVar || 0.18;
+            const priorAllelicVariance = priorAllelicVarianceVar || 0.0462;
             promise.done(
                 function (dataForGene) {
                     const numericSE = parseFloat(dataForGene.se);
                     const numericBeta = parseFloat(dataForGene.beta);
                     const numericpValue = parseFloat(dataForGene.pValue);
                     const arrayOfPlotElements = priorPosteriorArray(numericBeta,numericSE,priorAllelicVariance)
-                    var dynaline = baget.dynamicLine.buildDynamicLinePlot(arrayOfPlotElements,geneNameUpperCase,dataForGene);
+                    var dynaline = baget.dynamicLine.buildDynamicLinePlot(arrayOfPlotElements,geneNameUpperCase,priorAllelicVariance,dataForGene);
                     d3.select(window).on('resize', baget.dynamicLine.resize);
                 }
 
