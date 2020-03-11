@@ -1,12 +1,16 @@
 package baget
 
+import groovy.json.JsonSlurper
+import org.codehaus.groovy.grails.web.json.JSONArray
+import org.codehaus.groovy.grails.web.json.JSONObject
+
 class DynaLineController {
     def index() {
-        render(view:'dynaLine',model:[dataFileBased:0])
+        render(view: 'dynaLine', model: [dataFileBased: 0])
     }
 
     def dynaLine() {
-        render(view:'dynaLine',model:[dataFileBased:0])
+        render(view: 'dynaLine', model: [dataFileBased: 0])
     }
 
 // c=  chromosome number, y=-1og P, x= location in chromosome, n= name
@@ -68,8 +72,30 @@ class DynaLineController {
 {"x":1290000,"y":3,"c":"X","n":"rsXX1234567"}]""".toString()
 
 
-
-
     def functionalData() {
-        render(view:'dynaLine',model:[])
-    }}
+        render(view: 'dynaLine', model: [])
+    }
+
+    def bestGeneBurdenResults() {
+        String jsonDataAsString = new File('./web-app/WEB-INF/resources/bestBurdenTest.json').text
+        def slurper = new JsonSlurper()
+        JSONArray jsonArray = slurper.parseText(jsonDataAsString)
+        render(status: 200, contentType: "application/json") {
+            jsonArray
+        }
+        return
+    }
+
+    def bestGeneBurdenResultsForGene() {
+        String geneString = params.gene
+        String jsonDataAsString = new File('./web-app/WEB-INF/resources/bestBurdenTest.json').text
+        def slurper = new JsonSlurper()
+        JSONArray jsonArray = slurper.parseText(jsonDataAsString)
+        JSONObject jsonObject = jsonArray.find { a -> a.gene == geneString }
+        render(status: 200, contentType: "application/json") {
+            jsonObject
+        }
+        return
+    }
+
+}

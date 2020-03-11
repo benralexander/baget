@@ -1,77 +1,100 @@
 var baget = baget || {};  // encapsulating variable
 
-(function () {
+baget.dynamicLine = (function () {
     //const d3 = require("d3@5");
     //import * as d3 from "d3";
-    const data = [{
-        orient: "left",
-        name: "1956",
-        x: 0.1,
-        y: 0.1
-    },
-        {
-            orient: "bottom",
-            name: "",
-            x: 0.3,
-            y: 0.4
-        },
-        {
-            orient: "bottom",
-            name: "",
-            x: 0.5,
-            y: 0.7
-        },
-        {
-            orient: "bottom",
-            name: "",
-            x: 0.7,
-            y: 0.8
-        },
-        {
-            orient: "right",
-            name: "1958",
-            x: 0.9,
-            y: 0.9
-        }
-    ];
-    const height = 720;
-    const width = 1000;
-    const margin = ({top: 20, right: 30, bottom: 30, left: 40});
-    const x = d3.scaleLinear()
-    .domain(d3.extent(data, d => d.x)).nice()
-    .range([margin.left, width - margin.right]);
-    const y = d3.scaleLinear()
-        .domain(d3.extent(data, d => d.y)).nice()
-        .range([height - margin.bottom, margin.top])
-    const xAxis = g => g
-    .attr("transform", `translate(0,${height - margin.bottom})`)
-    .call(d3.axisBottom(x).ticks(width / 80))
-    .call(g => g.select(".domain").remove())
-    .call(g => g.selectAll(".tick line").clone()
-        .attr("y2", -height)
-        .attr("stroke-opacity", 0.1))
-    .call(g => g.append("text")
-        .attr("x", width - 4)
-        .attr("y", -4)
-        .attr("font-weight", "bold")
-        .attr("text-anchor", "end")
-        .attr("fill", "black")
-        .text(data.x)
-        .call(halo));
-    const yAxis = g => g
-        .attr("transform", `translate(${margin.left},0)`)
-        .call(d3.axisLeft(y).ticks(null, ".2f"))
-        .call(g => g.select(".domain").remove())
-        .call(g => g.selectAll(".tick line").clone()
-            .attr("x2", width)
-            .attr("stroke-opacity", 0.1))
-        .call(g => g.select(".tick:last-of-type text").clone()
-            .attr("x", 4)
-            .attr("text-anchor", "start")
-            .attr("font-weight", "bold")
-            .attr("fill", "black")
-            .text(data.y)
-            .call(halo));
+    // const data = [{
+    //     orient: "left",
+    //     name: "1956",
+    //     x: 0.1,
+    //     y: 0.1
+    // },
+    //     {
+    //         orient: "bottom",
+    //         name: "",
+    //         x: 0.3,
+    //         y: 0.4
+    //     },
+    //     {
+    //         orient: "bottom",
+    //         name: "",
+    //         x: 0.5,
+    //         y: 0.7
+    //     },
+    //     {
+    //         orient: "bottom",
+    //         name: "",
+    //         x: 0.7,
+    //         y: 0.8
+    //     },
+    //     {
+    //         orient: "right",
+    //         name: "1958",
+    //         x: 0.9,
+    //         y: 0.9
+    //     }
+    // ];
+    // const height = 720;
+    // const width = 1000;
+    // const margin = ({top: 20, right: 30, bottom: 30, left: 40});
+    // const x = d3.scaleLinear()
+    // .domain(d3.extent(data, d => d.x)).nice()
+    // .range([margin.left, width - margin.right]);
+    // const y = d3.scaleLinear()
+    //     .domain(d3.extent(data, d => d.y)).nice()
+    //     .range([height - margin.bottom, margin.top])
+    // const xAxis = g => g
+    // .attr("transform", `translate(0,${height - margin.bottom})`)
+    // .call(d3.axisBottom(x).ticks(width / 80))
+    // .call(g => g.select(".domain").remove())
+    // .call(g => g.selectAll(".tick line").clone()
+    //     .attr("y2", -height)
+    //     .attr("stroke-opacity", 0.1))
+    // .call(g => g.append("text")
+    //     .attr("x", width - 4)
+    //     .attr("y", -4)
+    //     .attr("font-weight", "bold")
+    //     .attr("text-anchor", "end")
+    //     .attr("fill", "black")
+    //     .text(data.x)
+    //     .call(halo));
+    // const yAxis = g => g
+    //     .attr("transform", `translate(${margin.left},0)`)
+    //     .call(d3.axisLeft(y).ticks(null, ".2f"))
+    //     .call(g => g.select(".domain").remove())
+    //     .call(g => g.selectAll(".tick line").clone()
+    //         .attr("x2", width)
+    //         .attr("stroke-opacity", 0.1))
+    //     .call(g => g.select(".tick:last-of-type text").clone()
+    //         .attr("x", 4)
+    //         .attr("text-anchor", "start")
+    //         .attr("font-weight", "bold")
+    //         .attr("fill", "black")
+    //         .text(data.y)
+    //         .call(halo));
+    // function halo(text) {
+    //     text.select(function() { return this.parentNode.insertBefore(this.cloneNode(true), this); })
+    //         .attr("fill", "none")
+    //         .attr("stroke", "white")
+    //         .attr("stroke-width", 4)
+    //         .attr("stroke-linejoin", "round");
+    // };
+    // const line = d3.line()
+    //     .curve(d3.curveCatmullRom)
+    //     .x(d => x(d.x))
+    //     .y(d => y(d.y));
+    // function length(path) {
+    //     return d3.create("svg:path").attr("d", path).node().getTotalLength();
+    // };
+
+    let x;
+    let y;
+    let xAxis;
+    let yAxis;
+    let height;
+    let width;
+    let margin;
+
     function halo(text) {
         text.select(function() { return this.parentNode.insertBefore(this.cloneNode(true), this); })
             .attr("fill", "none")
@@ -79,13 +102,28 @@ var baget = baget || {};  // encapsulating variable
             .attr("stroke-width", 4)
             .attr("stroke-linejoin", "round");
     };
-    const line = d3.line()
-        .curve(d3.curveCatmullRom)
-        .x(d => x(d.x))
-        .y(d => y(d.y));
     function length(path) {
         return d3.create("svg:path").attr("d", path).node().getTotalLength();
     };
+    var widthAdjuster = function ()  {
+        var returnValue;
+        var browserWidth =   $(window).width();
+        returnValue = (browserWidth > 200) ?  browserWidth : 200;
+        returnValue = (returnValue < 1000) ?  returnValue : 1000;
+        return   returnValue;
+    }
+    var heightAdjuster = function ()  {
+        var returnValue;
+        var browserHeight =   $(window).height()-3200;
+        returnValue = (browserHeight > 300) ?  browserHeight : 350;
+        returnValue = (returnValue < 1000) ?  returnValue : 1000;
+        return   returnValue;
+    }
+    let line;
+
+
+
+
     let path;
 
 
@@ -117,8 +155,8 @@ var baget = baget || {};  // encapsulating variable
             const ym = y.invert(d3.event.layerY);
             const xm = x.invert(d3.event.layerX);
             const path = d3.select(this).select('path');
-            path.datum().each(function(d){
-
+            _.forEach(path.datum(),function(d){
+                console.log(' garbage truck');
             });
 
             // const i1 = d3.bisectLeft(data.dates, xm, 1);
@@ -143,16 +181,79 @@ var baget = baget || {};  // encapsulating variable
         }
     };
 
+    const resize = function () {
+        width = widthAdjuster()- margin.left - margin.right;
+        height = heightAdjuster() - margin.top - margin.bottom;
+        var extractedData  = d3.selectAll('#groupHolder').selectAll('g.allGroups').data();
+        var dataRange = UTILS.extractDataRange(extractedData);
+        d3.select("#scatterPlot1").selectAll('svg').remove();
+        qqPlot.width(width)
+            .height(height)
+            .dataHanger ("#scatterPlot1", extractedData);
+        d3.select("#scatterPlot1").call(qqPlot.render);
+    };
 
 
-    baget.dynamicLine = function (barChartName) {
 
+    const buildDynamicLinePlot = function (data,geneName) {
+
+        height = 720;
+        width = 1000;
+        margin = ({top: 20, right: 30, bottom: 30, left: 40});
+        x = d3.scaleLinear()
+            .domain(d3.extent(data, d => d.x)).nice()
+            .range([margin.left, width - margin.right]);
+        y = d3.scaleLinear()
+            .domain(d3.extent(data, d => d.y)).nice()
+            .range([height - margin.bottom, margin.top])
+        xAxis = g => g
+            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .call(d3.axisBottom(x).ticks(width / 80))
+            .call(g => g.select(".domain").remove())
+            .call(g => g.selectAll(".tick line").clone()
+                .attr("y2", -height)
+                .attr("stroke-opacity", 0.1))
+            .call(g => g.append("text")
+                .attr("x", width - 4)
+                .attr("y", -4)
+                .attr("font-weight", "bold")
+                .attr("text-anchor", "end")
+                .attr("fill", "black")
+                .text(data.x)
+                .call(halo));
+        yAxis = g => g
+            .attr("transform", `translate(${margin.left},0)`)
+            .call(d3.axisLeft(y).ticks(null, ".2f"))
+            .call(g => g.select(".domain").remove())
+            .call(g => g.selectAll(".tick line").clone()
+                .attr("x2", width)
+                .attr("stroke-opacity", 0.1))
+            .call(g => g.select(".tick:last-of-type text").clone()
+                .attr("x", 4)
+                .attr("text-anchor", "start")
+                .attr("font-weight", "bold")
+                .attr("fill", "black")
+                .text(data.y)
+                .call(halo));
+        line = d3.line()
+            .curve(d3.curveCatmullRom)
+            .x(d => x(d.x))
+            .y(d => y(d.y));
 
         var dynamicLineSelection = d3.select("#dynamicLine");
+
         const svg = dynamicLineSelection.append("svg")
             .attr("viewBox", [0, 0, width, height]);
 
         const l = length(line(data));
+
+        svg.append("g")
+            .append("text")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", 10)
+            .attr("x", 100)
+            .attr("y", -10)
+            .text("hello");
 
         svg.append("g")
             .call(xAxis);
@@ -183,7 +284,7 @@ var baget = baget || {};  // encapsulating variable
             .join("circle")
             .attr("cx", d => x(d.x))
             .attr("cy", d => y(d.y))
-            .attr("r", 3);
+            .attr("r", 1);
 
         const label = svg.append("g")
             .attr("font-family", "sans-serif")
@@ -213,9 +314,16 @@ var baget = baget || {};  // encapsulating variable
 
         svg.call(hover, path);
 
+
+
         return svg.node();
 
 
 
+    }
+
+    return {
+        resize:resize,
+        buildDynamicLinePlot: buildDynamicLinePlot
     }
 })();

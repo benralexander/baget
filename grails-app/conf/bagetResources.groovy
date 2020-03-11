@@ -56,7 +56,9 @@ modules = {
           resource url: 'js/baget/barchart.js'
     }
     dynaline{
+        resource url: 'https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js'
         resource url: 'js/baget/dynamicLine.js'
+        resource url: 'js/baget/dynaLineLauncher.js'
         resource url: 'css/baget/dynaline.css'
     }
     boxwhisker {
