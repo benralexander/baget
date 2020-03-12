@@ -13,3 +13,9 @@ text.movingTextDescription {
     font-size: 10pt;
     fill: red;
 }
+text.axisLabel {
+    font-family: 'Lato';
+    font-weight: bold;
+    font-style: italic;
+    font-size: 10pt;
+}

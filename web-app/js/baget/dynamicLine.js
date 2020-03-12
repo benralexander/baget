@@ -53,6 +53,7 @@ baget.dynamicLine = (function () {
             .on("mouseleave", left);
 
         const dotHolder = svg.append("g")
+            .attr("display", "none");
 
         const dot = dotHolder.append("circle")
             .attr("r", 3)
@@ -95,48 +96,38 @@ baget.dynamicLine = (function () {
             });
             const closestDataPoint = path.datum()[closestIndex];
             if ( typeof closestDataPoint !== 'undefined'){
+                dotHolder.attr("display", null);
                 dot
                     .attr("cx", d => x(closestDataPoint.x))
-                    .attr("cy", d => y(closestDataPoint.y))
-                    .attr("display",  null );
+                    .attr("cy", d => y(closestDataPoint.y));
                 priorDescription
                     .attr("dx", d => x(closestDataPoint.x))
                     .attr("dy", d => y(0))
-                    .attr("display",  null )
                     .text('prior:'+closestDataPoint.x);
                 posteriorDescription
                     .attr("dx", d => x(0))
                     .attr("dy", d => y(closestDataPoint.y))
-                    .attr("display",  null )
                     .text('posterior probability:'+d3.format(".2f")(closestDataPoint.y));
                 crosshairsVertical
                     .attr("x1", d => x(closestDataPoint.x))
                     .attr("y1", d => y(0))
                     .attr("x2", d => x(closestDataPoint.x))
-                    .attr("y2", d => y(1))
-                    .attr("display",  null );
+                    .attr("y2", d => y(1));
                 crosshairsHorizontal
                     .attr("x1", d => x(0))
                     .attr("y1", d => y(closestDataPoint.y))
                     .attr("x2", d => x(1))
-                    .attr("y2", d => y(closestDataPoint.y))
-                    .attr("display",  null );
+                    .attr("y2", d => y(closestDataPoint.y));
             }
 
         }
 
         function entered() {
-            const path = $(this).find('path');
-            dot.attr("display", null);
+            dotHolder.attr("display", null);
         }
 
         function left() {
-            const path = $(this).find('path');
-            dot.attr("display", "none");
-            priorDescription.attr("display", "none");
-            posteriorDescription.attr("display", "none");
-            crosshairsVertical.attr("display", "none");
-            crosshairsHorizontal.attr("display", "none");
+            dotHolder.attr("display", "none");
         }
     };
 
@@ -158,7 +149,7 @@ baget.dynamicLine = (function () {
 
         height = 600;
         width = 1000;
-        margin = ({top: 100, right: 50, bottom: 30, left: 40});
+        margin = ({top: 100, right: 50, bottom: 35, left: 60});
         x = d3.scaleLinear()
             .domain(d3.extent(data, d => d.x)).nice()
             .range([margin.left, width - margin.right]);
@@ -206,6 +197,7 @@ baget.dynamicLine = (function () {
 
         const l = length(line(data));
 
+        // text label across the top of the plot
         svg.append("g")
             .selectAll("text")
             .data([geneName,"pValue: "+dataForGene.pValue,"beta: "+dataForGene.beta,"std. err: "+dataForGene.se, "prior allelic variance: "+priorAllelicVariance])
@@ -220,12 +212,11 @@ baget.dynamicLine = (function () {
                 return d;
             });
 
+        // build the axes
         svg.append("g")
             .call(xAxis);
-
         svg.append("g")
             .call(yAxis);
-
         path = svg.append("path")
             .datum(data)
             .attr("fill", "none")
@@ -239,7 +230,6 @@ baget.dynamicLine = (function () {
             .duration(800)
             .ease(d3.easeLinear)
             .attr("stroke-dasharray", `${l},${l}`);
-
         svg.append("g")
             .attr("fill", "white")
             .attr("stroke", "black")
@@ -251,6 +241,26 @@ baget.dynamicLine = (function () {
             .attr("cy", d => y(d.y))
             .attr("r", 0.5);
 
+        // label the axes
+        svg.append("text")
+            .attr("class", "axisLabel")
+            .attr("text-anchor", "middle")
+            .attr("x", function(d,i){
+                return (width-margin.right-margin.left)/2;
+            })
+            .attr("y", height-2 )
+            .text('Prior');
+        svg.append("text")
+            .attr("class", "axisLabel")
+            .attr("text-anchor", "middle")
+            .attr("x", 10 )
+            .attr("y", ((height-margin.top-margin.bottom)/2)+50 )
+            .attr("transform", function(d) {
+                return "rotate(-90,10,"+(((height-margin.top-margin.bottom)/2)+50) +")"
+            })
+            .text('Posterior probability');
+
+        // build the identity line
         const identityLine = svg.append("g");
         identityLine.append("line")
             .attr("class", "identity")

@@ -59,11 +59,18 @@ mpgSoftware.dynaLineLauncher = (function () {
         const numerator = priorAllelicVariance*beta*beta;
         const denominator = (2*variance)*(variance+priorAllelicVariance);
         const bayesFactor = multiplier * Math.exp(numerator/denominator);
-        const rangeOfPossiblePriors = _.map(_.range(100),function(rangeElement){return rangeElement/100.0});
+        const rangeOfPossiblePriors = _.map(_.range(101),function(rangeElement){return rangeElement/100.0});
         return _.map(rangeOfPossiblePriors,function(prior){
-            const po = (prior/(1-prior))*bayesFactor;
+            let posterior;
+            if (prior<1) {
+                const po = (prior/(1-prior))*bayesFactor;
+                posterior = po/(1+po);
+            } else {
+                posterior = 1;
+            }
+             po = (prior/(1-prior))*bayesFactor;
             return {x:prior,
-            y:po/(1+po),
+            y:posterior,
             name:'',
             orient:'bottom'};
         });

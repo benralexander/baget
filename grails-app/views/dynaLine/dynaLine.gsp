@@ -35,11 +35,11 @@
 
     <div>
         <label for="geneName">Gene:</label>
-        <input type="text" id="geneName" name="geneName">
+        <input type="text" id="geneName" name="geneName" value="SLC30A8">
     </div>
     <div>
         <label for="priorAllelicVariance">prior allelic variance:</label>
-        <input type="text" id="priorAllelicVariance" name="priorAllelicVariance">
+        <input type="text" id="priorAllelicVariance" name="priorAllelicVariance" value="0.0462">
         <span  class="pull-right"><button onclick="drawPic()">Launch</button></span>
     </div>
 
