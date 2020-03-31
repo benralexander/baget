@@ -61,6 +61,13 @@ modules = {
         resource url: 'js/baget/dynaLineLauncher.js'
         resource url: 'css/baget/dynaline.css'
     }
+    growthFactor{
+        resource url: 'https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js'
+        resource url: 'js/baget/growthFactor.js'
+        resource url: 'js/baget/growthFactorLauncher.js'
+        resource url: 'css/baget/growthFactor.css'
+    }
+
     boxwhisker {
         resource url: 'css/baget/boxWhiskerPlot.css'
         resource url: 'css/baget/clickablePopUp.css'
