@@ -1,0 +1,20 @@
+text.countryLabel  {
+    font-family: 'Lato';
+    font-weight: bold;
+    font-size: 6pt;
+}
+text.countryInflectionLabel{
+    font-family: 'Lato';
+    font-weight: normal;
+    font-size:  6pt;
+}
+text.countryInflectionLabel.titleLine{
+    font-weight: bold;
+    font-size:  8pt;
+}
+path.categoryLine {
+    display: none;
+}
+text.countryLabel.noncountry {
+    display: none;
+}

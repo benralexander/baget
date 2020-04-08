@@ -8786,3 +8786,9 @@ n:2970:groovy/tmp/templates/GStringTemplateScript2$_getTemplate_closure1
 n:2435:DUMMY$_closure1
 n:6307:groovy/tmp/templates/GStringTemplateScript3
 n:2970:groovy/tmp/templates/GStringTemplateScript3$_getTemplate_closure1
+n:258:org/springframework/uaa/client/protobuf/UaaClient$1
+n:1489:org/slf4j/Logger$debug$0
+n:1487:org/slf4j/Logger$info$1
+n:1547:javax/servlet/http/HttpServletResponse$sendRedirect$4
+n:1734:javax/servlet/http/HttpServletResponse$setDateHeader$0
+n:1547:javax/servlet/http/HttpServletResponse$sendRedirect$1

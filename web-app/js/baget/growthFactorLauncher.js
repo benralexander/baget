@@ -39,31 +39,21 @@ mpgSoftware.growthFactorLauncher = (function () {
         .attr("width", width)
         .attr("height", height);
 
+    const calculatePositionMultipliers = function (length){
 
-
-
-    const priorPosteriorArray = function(beta,se, priorAllelicVariance){
-        const variance = se*se;
-        const multiplier =  Math.sqrt(variance / (variance+priorAllelicVariance));
-        const numerator = priorAllelicVariance*beta*beta;
-        const denominator = (2*variance)*(variance+priorAllelicVariance);
-        const bayesFactor = multiplier * Math.exp(numerator/denominator);
-        const rangeOfPossiblePriors = _.map(_.range(101),function(rangeElement){return rangeElement/100.0});
-        return _.map(rangeOfPossiblePriors,function(prior){
-            let posterior;
-            if (prior<1) {
-                const po = (prior/(1-prior))*bayesFactor;
-                posterior = po/(1+po);
-            } else {
-                posterior = 1;
-            }
-            po = (prior/(1-prior))*bayesFactor;
-            return {x:prior,
-                y:posterior,
-                name:'',
-                orient:'bottom'};
-        });
+        return _.fill(Array(length), 1);
     }
+
+
+const calculateWeightedMovingAverage = function (dataVector){
+    const vectorLength = dataVector.length;
+    const positionMultipliers = calculatePositionMultipliers (vectorLength);
+    let developingAverage = 0;
+    _.forEach(dataVector, function (element, index){
+        developingAverage += (element*positionMultipliers [index]);
+    });
+return developingAverage /vectorLength;
+}
 
 
 
@@ -75,14 +65,18 @@ mpgSoftware.growthFactorLauncher = (function () {
                     return {countryName: d["Entity"],
                             code: d["Code"],
                             date: d["Date"],
-                    y:d ["Total confirmed deaths due to COVID-19 (deaths)"],
-                    x:d ["Days since the total confirmed deaths of COVID-19 reached 5"]};
+                    y:+d["Total confirmed deaths (deaths)"],
+                    x:+d["Days since the 5th total confirmed death"]};
                     }
 
                 );
             countryData.then(
                 function (allData) {
-                    var growthFactorPlot = baget.growthFactor.buildGrowthFactorPlot(_.filter(allData,'x'));
+                    var growthFactorPlot = baget.growthFactor.buildGrowthFactorPlot(_.filter(allData,function (o){
+                        return (o.x)
+                            && (!_.startsWith(o.countryName,'World'))
+                            && (o.countryName!=='Europe')
+                            && (o.countryName!=='North America')}));
                     // d3.select(window).on('resize', baget.growthFactor.resize);
                 }
 
@@ -112,7 +106,8 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 // public routines are declared below
     return {
-        prepareDisplay:prepareDisplay
+        prepareDisplay:prepareDisplay,
+        calculateWeightedMovingAverage:calculateWeightedMovingAverage
     }
 
 }());
