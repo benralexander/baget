@@ -32,14 +32,18 @@
     <div class="starter-template">
         <h2>Comparing growth factors for Covid-19 across countries</h2>
     </div>
+    <div>
+        <input type="checkbox" class="custom-control-input" id="includeNewAdditions"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
+        <label class="custom-control-label" for="includeNotInflected">Include countries that we have been tracking for less than 10 days</label>
+    </div>
 
     <div>
-        <label for="geneName">Gene:</label>
-        <input type="text" id="geneName" name="geneName" value="SLC30A8">
+        <input type="checkbox" class="custom-control-input" id="includeNotInflected"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
+        <label class="custom-control-label" for="includeNotInflected">Include countries that have NOT reached an inflection point</label>
     </div>
     <div>
-        <label for="priorAllelicVariance">prior allelic variance:</label>
-        <input type="text" id="priorAllelicVariance" name="priorAllelicVariance" value="0.0462">
+        <input type="checkbox" class="custom-control-input" id="includeInflected" checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
+        <label class="custom-control-label" for="includeInflected">Include countries that have reached an inflection point</label>
         <span  class="pull-right"><button onclick="drawPic()">Launch</button></span>
     </div>
 
@@ -108,7 +112,7 @@
 
         <div class="col-md-8">
 
-            <div id="dynamicLine"></div>
+            <div id="growthFactorPlot"></div>
 
             %{--<svg class="chart"></svg>--}%
 
@@ -126,9 +130,8 @@
             window);
     }
 </script>
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-%{--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>--}%
-<!-- Include all compiled plugins (below), or include individual files as needed -->
-%{--<script src="../../../web-app/js/baget/bootstrap.min.js"></script>--}%
+$( window ).ready(function() {
+drawPic();
+});
 </body>
 </html>

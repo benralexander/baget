@@ -65,13 +65,13 @@ baget.growthFactor = (function () {
                 .append("rect")
                 .attr("class", "countryInflectionLabelHolder")
                 .attr("x", function(d,i){
-                    return x(chooseValueFunction (d).x)+shiftPopUpMessage;
+                    return x(chooseValueFunction (d).x)+shiftPopUpMessage-5;
                 })
                 .attr("y", function(d,i){
-                    return y(chooseValueFunction (d).y)-shiftPopUpMessage;
+                    return y(chooseValueFunction (d).y)-shiftPopUpMessage-5;
                 })
                 .attr("width", 190)
-                .attr("height", 100)
+                .attr("height", 43+(("Inflection point detected"===title)? 13:0) )
                 .attr("fill", 'white')
             ;
 
@@ -91,25 +91,26 @@ baget.growthFactor = (function () {
                 })
                 .text(function(d,i){
                     return title;
-                })
-                .append('tspan')
+                });
+            popUpLabelHolder.append('tspan')
                 .attr("class", "countryInflectionLabel")
-                .text( d =>"Country ="+chooseValueFunction (d).countryName)
                 .attr("alignment-baseline", "hanging")
                 .attr('dy', '1.2em')
                 .attr("x", d=>x(chooseValueFunction (d).x)+shiftPopUpMessage)
-                .append('tspan')
+                .text( d =>"in "+chooseValueFunction (d).countryName+' by day '+chooseValueFunction (d).x);
+            popUpLabelHolder.append('tspan')
                 .attr("class", "countryInflectionLabel")
-                .text( function(d,i){return "day ="+chooseValueFunction (d).x})
                 .attr("alignment-baseline", "hanging")
                 .attr('dy', '1.2em')
                 .attr("x", function(d,i){
                     return x(chooseValueFunction (d).x)+shiftPopUpMessage;
-                });
+                })
+                .text( function(d,i){return "("+chooseValueFunction (d).date+")"});
             if ("Inflection point detected"===title){
                 popUpLabelHolder
                     .append('tspan')
-                    .text( function(d,i){return " total predicted deaths ="+(chooseValueFunction (d).y*2)})
+                    .attr("class", "countryInflectionLabel")
+                    .text( function(d,i){return "eventual deaths predicted: "+(chooseValueFunction (d).y*2)})
                     .attr("alignment-baseline", "hanging")
                     .attr('dy', '1.2em')
                     .attr("x", function(d,i){
@@ -186,172 +187,148 @@ baget.growthFactor = (function () {
     };
 
 
+const calculateGrowthFactorByCountry = function (data){
 
-    const buildGrowthFactorPlot = function (data) {
+    const dataByCountry =d3.nest() // nest function to group by country
+        .key(function(d) { return d.countryName;} )
+        .entries(data);
+    const growthFactorByCountry = _.map(   dataByCountry,
+        function (v){
+        //let returnObject = [];
+        let differenceArray = [];
+        _.forEach(v.values,  function(value, index){
+            if (v.values.length < 2)return true;
+            if ((index > 0) && (index < 3)){
+                differenceArray.push (
+                    {
+                        x: v.values[index].x,
+                        y: v.values[index].y,
+                        difference: v.values[index].y - v.values[index - 1].y,
+                        code: v.values[index].code,
+                        countryName: v.values[index].countryName
+                    });
+            }else if ((index > 2) && (index < v.values.length-2)){
+                const v1 = _.map (_.slice(v.values, index-2,index+1), o=>o.y);
+                const v2 = _.map (_.slice(v.values, index-1,index+2), o=>o.y);
 
-        height = 600;
-        width = 1000;
-        margin = ({top: 100, right: 50, bottom: 35, left: 60});
+                const n1 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v1);
+                const n2 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v2);
 
-        const dataByCountry =d3.nest() // nest function to group by country
-            .key(function(d) { return d.countryName;} )
-            .entries(data);
+                differenceArray.push (
+                    {x:v.values[index].x,
+                        y:v.values[index].y,
+                        // difference: v.values[index].y-v.values[index-1].y,
+                        difference: n2-n1,
+                        code: v.values[index].code,
+                        countryName: v.values[index].countryName}
+                );
+            }else if ((index > 1) &&(index === v.values.length-2)){
+                const v1 = _.map (_.slice(v.values, index-2,index), o=>o.y);
+                const v2 = _.map (_.slice(v.values, index-1,index+1), o=>o.y);
 
-        growthFactorByCountry = _.map(dataByCountry,function (v){
-            //let returnObject = [];
-            let differenceArray = [];
-            _.forEach(v.values,  function(value, index){
-                if (v.values.length < 2)return true;
-                if ((index > 0) && (index < 3)){
-                    differenceArray.push (
-                        {
-                            x: v.values[index].x,
-                            y: v.values[index].y,
-                            difference: v.values[index].y - v.values[index - 1].y,
-                            code: v.values[index].code,
-                            countryName: v.values[index].countryName
-                        });
-                }else if ((index > 2) && (index < v.values.length-2)){
-                    const v1 = _.map (_.slice(v.values, index-2,index+1), o=>o.y);
-                    const v2 = _.map (_.slice(v.values, index-1,index+2), o=>o.y);
+                const n1 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v1);
+                const n2 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v2);
 
-                    const n1 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v1);
-                    const n2 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v2);
+                differenceArray.push (
+                    {x:v.values[index].x,
+                        y:v.values[index].y,
+                        difference: n2-n1,
+                        code: v.values[index].code,
+                        countryName: v.values[index].countryName}
+                );
+            }else if ((index > 1)&&(index === v.values.length-1)){
+                const v1 = _.map (_.slice(v.values, index-2,index-1), o=>o.y);
+                const v2 = _.map (_.slice(v.values, index-1,index), o=>o.y);
 
-                    differenceArray.push (
-                        {x:v.values[index].x,
-                            y:v.values[index].y,
-                            // difference: v.values[index].y-v.values[index-1].y,
-                            difference: n2-n1,
-                            code: v.values[index].code,
-                            countryName: v.values[index].countryName}
-                    );
-                }else if ((index > 1) &&(index === v.values.length-2)){
-                    const v1 = _.map (_.slice(v.values, index-2,index), o=>o.y);
-                    const v2 = _.map (_.slice(v.values, index-1,index+1), o=>o.y);
+                const n1 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v1);
+                const n2 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v2);
 
-                    const n1 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v1);
-                    const n2 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v2);
-
-                    differenceArray.push (
-                        {x:v.values[index].x,
-                            y:v.values[index].y,
-                            difference: n2-n1,
-                            code: v.values[index].code,
-                            countryName: v.values[index].countryName}
-                    );
-                }else if ((index > 1)&&(index === v.values.length-1)){
-                    const v1 = _.map (_.slice(v.values, index-2,index-1), o=>o.y);
-                    const v2 = _.map (_.slice(v.values, index-1,index), o=>o.y);
-
-                    const n1 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v1);
-                    const n2 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v2);
-
-                    differenceArray.push (
-                        {x:v.values[index].x,
-                            y:v.values[index].y,
-                            difference: n2-n1,
-                            code: v.values[index].code,
-                            countryName: v.values[index].countryName}
-                    );
-                }
-            });
-            let growthRateArray = [];
-            _.forEach(differenceArray,function(value, index){
-                if ((index > 0) && (differenceArray[index-1].difference !==0)){
-                    growthRateArray.push (
-                        {   x:v.values[index].x,
-                            y:v.values[index].y,
-                            growthFactor:differenceArray[index].difference/differenceArray[index-1].difference,
-                            code: v.values[index].code,
-                            countryName: v.values[index].countryName});
-                }
-            });
-            let analComplete = {inflection: null, noinflection: null  };
-            const numberOfDays = 3;
-            _.forEach(growthRateArray, function (rate, index){
-                if(index > (numberOfDays-1)) {
-                   if ((growthRateArray[index].growthFactor<= 1) &&
-                        (growthRateArray[index-1].growthFactor <= 1)&&
-                        (growthRateArray[index-2].growthFactor <= 1)) {
-                       analComplete['inflection'] = {
-                           index: index,
-                           x: growthRateArray[index].x,
-                           y: growthRateArray[index].y,
-                           code: v.values[index].code,
-                           countryName: v.values[index].countryName
-                       };
-                       return false;
-                   } else {
-                       analComplete['noinflection'] = {
-                           index: index,
-                           x: growthRateArray[index].x,
-                           y: growthRateArray[index].y,
-                           code: v.values[index].code,
-                           countryName: v.values[index].countryName
-                       };
-                       return true;
-                   }
-                } else {
-                    return true;
-                }
-                   });
-;
-            return {key:v.key,
-                values:analComplete}
+                differenceArray.push (
+                    {x:v.values[index].x,
+                        y:v.values[index].y,
+                        difference: n2-n1,
+                        code: v.values[index].code,
+                        countryName: v.values[index].countryName}
+                );
+            }
         });
-        const dataFilter = function (data){
-            return _.filter (data, datum => datum.code.length > 0)
+        let growthRateArray = [];
+        _.forEach(differenceArray,function(value, index){
+            if ((index > 0) && (differenceArray[index-1].difference !==0)){
+                growthRateArray.push (
+                    {   x:v.values[index].x,
+                        y:v.values[index].y,
+                        growthFactor:differenceArray[index].difference/differenceArray[index-1].difference,
+                        code: v.values[index].code,
+                        countryName: v.values[index].countryName});
+            }
+        });
+        let analComplete = {inflection: null, noinflection: null  };
+        const numberOfDays = 3;
+        _.forEach(growthRateArray, function (rate, index){
+            if(index > (numberOfDays-1)) {
+                if ((growthRateArray[index].growthFactor<= 1) &&
+                    (growthRateArray[index-1].growthFactor <= 1)&&
+                    (growthRateArray[index-2].growthFactor <= 1)) {
+                    analComplete['inflection'] = {
+                        index: index,
+                        x: growthRateArray[index].x,
+                        y: growthRateArray[index].y,
+                        code: v.values[index].code,
+                        countryName: v.values[index].countryName,
+                        date:v.values[index].date
+                    };
+                    return false;
+                } else {
+                    analComplete['noinflection'] = {
+                        index: index,
+                        x: growthRateArray[index].x,
+                        y: growthRateArray[index].y,
+                        code: v.values[index].code,
+                        countryName: v.values[index].countryName,
+                        date:v.values[index].date
+                    };
+                    return true;
+l            }
+            } else {
+                return true;
+            }
+        });
+        analComplete ["rawValues"] = v.values;
+        ;
+        return {key:v.key,
+            values:analComplete}
+    });
+    _.forEach(dataByCountry, function (v,k) {
+        if (v.values[0].code.length===0){
+            v['type']='noncountry';
+        }else {
+            const countryGrowthFactorRecord = _.find (growthFactorByCountry, d => d.key==v.values[0].countryName);
+            if (countryGrowthFactorRecord.values.inflection){
+                countryGrowthFactorRecord.values['type']='inflection';
+                // countryGrowthFactorRecord.values['type']='inflection';
+            }else if ((!countryGrowthFactorRecord.values.inflection) && (countryGrowthFactorRecord.values.noinflection)){
+                countryGrowthFactorRecord.values['type']='noinflection';
+            }else {
+                countryGrowthFactorRecord.values['type']='inflectionUndetermined';
+            }
         }
-        x = d3.scaleLinear()
-           .domain(d3.extent(dataFilter (data), d => +d.x)).nice()
-            .range([margin.left, width - margin.right]);
-        y = d3.scaleLinear()
-            .domain(d3.extent(dataFilter (data), d => +d.y)).nice()
-            .range([height - margin.bottom, margin.top])
-        xAxis = g => g
-            .attr("transform", `translate(0,${height - margin.bottom})`)
-            .call(d3.axisBottom(x).ticks(width / 80))
-            .call(g => g.select(".domain").remove())
-            .call(g => g.selectAll(".tick line").clone()
-                .attr("y2", -height+margin.top)
-                .attr("stroke-opacity", 0.1))
-            .call(g => g.append("text")
-                .attr("x", width - 4)
-                .attr("y", -4)
-                .attr("font-weight", "bold")
-                .attr("text-anchor", "end")
-                .attr("fill", "black")
-                .text(data.x)
-                .call(halo));
-        yAxis = g => g
-            .attr("transform", `translate(${margin.left},0)`)
-            .call(d3.axisLeft(y).ticks(null, ".2f"))
-            .call(g => g.select(".domain").remove())
-            .call(g => g.selectAll(".tick line").clone()
-                .attr("x2", width)
-                .attr("stroke-opacity", 0.1))
-            .call(g => g.select(".tick:last-of-type text").clone()
-                .attr("x", 4)
-                .attr("text-anchor", "start")
-                .attr("font-weight", "bold")
-                .attr("fill", "black")
-                .text(data.y)
-                .call(halo));
+    });
+    return growthFactorByCountry;
+}
 
-        line = d3.line()
-            .curve(d3.curveCatmullRom)
-            .x(d => x(d.x))
-            .y(d => y(d.y));
 
-        var dynamicLineSelection = d3.select("#dynamicLine");
 
-        const svg = dynamicLineSelection.append("svg")
-            .attr("viewBox", [0, 0, width, height]);
 
-        const l = length(line(data));
+
+
+    const buildGrowthFactorPlot = function (unfilteredData,
+                                            preAnalysisFilter,
+                                            postAnalysisFilter ) {
+    const transitionTime = 2000;
+
         var color = d3.scaleOrdinal(d3.schemeCategory10);
-        countryColorObject = {};
+        const countryColorObject = {};
         const countryColor = function (countryColorString){
             if ( typeof countryColorObject [countryColorString] !== 'undefined'){
                 return countryColorObject [countryColorString];
@@ -359,88 +336,191 @@ baget.growthFactor = (function () {
                 return color ((countryColorString.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0) ) % 10);
             }
         };
-        // add a field to describe the category for these data
-        _.forEach(dataByCountry, function (v,k) {
-            if (v.values[0].code.length===0){
-                v['type']='noncountry';
-            }else {
-                const countryGrowthFactorRecord = _.find (growthFactorByCountry, d => d.key==v.values[0].countryName);
-                if (countryGrowthFactorRecord.values.inflection){
-                    countryGrowthFactorRecord.values['type']=v['type']='inflection';
-                    // countryGrowthFactorRecord.values['type']='inflection';
-                }else if ((!countryGrowthFactorRecord.values.inflection) && (countryGrowthFactorRecord.values.noinflection)){
-                    countryGrowthFactorRecord.values['type']=v['type']='noinflection';
-                }else {
-                    countryGrowthFactorRecord.values['type']=v['type']='inflectionUndetermined';
-                }
-            }
-        });
+        _.forEach(_.uniq(unfilteredData,'countryName'), d=>countryColor(d.countryName));
+
+        const data = preAnalysisFilter (unfilteredData);
+        height = 600;
+        width = 1000;
+        margin = ({top: 100, right: 50, bottom: 35, left: 60});
+
+
+
+        const growthFactorByCountry = postAnalysisFilter(calculateGrowthFactorByCountry (data));
+
+        x = d3.scaleLinear()
+            .domain(d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.x)).nice()
+            .range([margin.left, width - margin.right]);
+        y = d3.scaleLinear()
+            .domain(d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.y)).nice()
+            .range([height - margin.bottom, margin.top]);
+        xAxis = g => g
+            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .call(d3.axisBottom(x).ticks(width / 80))
+            .call(g => g.select(".domain").remove())
+            .call(g => g.selectAll(".tick line").clone()
+                .attr("y2", -height+margin.top)
+                .attr("stroke-opacity", 0.1));
+
+        yAxis = g => g
+            .attr("transform", `translate(${margin.left},0)`)
+            .call(d3.axisLeft(y).ticks(null, ".2f"))
+            .call(g => g.select(".domain").remove())
+            .call(g => g.selectAll(".tick line").clone()
+                .attr("x2", width)
+                .attr("stroke-opacity", 0.1));
+
+
+        // line = d3.line()
+        //     .curve(d3.curveCatmullRom)
+        //     .x(d => x(d.x))
+        //     .y(d => y(d.y));
+
+        var dynamicLineSelection = d3.select("#growthFactorPlot");
+
+        dynamicLineSelection.selectAll("svg.growthFactorPlot")
+            .data ([1])
+            .enter()
+            .append("svg")
+            .attr("class","growthFactorPlot")
+            .attr("viewBox", [0, 0, width, height]);
+        const svg = dynamicLineSelection.select("svg.growthFactorPlot");
+
+        xAxisRevise = g => g
+            .call(d3.axisBottom(x).ticks(width / 80));
+        yAxisRevise = g => g
+            .call(d3.axisLeft(y).ticks(null, ".2f"));
+
 
             // build the axes
-        svg.append("g")
+        const xaxis = svg.selectAll("g.xaxis").data([1]);
+
+        xaxis.enter()
+            .append("g")
+            .attr("class",'xaxis')
             .call(xAxis);
-        svg.append("g")
+        if (xaxis.enter().size()===0){
+            xaxis.transition()
+                .call(xAxisRevise);
+        }
+
+        const yaxis = svg.selectAll("g.yaxis").data([1]);
+        yaxis.enter()
+            .append("g")
+            .attr("class",'yaxis')
             .call(yAxis);
+        if (yaxis.enter().size()===0){
+            yaxis.transition()
+                .call(yAxisRevise);
+        }
+        // data lines for each country or category
         path =svg.selectAll("path.dataLine")
-            .data(dataByCountry)
-            .enter()
+            .data(growthFactorByCountry,d=>d.key);
+
+        path.enter()
             .append("path")
-            .attr("class", d => (((d.values[0].code.length> 0)? "countryLine":"categoryLine") + " dataLine "+d.type))
+            .attr("class", d => (((d.values.rawValues[0].code.length> 0)? "countryLine":"categoryLine") + " dataLine "+d.type))
             .attr("fill", "none")
             .attr("stroke", function(d){ return countryColor(d.key) })
             .attr("stroke-width", 1)
             .attr("d", function(d,k){
                 return d3.line()
+                    .x(function(d) { return x(0); })
+                    .y(function(d) { return y(0); })
+                    (d.values.rawValues)
+            })
+            .transition(transitionTime)
+            .attr("d", function(d,k){
+                return d3.line()
                     .x(function(d) { return x(+d.x); })
                     .y(function(d) { return y(+d.y); })
-                    (d.values)
+                    (d.values.rawValues)
             });
-        // const everyPoint = svg.selectAll("circle")
-        //     .data(dataByCountry)
-        //     .enter()
-        //     .append("circle")
-        //     .attr("class",  d => d.values.code+"everyPoint")
-        //     .attr("r", 1.5)
-        //     .attr("fill", function(d){ return countryColor(d.key) })
-        //     .attr("cx", d => x(d.values.x))
-        //     .attr("cy", d => y(d.values.y));
-        svg.selectAll(".text")
-            .data(dataByCountry)
-            .enter()
+
+        path.transition(transitionTime)
+            .attr("d", function(d,k){
+                return d3.line()
+                    .x(function(d) { return x(+d.x); })
+                    .y(function(d) { return y(+d.y); })
+                    (d.values.rawValues)
+            });
+
+        path.exit()
+            .remove();
+
+        // data line label for each country or category
+        const dataLineLabel = svg.selectAll("text.countryLabel")
+            .data(growthFactorByCountry,d=>d.key);
+        dataLineLabel.enter()
             .append("text")
-            .attr("class", d => "countryLabel "+d.type)
+            .attr("class", d => "countryLabel ")
             .attr("text-anchor", "last")
-            .attr("x", function(d,i){
-                return x(_.last(d.values,'x').x);
-            })
-            .attr("y", function(d,i){
-                return y(_.last(d.values,'y').y);
-            })
             .text(function(d,i){
                 return d.key;
+            })
+            .attr("x", function(d,i){
+                return x(_.last(d.values.rawValues,'x').x);
+            })
+            .attr("y", function(d,i){
+                return y(0);
+            })
+            .transition(transitionTime)
+            .attr("x", function(d,i){
+                return x(_.last(d.values.rawValues,'x').x);
+            })
+            .attr("y", function(d,i){
+                return y(_.last(d.values.rawValues,'y').y);
             });
-        const inflectionPoint = svg.selectAll("circle")
-            .data(_.filter (growthFactorByCountry,function(o){return o.values.inflection}))
-            .enter()
+
+        dataLineLabel.transition(transitionTime)
+            .attr("x", function(d,i){
+                return x(_.last(d.values.rawValues,'x').x);
+            })
+            .attr("y", function(d,i){
+                return y(_.last(d.values.rawValues,'y'));
+            })
+
+        dataLineLabel.exit()
+            .remove();
+
+        // inflection point for each line, if it exists
+        const inflectionPoint = svg.selectAll("circle.inflectionPoint")
+            .data(_.filter (growthFactorByCountry,function(o){return o.values.inflection}),d=>d.key);
+        inflectionPoint.enter()
             .append("circle")
-            .attr("class",  d => d.values.inflection.code+" inflectionPoint")
+            .attr("class",  d => d.values.inflection.code+" inflectionPoint "+d.type)
             .attr("r", 4)
             .attr("fill", function(d){ return countryColor(d.key) })
+            .attr("stroke", 'black')
+            .attr("stroke-width", 1)
+            .attr("cx", d => x(d.values.inflection.x))
+            .attr("cy", d => y(0))
+            .transition(transitionTime)
+            .attr("cy", d => y(d.values.inflection.y));
+        inflectionPoint
             .attr("cx", d => x(d.values.inflection.x))
             .attr("cy", d => y(d.values.inflection.y))
-            .attr("stroke", 'black')
-            .attr("stroke-width", 1);
+        inflectionPoint.exit()
+            .remove()
+        ;
 
-        const noinflectionPoint = svg.selectAll("circle")
-            .data(_.filter (growthFactorByCountry,function(o){return ((o.values.noinflection)  && (!o.values.inflection))}))
-            .enter()
+        // a point to describe lack of inflection
+        const noinflectionPoint = svg.selectAll("circle.noinflection")
+            .data(_.filter (growthFactorByCountry,function(o){return ((o.values.noinflection)  && (!o.values.inflection))})
+                ,d=>d.key);
+        noinflectionPoint.enter()
             .append("circle")
-            .attr("class", "noinflection")
-            .attr("class",  d => d.values.noinflection.code+" noinflection")
+            .attr("class",  d => d.values.noinflection.code+" noinflection "+d.type)
             .attr("r", 3)
             .attr("fill", function(d){ return countryColor(d.key) })
             .attr("cx", d => x(d.values.noinflection.x))
+            .attr("cy", d => y(0))
+            .transition(transitionTime)
             .attr("cy", d => y(d.values.noinflection.y));
+        noinflectionPoint
+            .attr("cx", d => x(d.values.noinflection.x))
+            .attr("cy", d => y(d.values.noinflection.y))
+        noinflectionPoint.exit()
+            .remove();
 
         // label the axes
         svg.append("text")
@@ -461,35 +541,11 @@ baget.growthFactor = (function () {
             })
             .text('Total deaths');
 
-        // build the identity line
-        const identityLine = svg.append("g");
-        identityLine.append("line")
-            .attr("class", "identity")
-            .style("stroke", "blue")
-            .attr("stroke-opacity", 0.3)
-            .style("stroke-width", 1.5)
-            .attr("x1", d => x(0))
-            .attr("y1", d => y(0))
-            .attr("x2", d => x(1))
-            .attr("y2", d => y(1));
-        identityLine.append("circle")
-            .attr("r", 2)
-            .attr("fill", "blue")
-            .attr("class", "identityStart")
-            .attr("cx", d => x(0))
-            .attr("cy", d => y(0));
-        identityLine.append("circle")
-            .attr("r", 2)
-            .attr("fill", "blue")
-            .attr("class", "identityEnd")
-            .attr("cx", d => x(1))
-            .attr("cy", d => y(1));
-
 
 
         inflectionPoint.call(hover, svg);
         noinflectionPoint.call(hover, svg);
-       // everyPoint.call(hover, svg);
+
 
 
 

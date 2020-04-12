@@ -3,18 +3,30 @@ text.countryLabel  {
     font-weight: bold;
     font-size: 6pt;
 }
-text.countryInflectionLabel{
+tspan.countryInflectionLabel{
     font-family: 'Lato';
     font-weight: normal;
-    font-size:  6pt;
+    font-size:  8pt;
 }
 text.countryInflectionLabel.titleLine{
     font-weight: bold;
     font-size:  8pt;
 }
-path.categoryLine {
-    display: none;
-}
-text.countryLabel.noncountry {
-    display: none;
-}
+/*path.categoryLine {*/
+/*    display: none;*/
+/*}*/
+/*text.countryLabel.noncountry {*/
+/*    display: none;*/
+/*}*/
+/*circle.noinflection.noncountry {*/
+/*    display: none;*/
+/*}*/
+/*circle.inflection.noncountry {*/
+/*    display: none;*/
+/*}*/
+/*path.countryLine.noinflection{*/
+/*    display: none;*/
+/*}*/
+/*text.countryLabel.noinflection{*/
+/*    display: none;*/
+/*}*/

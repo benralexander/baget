@@ -5,7 +5,8 @@ var mpgSoftware = mpgSoftware || {};
 
 mpgSoftware.growthFactorLauncher = (function () {
 
-    const priorAllelicVariance =  0.042;
+    let showCountriesWithInflectionPoints =  true;
+    let showCountriesWithoutInflectionPoints =  false;
 
     var widthAdjuster = function ()  {
         var returnValue;
@@ -39,8 +40,20 @@ mpgSoftware.growthFactorLauncher = (function () {
         .attr("width", width)
         .attr("height", height);
 
-    const calculatePositionMultipliers = function (length){
+    const changeWhatIsDisplayed = function (callingObject){
+        const callingObjectId = $(callingObject).attr('id');
+        const callingObjectIsChecked = $(callingObject).prop("checked") === true;
+        if (callingObjectId==="includeInflected"){
+            showCountriesWithInflectionPoints = callingObjectIsChecked;
+        }else if (callingObjectId==="includeNotInflected"){
+            showCountriesWithoutInflectionPoints  = callingObjectIsChecked;
+        }else if (callingObjectId==="includeNewAdditions"){
 
+
+        }
+    }
+
+    const calculatePositionMultipliers = function (length){
         return _.fill(Array(length), 1);
     }
 
@@ -76,27 +89,27 @@ return developingAverage /vectorLength;
                         return (o.x)
                             && (!_.startsWith(o.countryName,'World'))
                             && (o.countryName!=='Europe')
-                            && (o.countryName!=='North America')}));
-                    // d3.select(window).on('resize', baget.growthFactor.resize);
+                            && (o.countryName!=='North America')}),
+                        function (data){
+                        return _.filter (data, datum => datum.code.length > 0)
+                    },function (data){
+                        if (showCountriesWithInflectionPoints&&!showCountriesWithoutInflectionPoints){
+                            return _.filter (data, datum => datum.values.type == 'inflection')
+                        } else if (!showCountriesWithInflectionPoints&&showCountriesWithoutInflectionPoints){
+                            return _.filter (data, datum => datum.values.type == 'noinflection')
+                        }else if (showCountriesWithInflectionPoints&&showCountriesWithoutInflectionPoints){
+                            return _.filter (data, datum => (datum.values.type == 'noinflection')||(datum.values.type == 'inflection'))
+                        }else if (!showCountriesWithInflectionPoints&&!showCountriesWithoutInflectionPoints){
+                            return _.filter (data, datum => datum.values.type !== 'noinflection' &&datum.values.type !== 'inflection' )
+                        }
+
+                        });
+                    d3.select(window).on('resize', baget.growthFactor.resize);
                 }
 
             );
 
-            // var promise =  $.ajax({
-            //     cache: false,
-            //     type: "post",
-            //     url: dataUrl,
-            //     data: { },
-            //     async: true
-            // });
-            // const priorAllelicVariance = priorAllelicVarianceVar || 0.0462;
-            // promise.done(
-            //     function (dataForGene) {
-            //         var dynaline = baget.growthFactor.buildGrowthFactorPlot(arrayOfPlotElements,dataForGene);
-            //         d3.select(window).on('resize', baget.growthFactor.resize);
-            //     }
-            //
-            // );
+
 
         } catch(e){
             console.log('f');
@@ -107,7 +120,8 @@ return developingAverage /vectorLength;
 // public routines are declared below
     return {
         prepareDisplay:prepareDisplay,
-        calculateWeightedMovingAverage:calculateWeightedMovingAverage
+        calculateWeightedMovingAverage:calculateWeightedMovingAverage,
+        changeWhatIsDisplayed:changeWhatIsDisplayed
     }
 
 }());
