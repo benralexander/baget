@@ -12,6 +12,32 @@ text.countryInflectionLabel.titleLine{
     font-weight: bold;
     font-size:  8pt;
 }
+div.sectionDescription{
+    font-family: 'SansSerif';
+    font-weight: bold;
+    font-size: 14px;
+}
+div.dataChoosingSection {
+    font-family: 'SansSerif';
+    font-weight: bold;
+    font-size: 14px;
+    border: 1px solid black;
+    margin:  5px;
+    padding: 3px;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px; /* future proofing */
+    -khtml-border-radius: 10px; /* for old Konqueror browsers */
+}
+div.everyGroupToDisplay {
+    border: 1px solid black;
+    margin:  5px;
+    padding: 3px;
+    width: 100px;
+    height: 200px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
 /*path.categoryLine {*/
 /*    display: none;*/
 /*}*/

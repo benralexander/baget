@@ -9,6 +9,8 @@ baget.growthFactor = (function () {
     let width;
     let margin;
     let growthFactorByCountry;
+    let color ;
+    let countryColorObject;
 
     function halo(text) {
         text.select(function() { return this.parentNode.insertBefore(this.cloneNode(true), this); })
@@ -192,7 +194,7 @@ const calculateGrowthFactorByCountry = function (data){
     const dataByCountry =d3.nest() // nest function to group by country
         .key(function(d) { return d.countryName;} )
         .entries(data);
-    const growthFactorByCountry = _.map(   dataByCountry,
+     growthFactorByCountry = _.map(   dataByCountry,
         function (v){
         //let returnObject = [];
         let differenceArray = [];
@@ -276,7 +278,7 @@ const calculateGrowthFactorByCountry = function (data){
                         y: growthRateArray[index].y,
                         code: v.values[index].code,
                         countryName: v.values[index].countryName,
-                        date:v.values[index].date
+                        date:_.find(v.values,d=>d.x===growthRateArray[index].x).date
                     };
                     return false;
                 } else {
@@ -286,7 +288,7 @@ const calculateGrowthFactorByCountry = function (data){
                         y: growthRateArray[index].y,
                         code: v.values[index].code,
                         countryName: v.values[index].countryName,
-                        date:v.values[index].date
+                        date:_.find(v.values,d=>d.x===growthRateArray[index].x).date
                     };
                     return true;
 l            }
@@ -300,9 +302,9 @@ l            }
             values:analComplete}
     });
     _.forEach(dataByCountry, function (v,k) {
-        if (v.values[0].code.length===0){
-            v['type']='noncountry';
-        }else {
+        // if (v.values[0].code.length===0){
+        //     v['type']='noncountry';
+        // }else {
             const countryGrowthFactorRecord = _.find (growthFactorByCountry, d => d.key==v.values[0].countryName);
             if (countryGrowthFactorRecord.values.inflection){
                 countryGrowthFactorRecord.values['type']='inflection';
@@ -312,11 +314,24 @@ l            }
             }else {
                 countryGrowthFactorRecord.values['type']='inflectionUndetermined';
             }
-        }
+        // }
     });
     return growthFactorByCountry;
 }
 
+    const initializeCountryColoring = function (unfilteredData) {
+         color = d3.scaleOrdinal(d3.schemeCategory10);
+         countryColorObject = {};
+        _.forEach(_.uniq(unfilteredData,'countryName'), d=>countryColor(d.countryName));
+    } ;
+
+    const countryColor = function (countryColorString){
+        if ( typeof countryColorObject [countryColorString] !== 'undefined'){
+            return countryColorObject [countryColorString];
+        }else {
+            return color ((countryColorString.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0) ) % 10);
+        }
+    };
 
 
 
@@ -325,18 +340,8 @@ l            }
     const buildGrowthFactorPlot = function (unfilteredData,
                                             preAnalysisFilter,
                                             postAnalysisFilter ) {
-    const transitionTime = 2000;
-
-        var color = d3.scaleOrdinal(d3.schemeCategory10);
-        const countryColorObject = {};
-        const countryColor = function (countryColorString){
-            if ( typeof countryColorObject [countryColorString] !== 'undefined'){
-                return countryColorObject [countryColorString];
-            }else {
-                return color ((countryColorString.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0) ) % 10);
-            }
-        };
-        _.forEach(_.uniq(unfilteredData,'countryName'), d=>countryColor(d.countryName));
+        const transitionTime = 2000;
+        initializeCountryColoring(unfilteredData);
 
         const data = preAnalysisFilter (unfilteredData);
         height = 600;
@@ -369,12 +374,6 @@ l            }
                 .attr("x2", width)
                 .attr("stroke-opacity", 0.1));
 
-
-        // line = d3.line()
-        //     .curve(d3.curveCatmullRom)
-        //     .x(d => x(d.x))
-        //     .y(d => y(d.y));
-
         var dynamicLineSelection = d3.select("#growthFactorPlot");
 
         dynamicLineSelection.selectAll("svg.growthFactorPlot")
@@ -386,9 +385,15 @@ l            }
         const svg = dynamicLineSelection.select("svg.growthFactorPlot");
 
         xAxisRevise = g => g
-            .call(d3.axisBottom(x).ticks(width / 80));
+            .call(d3.axisBottom(x).ticks(width / 80))
+            .call(g => g.selectAll(".tick line")
+                .attr("y2", -height+margin.top)
+                .attr("stroke-opacity", 0.1));
         yAxisRevise = g => g
-            .call(d3.axisLeft(y).ticks(null, ".2f"));
+            .call(d3.axisLeft(y).ticks(null, ".2f"))
+            .call(g => g.selectAll(".tick line")
+                .attr("x2", width)
+                .attr("stroke-opacity", 0.1));
 
 
             // build the axes
@@ -398,20 +403,19 @@ l            }
             .append("g")
             .attr("class",'xaxis')
             .call(xAxis);
-        if (xaxis.enter().size()===0){
-            xaxis.transition()
-                .call(xAxisRevise);
-        }
+        xaxis.transition()
+            .call(xAxisRevise);
+
 
         const yaxis = svg.selectAll("g.yaxis").data([1]);
         yaxis.enter()
             .append("g")
             .attr("class",'yaxis')
             .call(yAxis);
-        if (yaxis.enter().size()===0){
-            yaxis.transition()
-                .call(yAxisRevise);
-        }
+        yaxis
+            .transition()
+            .call(yAxisRevise);
+
         // data lines for each country or category
         path =svg.selectAll("path.dataLine")
             .data(growthFactorByCountry,d=>d.key);
@@ -452,6 +456,7 @@ l            }
             .data(growthFactorByCountry,d=>d.key);
         dataLineLabel.enter()
             .append("text")
+            .merge(dataLineLabel)
             .attr("class", d => "countryLabel ")
             .attr("text-anchor", "last")
             .text(function(d,i){
@@ -476,7 +481,7 @@ l            }
                 return x(_.last(d.values.rawValues,'x').x);
             })
             .attr("y", function(d,i){
-                return y(_.last(d.values.rawValues,'y'));
+                return y(_.last(d.values.rawValues,'y').y);
             })
 
         dataLineLabel.exit()
@@ -498,7 +503,7 @@ l            }
             .attr("cy", d => y(d.values.inflection.y));
         inflectionPoint
             .attr("cx", d => x(d.values.inflection.x))
-            .attr("cy", d => y(d.values.inflection.y))
+            .attr("cy", d => y(d.values.inflection.y));
         inflectionPoint.exit()
             .remove()
         ;
@@ -543,8 +548,8 @@ l            }
 
 
 
-        inflectionPoint.call(hover, svg);
-        noinflectionPoint.call(hover, svg);
+        svg.selectAll("circle.inflectionPoint").call(hover, svg);
+        svg.selectAll("circle.noinflection").call(hover, svg);
 
 
 

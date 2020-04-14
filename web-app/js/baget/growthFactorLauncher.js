@@ -7,67 +7,125 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     let showCountriesWithInflectionPoints =  true;
     let showCountriesWithoutInflectionPoints =  false;
+    let showCountries =  true;
+    let showCombinations =  false;
+    let showCategories =  false;
 
-    var widthAdjuster = function ()  {
-        var returnValue;
-        var browserWidth =   $(window).width();
-        returnValue = (browserWidth > 200) ?  browserWidth : 200;
-        returnValue = (returnValue < 1000) ?  returnValue : 1000;
-        return   returnValue;
-    }
-    var heightAdjuster = function ()  {
-        var returnValue;
-        var browserHeight =   $(window).height()-3200;
-        returnValue = (browserHeight > 300) ?  browserHeight : 350;
-        returnValue = (returnValue < 1000) ?  returnValue : 1000;
-        return   returnValue;
-    }
+    let rememberData = [];
 
 
-    var margin = {top: 30, right: 20, bottom: 50, left: 70},
-        width = 800 - margin.left - margin.right,
-        height = 600 - margin.top - margin.bottom,
-        sliderOnScreenTop = 10,
-        sliderOnScreenBottom = 200;
 
-
-    var qqPlot;
-
-    var width = 960,
-        height = 500;
-
-    var chart = d3.select("#manhattanPlot1")
-        .attr("width", width)
-        .attr("height", height);
 
     const changeWhatIsDisplayed = function (callingObject){
         const callingObjectId = $(callingObject).attr('id');
         const callingObjectIsChecked = $(callingObject).prop("checked") === true;
-        if (callingObjectId==="includeInflected"){
-            showCountriesWithInflectionPoints = callingObjectIsChecked;
+        if (callingObjectId==="includeCountries"){
+            showCountries = callingObjectIsChecked;
+        }else if (callingObjectId==="includeCategories"){
+            showCategories  = callingObjectIsChecked;
+
+        }else if (callingObjectId==="includeCombinations"){
+            showCombinations  = callingObjectIsChecked;
+        }else if (callingObjectId==="include" +
+            "Inflected"){
+            showCountriesWithInflectionPoints  = callingObjectIsChecked;
         }else if (callingObjectId==="includeNotInflected"){
             showCountriesWithoutInflectionPoints  = callingObjectIsChecked;
         }else if (callingObjectId==="includeNewAdditions"){
 
 
         }
-    }
+        buildThePlotWithRememberedData ();
+    };
 
     const calculatePositionMultipliers = function (length){
         return _.fill(Array(length), 1);
+    };
+
+
+    const calculateWeightedMovingAverage = function (dataVector){
+        const vectorLength = dataVector.length;
+        const positionMultipliers = calculatePositionMultipliers (vectorLength);
+        let developingAverage = 0;
+        _.forEach(dataVector, function (element, index){
+            developingAverage += (element*positionMultipliers [index]);
+        });
+    return developingAverage /vectorLength;
+    };
+
+    const filterTheData = function (dataToFilter,prefilter){
+        if (prefilter){
+            let filterArray = [];
+            if (showCountries){
+                //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
+                filterArray.push (datum => (datum.code.length > 0) &&
+                    (!(datum.countryName.search('World')>=0))
+                );
+            }
+            if (showCategories){
+                filterArray.push (datum => datum.code.length === 0);
+            }
+            if (showCombinations){
+                filterArray.push (datum => ((datum.countryName.search('World')>=0)||
+                    (datum.countryName.search('Europe')>=0)||
+                    (datum.countryName.search('Asia')>=0)));
+            }
+
+
+            return function(data){
+                return _.filter (data, function (oneRec){
+                    // let finalAnswer = true;
+                    // _.forEach(filterArray,function(oneFilter){
+                    //     if (!oneFilter(oneRec)){
+                    //         finalAnswer = false;
+                    //         return false;
+                    //     }
+                    // });
+                    let finalAnswer = false;
+                    _.forEach(filterArray,function(oneFilter){
+                        if (oneFilter(oneRec)){
+                            finalAnswer = true;
+                            return false;
+                        }
+                    });
+                    return finalAnswer;
+                })
+            }
+        }else {
+
+        }
+
+
     }
 
 
-const calculateWeightedMovingAverage = function (dataVector){
-    const vectorLength = dataVector.length;
-    const positionMultipliers = calculatePositionMultipliers (vectorLength);
-    let developingAverage = 0;
-    _.forEach(dataVector, function (element, index){
-        developingAverage += (element*positionMultipliers [index]);
-    });
-return developingAverage /vectorLength;
-}
+    const buildThePlot= function (allData) {
+        const thingsToDisplay = filterTheData (allData, true);
+        $('div.everyGroupToDisplay').empty ();
+        $('div.everyGroupToDisplay').append('<ul>');
+        _.forEach(_.uniqBy(thingsToDisplay(allData),'countryName'),function (v,k){
+            $('div.everyGroupToDisplay').append('<li>'+((v)?v.countryName:"")+'</li>');
+        });
+        $('div.everyGroupToDisplay').append('</ul>');
+        var growthFactorPlot = baget.growthFactor.buildGrowthFactorPlot(allData,
+            thingsToDisplay,
+            function (data){
+                if (showCountriesWithInflectionPoints&&!showCountriesWithoutInflectionPoints){
+                    return _.filter (data, datum => datum.values.type == 'inflection')
+                } else if (!showCountriesWithInflectionPoints&&showCountriesWithoutInflectionPoints){
+                    return _.filter (data, datum => datum.values.type == 'noinflection')
+                }else if (showCountriesWithInflectionPoints&&showCountriesWithoutInflectionPoints){
+                    return _.filter (data, datum => (datum.values.type == 'noinflection')||(datum.values.type == 'inflection'))
+                }else if (!showCountriesWithInflectionPoints&&!showCountriesWithoutInflectionPoints){
+                    return _.filter (data, datum => datum.values.type !== 'noinflection' &&datum.values.type !== 'inflection' )
+                }
 
+            });
+    };
+
+    const buildThePlotWithRememberedData = function (){
+        buildThePlot (rememberData);
+    }
 
 
     const prepareDisplay = function(dataUrl,  window){
@@ -84,26 +142,10 @@ return developingAverage /vectorLength;
 
                 );
             countryData.then(
-                function (allData) {
-                    var growthFactorPlot = baget.growthFactor.buildGrowthFactorPlot(_.filter(allData,function (o){
-                        return (o.x)
-                            && (!_.startsWith(o.countryName,'World'))
-                            && (o.countryName!=='Europe')
-                            && (o.countryName!=='North America')}),
-                        function (data){
-                        return _.filter (data, datum => datum.code.length > 0)
-                    },function (data){
-                        if (showCountriesWithInflectionPoints&&!showCountriesWithoutInflectionPoints){
-                            return _.filter (data, datum => datum.values.type == 'inflection')
-                        } else if (!showCountriesWithInflectionPoints&&showCountriesWithoutInflectionPoints){
-                            return _.filter (data, datum => datum.values.type == 'noinflection')
-                        }else if (showCountriesWithInflectionPoints&&showCountriesWithoutInflectionPoints){
-                            return _.filter (data, datum => (datum.values.type == 'noinflection')||(datum.values.type == 'inflection'))
-                        }else if (!showCountriesWithInflectionPoints&&!showCountriesWithoutInflectionPoints){
-                            return _.filter (data, datum => datum.values.type !== 'noinflection' &&datum.values.type !== 'inflection' )
-                        }
 
-                        });
+                function (allData) {
+                    rememberData = _.filter (allData,datum => (!(datum.countryName.search('excl.')>=0)));
+                    buildThePlot(rememberData);
                     d3.select(window).on('resize', baget.growthFactor.resize);
                 }
 
@@ -119,6 +161,7 @@ return developingAverage /vectorLength;
 
 // public routines are declared below
     return {
+        buildThePlotWithRememberedData:buildThePlotWithRememberedData,
         prepareDisplay:prepareDisplay,
         calculateWeightedMovingAverage:calculateWeightedMovingAverage,
         changeWhatIsDisplayed:changeWhatIsDisplayed
