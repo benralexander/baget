@@ -15,7 +15,9 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
 
+    const logVersusLinear= function (callingObject){
 
+    };
     const changeWhatIsDisplayed = function (callingObject){
         const callingObjectId = $(callingObject).attr('id');
         const callingObjectIsChecked = $(callingObject).prop("checked") === true;
@@ -36,6 +38,9 @@ mpgSoftware.growthFactorLauncher = (function () {
 
         }
         buildThePlotWithRememberedData ();
+    };
+    const changeGroupCheckbox = function (callingObject){
+        const callingObjectId = $(callingObject);
     };
 
     const calculatePositionMultipliers = function (length){
@@ -102,11 +107,21 @@ mpgSoftware.growthFactorLauncher = (function () {
     const buildThePlot= function (allData) {
         const thingsToDisplay = filterTheData (allData, true);
         $('div.everyGroupToDisplay').empty ();
-        $('div.everyGroupToDisplay').append('<ul>');
+        const startTheGroup = $('div.everyGroupToDisplay');
+        let listOfGroups = '<div>';
         _.forEach(_.uniqBy(thingsToDisplay(allData),'countryName'),function (v,k){
-            $('div.everyGroupToDisplay').append('<li>'+((v)?v.countryName:"")+'</li>');
+            listOfGroups+='<div>'+
+                '<input type="checkbox" class="custom-control-input" id="includeNewAdditions"  checked onclick="mpgSoftware.growthFactorLauncher.changeGroupCheckbox (this)">' +
+                '<label class="custom-control-label" for="includeNewAdditions">'+((v)?v.countryName:"")+'</label>'+
+                '</div>';
         });
-        $('div.everyGroupToDisplay').append('</ul>');
+        listOfGroups+='</div>'
+        // startTheGroup.append('<ul>');
+        //
+        // _.forEach(_.uniqBy(thingsToDisplay(allData),'countryName'),function (v,k){
+        //     startTheGroup.append('<li>'+((v)?v.countryName:"")+'</li>');
+        // });
+        startTheGroup.append(listOfGroups);
         var growthFactorPlot = baget.growthFactor.buildGrowthFactorPlot(allData,
             thingsToDisplay,
             function (data){
@@ -164,7 +179,9 @@ mpgSoftware.growthFactorLauncher = (function () {
         buildThePlotWithRememberedData:buildThePlotWithRememberedData,
         prepareDisplay:prepareDisplay,
         calculateWeightedMovingAverage:calculateWeightedMovingAverage,
-        changeWhatIsDisplayed:changeWhatIsDisplayed
+        changeWhatIsDisplayed:changeWhatIsDisplayed,
+        changeGroupCheckbox:changeGroupCheckbox,
+        logVersusLinear:logVersusLinear
     }
 
 }());

@@ -56,16 +56,12 @@ baget.growthFactor = (function () {
 
         const createInflectionPointPopUp = function(topLevelSvg,ountryRecord, chooseValueFunction, title) {
             const labelHolder = topLevelSvg.selectAll("g.countryInflectionLabelHolder")
-                .data([1])
-                .enter()
-                .append("g")
-                .attr("class", "countryInflectionLabelHolder");
+                .data([ountryRecord[0].values]);
 
-            labelHolder.selectAll("rect.countryInflectionLabelHolder")
-                .data([ountryRecord[0].values])
-                .enter()
-                .append("rect")
+            labelHolder.enter()
+                .append("g")
                 .attr("class", "countryInflectionLabelHolder")
+                .append("rect")
                 .attr("x", function(d,i){
                     return x(chooseValueFunction (d).x)+shiftPopUpMessage-5;
                 })
@@ -76,12 +72,21 @@ baget.growthFactor = (function () {
                 .attr("height", 43+(("Inflection point detected"===title)? 13:0) )
                 .attr("fill", 'white')
             ;
+            labelHolder
+                .attr("x", function(d,i){
+                    return x(chooseValueFunction (d).x)+shiftPopUpMessage-5;
+                })
+                .attr("y", function(d,i){
+                    return y(chooseValueFunction (d).y)-shiftPopUpMessage-5;
+                })
+            labelHolder.exit()
+                .remove ();
 
             const popUpLabelHolder = labelHolder.selectAll("text.countryInflectionLabel")
-                .data([ountryRecord[0].values])
-                .enter()
-                .append("text");
-            popUpLabelHolder
+                .data([ountryRecord[0].values]);
+
+            popUpLabelHolder.enter()
+                .append("text")
                 .attr("class", "countryInflectionLabel titleLine")
                 .attr("text-anchor", "last")
                 .attr("alignment-baseline", "hanging")
@@ -93,14 +98,14 @@ baget.growthFactor = (function () {
                 })
                 .text(function(d,i){
                     return title;
-                });
-            popUpLabelHolder.append('tspan')
+                })
+                .append('tspan')
                 .attr("class", "countryInflectionLabel")
                 .attr("alignment-baseline", "hanging")
                 .attr('dy', '1.2em')
                 .attr("x", d=>x(chooseValueFunction (d).x)+shiftPopUpMessage)
-                .text( d =>"in "+chooseValueFunction (d).countryName+' by day '+chooseValueFunction (d).x);
-            popUpLabelHolder.append('tspan')
+                .text( d =>"in "+chooseValueFunction (d).countryName+' by day '+chooseValueFunction (d).x)
+                .append('tspan')
                 .attr("class", "countryInflectionLabel")
                 .attr("alignment-baseline", "hanging")
                 .attr('dy', '1.2em')
@@ -109,7 +114,7 @@ baget.growthFactor = (function () {
                 })
                 .text( function(d,i){return "("+chooseValueFunction (d).date+")"});
             if ("Inflection point detected"===title){
-                popUpLabelHolder
+                popUpLabelHolder.enter()
                     .append('tspan')
                     .attr("class", "countryInflectionLabel")
                     .text( function(d,i){return "eventual deaths predicted: "+(chooseValueFunction (d).y*2)})
@@ -119,6 +124,8 @@ baget.growthFactor = (function () {
                         return x(chooseValueFunction (d).x)+shiftPopUpMessage;
                     });
             }
+            popUpLabelHolder.exit()
+                .remove ();
 
         };
 
@@ -341,6 +348,9 @@ l            }
                                             preAnalysisFilter,
                                             postAnalysisFilter ) {
         const transitionTime = 2000;
+        _.forEach(unfilteredData, function (rec){
+            rec["y"] = rec.y+1;
+        })
         initializeCountryColoring(unfilteredData);
 
         const data = preAnalysisFilter (unfilteredData);
@@ -355,9 +365,14 @@ l            }
         x = d3.scaleLinear()
             .domain(d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.x)).nice()
             .range([margin.left, width - margin.right]);
-        y = d3.scaleLinear()
-            .domain(d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.y)).nice()
+        // y = d3.scaleLog()
+        //     .domain(d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.y)).nice()
+        //     .range([height - margin.bottom, margin.top]);
+        let [yLower,yUpper] = d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.y);
+        y = d3.scaleLog()
+            .domain([yLower,yUpper]).nice()
             .range([height - margin.bottom, margin.top]);
+
         xAxis = g => g
             .attr("transform", `translate(0,${height - margin.bottom})`)
             .call(d3.axisBottom(x).ticks(width / 80))
@@ -429,7 +444,7 @@ l            }
             .attr("d", function(d,k){
                 return d3.line()
                     .x(function(d) { return x(0); })
-                    .y(function(d) { return y(0); })
+                    .y(function(d) { return y(yLower); })
                     (d.values.rawValues)
             })
             .transition(transitionTime)
@@ -466,7 +481,7 @@ l            }
                 return x(_.last(d.values.rawValues,'x').x);
             })
             .attr("y", function(d,i){
-                return y(0);
+                return y(yLower);
             })
             .transition(transitionTime)
             .attr("x", function(d,i){
@@ -498,7 +513,7 @@ l            }
             .attr("stroke", 'black')
             .attr("stroke-width", 1)
             .attr("cx", d => x(d.values.inflection.x))
-            .attr("cy", d => y(0))
+            .attr("cy", d => y(yLower))
             .transition(transitionTime)
             .attr("cy", d => y(d.values.inflection.y));
         inflectionPoint
@@ -518,7 +533,7 @@ l            }
             .attr("r", 3)
             .attr("fill", function(d){ return countryColor(d.key) })
             .attr("cx", d => x(d.values.noinflection.x))
-            .attr("cy", d => y(0))
+            .attr("cy", d => y(yLower))
             .transition(transitionTime)
             .attr("cy", d => y(d.values.noinflection.y));
         noinflectionPoint

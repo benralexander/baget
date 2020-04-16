@@ -33,42 +33,61 @@
         <h2>Comparing growth factors for Covid-19 </h2>
     </div>
     <div class="row">
-        <div class="col-sm-10 dataChoosingSection">
+        <div class="col-sm-12 dataChoosingSection">
             <div class="sectionDescription">
                Data we will analyze
             </div>
-            <div>
-                <input type="checkbox" class="custom-control-input" id="includeCountries"  checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                <label class="custom-control-label" for="includeCountries">Include data for individual countries</label>
+            <div class="row">
+                <div class="col-sm-6 clickOnSectionsWeWant">
+                    <div>
+                        <input type="checkbox" class="custom-control-input" id="includeCountries"  checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
+                        <label class="custom-control-label" for="includeCountries">Include data for individual countries</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" class="custom-control-input" id="includeCombinations"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
+                        <label class="custom-control-label" for="includeCombinations">Include county combinations</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" class="custom-control-input" id="includeCategories"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
+                        <label class="custom-control-label" for="includeCategories">Include other categories of data</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" class="custom-control-input" id="includeNewAdditions"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
+                        <label class="custom-control-label" for="includeNewAdditions">Include countries that we have been tracking for less than 10 days</label>
+                    </div>
+                </div>
+                <div class="col-sm-6 displayTheSectionsWeWant">
+                    <div>
+                        <span  class="pull-right"><div class="everyGroupToDisplay"></div></span>
+                    </div>
+                </div>
             </div>
-            <div>
-                <input type="checkbox" class="custom-control-input" id="includeCombinations"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                <label class="custom-control-label" for="includeCombinations">Include county combinations</label>
-            </div>
-            <div>
-                <input type="checkbox" class="custom-control-input" id="includeCategories"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                <label class="custom-control-label" for="includeCategories">Include other categories of data</label>
-            </div>
-            <div>
-                <input type="checkbox" class="custom-control-input" id="includeNewAdditions"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                <label class="custom-control-label" for="includeNewAdditions">Include countries that we have been tracking for less than 10 days</label>
-            </div>
-            <div>
-                <span  class="pull-right"><div class="everyGroupToDisplay"></div></span>
-            </div>
+
+
         </div>
-        <div class="col-sm-10  dataChoosingSection">
+        <div class="col-sm-12  dataChoosingSection">
             <div class="sectionDescription">
                 Analyses to present
             </div>
-            <div>
-                <input type="checkbox" class="custom-control-input" id="includeNotInflected"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                <label class="custom-control-label" for="includeNotInflected">Include countries that have NOT reached an inflection point</label>
+            <div class="row">
+                <div class="col-sm-6 clickOnSectionsWeWant">
+                    <div>
+                        <input type="checkbox" class="custom-control-input" id="includeNotInflected"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
+                        <label class="custom-control-label" for="includeNotInflected">Include countries that have NOT reached an inflection point</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" class="custom-control-input" id="includeInflected" checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
+                        <label class="custom-control-label" for="includeInflected">Include countries that have reached an inflection point</label>
+                    </div>
+                </div>
+                <div class="col-sm-6 displayTheSectionsWeWant">
+                    <div>
+                        <input type="checkbox" class="custom-control-input" id="logVersusLinear" checked onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)">
+                        <label class="custom-control-label" for="logVersusLinear">Linear scale</label>
+                    </div>
+                </div>
             </div>
-            <div>
-                <input type="checkbox" class="custom-control-input" id="includeInflected" checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                <label class="custom-control-label" for="includeInflected">Include countries that have reached an inflection point</label>
-            </div>
+
         </div>
     </div>
 
