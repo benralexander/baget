@@ -7,10 +7,12 @@ baget.growthFactor = (function () {
     let yAxis;
     let height;
     let width;
-    let margin;
+    let margin = ({top: 100, right: 50, bottom: 35, left: 60});
     let growthFactorByCountry;
     let color ;
     let countryColorObject;
+    let linearNotLog= true;
+    let instance = {};
 
     function halo(text) {
         text.select(function() { return this.parentNode.insertBefore(this.cloneNode(true), this); })
@@ -85,7 +87,7 @@ baget.growthFactor = (function () {
             const popUpLabelHolder = labelHolder.selectAll("text.countryInflectionLabel")
                 .data([ountryRecord[0].values]);
 
-            popUpLabelHolder.enter()
+            const developingPopUpInformation  = popUpLabelHolder.enter()
                 .append("text")
                 .attr("class", "countryInflectionLabel titleLine")
                 .attr("text-anchor", "last")
@@ -114,7 +116,7 @@ baget.growthFactor = (function () {
                 })
                 .text( function(d,i){return "("+chooseValueFunction (d).date+")"});
             if ("Inflection point detected"===title){
-                popUpLabelHolder.enter()
+                developingPopUpInformation
                     .append('tspan')
                     .attr("class", "countryInflectionLabel")
                     .text( function(d,i){return "eventual deaths predicted: "+(chooseValueFunction (d).y*2)})
@@ -183,16 +185,11 @@ baget.growthFactor = (function () {
         }
     };
 
-    const resize = function () {
+    instance.resize = function () {
         width = widthAdjuster()- margin.left - margin.right;
         height = heightAdjuster() - margin.top - margin.bottom;
-        var extractedData  = d3.selectAll('#groupHolder').selectAll('g.allGroups').data();
-        var dataRange = UTILS.extractDataRange(extractedData);
-        d3.select("#scatterPlot1").selectAll('svg').remove();
-        qqPlot.width(width)
-            .height(height)
-            .dataHanger ("#scatterPlot1", extractedData);
-        d3.select("#scatterPlot1").call(qqPlot.render);
+        mpgSoftware.growthFactorLauncher.buildThePlotWithRememberedData ();
+
     };
 
 
@@ -344,20 +341,20 @@ l            }
 
 
 
-    const buildGrowthFactorPlot = function (unfilteredData,
+    instance.buildGrowthFactorPlot = function (unfilteredData,
                                             preAnalysisFilter,
                                             postAnalysisFilter ) {
         const transitionTime = 2000;
-        _.forEach(unfilteredData, function (rec){
-            rec["y"] = rec.y+1;
-        })
+        if (!linearNotLog) { // log functions prefer values > 0
+            _.forEach(unfilteredData, function (rec) {
+                if(rec.y<=0){
+                    rec["y"] = 1;
+                }
+            })
+        }
         initializeCountryColoring(unfilteredData);
 
         const data = preAnalysisFilter (unfilteredData);
-        height = 600;
-        width = 1000;
-        margin = ({top: 100, right: 50, bottom: 35, left: 60});
-
 
 
         const growthFactorByCountry = postAnalysisFilter(calculateGrowthFactorByCountry (data));
@@ -365,13 +362,24 @@ l            }
         x = d3.scaleLinear()
             .domain(d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.x)).nice()
             .range([margin.left, width - margin.right]);
-        // y = d3.scaleLog()
-        //     .domain(d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.y)).nice()
-        //     .range([height - margin.bottom, margin.top]);
         let [yLower,yUpper] = d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.y);
-        y = d3.scaleLog()
-            .domain([yLower,yUpper]).nice()
-            .range([height - margin.bottom, margin.top]);
+        if (linearNotLog){
+            y = d3.scaleLinear()
+                .domain([yLower,yUpper]).nice()
+                .range([height - margin.bottom, margin.top]);
+        }else {
+            y = d3.scaleLog()
+                .domain([yLower,yUpper]).nice()
+                .range([height - margin.bottom, margin.top]);
+        }
+
+        const timeParse = d3.timeParse("%b %e, %Y");
+        const dateExtent = d3.extent(data, function(d){
+            return timeParse(d.date);
+        });
+
+
+
 
         xAxis = g => g
             .attr("transform", `translate(0,${height - margin.bottom})`)
@@ -430,6 +438,22 @@ l            }
         yaxis
             .transition()
             .call(yAxisRevise);
+
+        // text label across the top of the plot
+        const dateFormat = d3.timeFormat("%B %d, %Y");
+        svg.append("g")
+            .selectAll("text.describeDateRangeOfData")
+            .data([dateExtent])
+            .enter()
+            .append("text")
+            .attr("class", 'describeDateRangeOfData')
+            .attr("x", function(d,i){
+                return ((width-margin.right-margin.left)/5)*i;
+            })
+            .attr("y", 30)
+            .text(function(d){
+                return "data covers period from "+ dateFormat (d[0])+ " to "+ dateFormat (d[1]) +".";
+            });
 
         // data lines for each country or category
         path =svg.selectAll("path.dataLine")
@@ -569,14 +593,33 @@ l            }
 
 
 
-        return svg.node();
+        return instance;
 
 
 
-    }
+    };
 
-    return {
-        resize:resize,
-        buildGrowthFactorPlot: buildGrowthFactorPlot
-    }
+    instance.linearNotLog= function (x) {
+        if (!arguments.length) return linearNotLog;
+        linearNotLog = x;
+        return instance;
+    };
+
+    instance.height= function (x) {
+        if (!arguments.length) return height;
+        height = x;
+        return instance;
+    };
+
+    instance.width= function (x) {
+        if (!arguments.length) return width;
+        width = x;
+        return instance;
+    };
+
+    return instance;
+    // return {
+    //     resize:resize,
+    //     buildGrowthFactorPlot: buildGrowthFactorPlot
+    // }
 })();

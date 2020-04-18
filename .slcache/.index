@@ -8941,3 +8941,9 @@ n:11364:D__dev_baget_grails_app_views_growthFactor_growthFactorPlot_gsp
 n:5451:D__dev_baget_grails_app_views_growthFactor_growthFactorPlot_gsp$_run_closure2
 n:1425:java_util_concurrent_CountDownLatch$countDown$3
 n:5457:D__dev_baget_grails_app_views_growthFactor_growthFactorPlot_gsp$_run_closure2
+n:1533:javax/servlet/ServletRequest$removeAttribute$4
+n:1542:javax/servlet/ServletRequest$getParameter$5
+n:2051:org/codehaus/groovy/grails/web/util/GrailsPrintWriter$leftShift$2
+n:2097:org/codehaus/groovy/grails/web/util/GrailsPrintWriter$leftShift$3
+n:2011:java_net_URLDecoder$decode$4
+n:1602:java_util_concurrent_ConcurrentMap$putIfAbsent$0

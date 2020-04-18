@@ -81,7 +81,7 @@
                     </div>
                 </div>
                 <div class="col-sm-6 displayTheSectionsWeWant">
-                    <div>
+                    <div class="pull-right">
                         <input type="checkbox" class="custom-control-input" id="logVersusLinear" checked onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)">
                         <label class="custom-control-label" for="logVersusLinear">Linear scale</label>
                     </div>

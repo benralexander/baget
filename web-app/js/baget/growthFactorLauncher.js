@@ -10,13 +10,17 @@ mpgSoftware.growthFactorLauncher = (function () {
     let showCountries =  true;
     let showCombinations =  false;
     let showCategories =  false;
-
+    let useLinearNotLog = true;
     let rememberData = [];
-
+    let height = 600;
+    let width = 1000;
 
 
     const logVersusLinear= function (callingObject){
-
+        const callingObjectId = $(callingObject).attr('id');
+        const callingObjectIsChecked = $(callingObject).prop("checked") === true;
+        useLinearNotLog = callingObjectIsChecked;
+        buildThePlotWithRememberedData ();
     };
     const changeWhatIsDisplayed = function (callingObject){
         const callingObjectId = $(callingObject).attr('id');
@@ -45,6 +49,14 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     const calculatePositionMultipliers = function (length){
         return _.fill(Array(length), 1);
+    };
+
+    const setHeight = function (currentHeight){
+        height = currentHeight;
+    };
+
+    const setWidtth = function (currentWidtth){
+        widtth = currentWidtth;
     };
 
 
@@ -116,13 +128,12 @@ mpgSoftware.growthFactorLauncher = (function () {
                 '</div>';
         });
         listOfGroups+='</div>'
-        // startTheGroup.append('<ul>');
-        //
-        // _.forEach(_.uniqBy(thingsToDisplay(allData),'countryName'),function (v,k){
-        //     startTheGroup.append('<li>'+((v)?v.countryName:"")+'</li>');
-        // });
         startTheGroup.append(listOfGroups);
-        var growthFactorPlot = baget.growthFactor.buildGrowthFactorPlot(allData,
+        var growthFactorPlot = baget.growthFactor
+            .linearNotLog(useLinearNotLog)
+            .height (height)
+            .width(width)
+            .buildGrowthFactorPlot(allData,
             thingsToDisplay,
             function (data){
                 if (showCountriesWithInflectionPoints&&!showCountriesWithoutInflectionPoints){
@@ -151,7 +162,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                     return {countryName: d["Entity"],
                             code: d["Code"],
                             date: d["Date"],
-                    y:+d["Total confirmed deaths (deaths)"],
+                   // y:+d["Total confirmed deaths (deaths)"],
+                        y:+d[" (deaths)"],
                     x:+d["Days since the 5th total confirmed death"]};
                     }
 
@@ -159,7 +171,8 @@ mpgSoftware.growthFactorLauncher = (function () {
             countryData.then(
 
                 function (allData) {
-                    rememberData = _.filter (allData,datum => (!(datum.countryName.search('excl.')>=0)));
+                    rememberData = _.filter (allData,datum => ((!(datum.countryName.search('excl.')>=0)))&&
+                        (!isNaN(datum.y)));
                     buildThePlot(rememberData);
                     d3.select(window).on('resize', baget.growthFactor.resize);
                 }
@@ -176,6 +189,8 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 // public routines are declared below
     return {
+        setWidth:setWidtth,
+        setHeight:setHeight,
         buildThePlotWithRememberedData:buildThePlotWithRememberedData,
         prepareDisplay:prepareDisplay,
         calculateWeightedMovingAverage:calculateWeightedMovingAverage,

@@ -41,6 +41,11 @@ div.everyGroupToDisplay {
 div.everyGroupToDisplay ul {
     list-style-type: none;
 }
+text.describeDateRangeOfData {
+    font-family: 'Lato';
+    font-weight: bold;
+    font-size: 14pt;
+}
 /*path.categoryLine {*/
 /*    display: none;*/
 /*}*/
