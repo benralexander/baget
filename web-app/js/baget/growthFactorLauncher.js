@@ -17,12 +17,22 @@ mpgSoftware.growthFactorLauncher = (function () {
     let startDate = new Date ();
     let endDate = new Date ();
 
+    const rememberTheseData = function (identifier,dataToRemember){
+        $( "#"+identifier ).data( "store", {dataToRemember:dataToRemember} );
+    };
+    const recallData = function (identifier){
+        const storedDataObject = $( "#"+identifier ).data( "store");
+        if ( typeof storedDataObject !== 'undefined'){
+            return storedDataObject.dataToRemember;
+        }
+    }
+
 
     const logVersusLinear= function (callingObject){
         const callingObjectId = $(callingObject).attr('id');
         const callingObjectIsChecked = $(callingObject).prop("checked") === true;
         useLinearNotLog = callingObjectIsChecked;
-        buildThePlotWithRememberedData ();
+        buildThePlotWithRememberedData ("country");
     };
     const changeWhatIsDisplayed = function (callingObject){
         const callingObjectId = $(callingObject).attr('id');
@@ -43,7 +53,7 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
         }
-        buildThePlotWithRememberedData ();
+        buildThePlotWithRememberedData ("country");
     };
     const changeGroupCheckbox = function (callingObject){
         const callingObjectId = $(callingObject);
@@ -81,7 +91,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 $( "#amount" ).val( (new Date(ui.values[ 0 ] *1000).toDateString() ) + " - " + (new Date(ui.values[ 1 ] *1000)).toDateString() );
                 setStartDate(new Date(ui.values[ 0 ] *1000));
                 setEndDate(new Date(ui.values[ 1 ] *1000));
-                buildThePlotWithRememberedData ();
+                buildThePlotWithRememberedData ("country");
 
             }
         });
@@ -165,7 +175,8 @@ mpgSoftware.growthFactorLauncher = (function () {
     }
 
 
-    const buildThePlot= function (allData) {
+    const buildThePlot= function (idOfThePlaceToStoreData) {
+        const allData = recallData (idOfThePlaceToStoreData);
         const thingsToDisplay = filterTheData (allData, true);
         const postAnalysisFilter = filterTheData (allData, false);
         $('div.everyGroupToDisplay').empty ();
@@ -183,20 +194,23 @@ mpgSoftware.growthFactorLauncher = (function () {
             .linearNotLog(useLinearNotLog)
             .height (height)
             .width(width)
+            .idOfThePlaceToStoreData (idOfThePlaceToStoreData)
             .buildGrowthFactorPlot(allData,
             thingsToDisplay,
                 postAnalysisFilter
             );
     };
 
-    const buildThePlotWithRememberedData = function (){
-        buildThePlot (rememberData);
+    const buildThePlotWithRememberedData = function (idOfThePlaceToStoreData){
+
+        buildThePlot (idOfThePlaceToStoreData);
     }
 
 
-    const prepareDisplay = function(dataByCountryUrl, dataByCountryState,  window){
+    const prepareDisplay = function(dataUrl, dataAssignmentFunction,  idOfThePlaceToStoreData, window){
+
         try{
-            const countryData = d3.csv(dataByCountryState,
+            const countryData = d3.csv(dataUrl,dataAssignmentFunction
 
                 // function(d) {
                 //     return {countryName: d["Entity"],
@@ -207,31 +221,18 @@ mpgSoftware.growthFactorLauncher = (function () {
                 //     }
                 //
                 // );
-            function(d) {
-                const dateString  = d["date"];
-                const currentDay = +dateString.substring (6, 8);
-                const currentMonth = +dateString.substring (4, 6);
-                const currentYear = +dateString.substring (0, 4);
-                const currentDate = new Date (currentYear,currentMonth,currentDay);
-                const months = [
-                    'Jan',
-                    'Feb',
-                    'Mar',
-                    'Apr',
-                    'May',
-                    'Jun',
-                    'Jul',
-                    'Aug',
-                    'Sep',
-                    'Oct',
-                    'Nov',
-                    'Dec'
-                ]
-                return {countryName: d["state"],
-                    code: d["state"],
-                    date: ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear(),
-                    y:+d["death"]};
-            }
+            // function(d) {
+            //     const dateString  = d["date"];
+            //     const currentDay = +dateString.substring (6, 8);
+            //     const currentMonth = +dateString.substring (4, 6);
+            //     const currentYear = +dateString.substring (0, 4);
+            //     const currentDate = new Date (currentYear,currentMonth,currentDay);
+            //
+            //     return {countryName: d["state"],
+            //         code: d["state"],
+            //         date: ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear(),
+            //         y:+d["death"]};
+            // }
 
         );
             countryData.then(
@@ -239,9 +240,10 @@ mpgSoftware.growthFactorLauncher = (function () {
                 function (allData) {
                     rememberData = _.filter (allData,datum => ((!(datum.countryName.search('excl.')>=0)))&&
                         (!isNaN(datum.y)));
+                    rememberTheseData (idOfThePlaceToStoreData,rememberData)
                     setStartDate(new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
                     setEndDate(new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
-                    buildThePlot(rememberData);
+                    buildThePlot(idOfThePlaceToStoreData);
                     d3.select(window).on('resize', baget.growthFactor.resize);
                     initializeDateSlider ();
                 }

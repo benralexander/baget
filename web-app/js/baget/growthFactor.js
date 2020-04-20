@@ -12,7 +12,9 @@ baget.growthFactor = (function () {
     let color ;
     let countryColorObject;
     let linearNotLog= true;
+    let idOfThePlaceToStoreData;
     let instance = {};
+
 
     function halo(text) {
         text.select(function() { return this.parentNode.insertBefore(this.cloneNode(true), this); })
@@ -193,7 +195,7 @@ baget.growthFactor = (function () {
     instance.resize = function () {
         width = widthAdjuster()- margin.left - margin.right;
         height = heightAdjuster() - margin.top - margin.bottom;
-        mpgSoftware.growthFactorLauncher.buildThePlotWithRememberedData ();
+        mpgSoftware.growthFactorLauncher.buildThePlotWithRememberedData (idOfThePlaceToStoreData);
 
     };
 
@@ -219,7 +221,7 @@ const calculateGrowthFactorByCountry = function (data){
             modifiedDataByCountry.push({key:_.first(dataWithCalculatedXAddedIn).code,
                 values:_.uniqBy(dataWithCalculatedXAddedIn,'x')});
         }
-    })
+    });
     dataByCountry = modifiedDataByCountry;
 
     const filterTheDataWeCareAbout = function (values){return _.filter (values,d=>(d.y>0) &&(d.x>0) )};
@@ -623,6 +625,13 @@ const calculateGrowthFactorByCountry = function (data){
         width = x;
         return instance;
     };
+    instance.idOfThePlaceToStoreData= function (x) {
+        if (!arguments.length) return idOfThePlaceToStoreData;
+        idOfThePlaceToStoreData = x;
+        return instance;
+    };
+
+
 
     return instance;
     // return {
