@@ -14,6 +14,12 @@ modules = {
     }
     jquery {
         resource url: 'js/jquery-1.11.0.min.js'
+        resource url: 'https://code.jquery.com/ui/1.11.0/jquery-ui.js'
+    }
+    jquery12 {
+        resource url:'https://code.jquery.com/jquery-3.5.0.js'
+        resource url:'https://code.jquery.com/ui/1.12.1/jquery-ui.js'
+        resource url:'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'
     }
     core {
         dependsOn "jquery,bootstrap"
@@ -62,6 +68,7 @@ modules = {
         resource url: 'css/baget/dynaline.css'
     }
     growthFactor{
+        dependsOn 'jquery12'
         resource url: 'https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js'
         resource url: 'js/baget/growthFactor.js'
         resource url: 'js/baget/growthFactorLauncher.js'

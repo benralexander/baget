@@ -40,7 +40,7 @@
 <body>
 <script>
     $(document).ready(function(){
-        $('.dropdown-toggle').dropdown()
+        $('.dropdown-toggle').selectmenu()
     });
 </script>
 <r:layoutResources/>

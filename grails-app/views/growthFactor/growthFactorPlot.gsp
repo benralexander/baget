@@ -55,6 +55,14 @@
                         <input type="checkbox" class="custom-control-input" id="includeNewAdditions"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
                         <label class="custom-control-label" for="includeNewAdditions">Include countries that we have been tracking for less than 10 days</label>
                     </div>
+                    <div>
+                        <p>
+                            <label for="amount">Date range:</label>
+                            <input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" size="100"/>
+                        </p>
+
+                        <div id="dateSlider"></div>
+                    </div>
                 </div>
                 <div class="col-sm-6 displayTheSectionsWeWant">
                     <div>
@@ -73,11 +81,11 @@
                 <div class="col-sm-6 clickOnSectionsWeWant">
                     <div>
                         <input type="checkbox" class="custom-control-input" id="includeNotInflected"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                        <label class="custom-control-label" for="includeNotInflected">Include countries that have NOT reached an inflection point</label>
+                        <label class="custom-control-label" for="includeNotInflected">Include groups that have NOT reached an inflection point</label>
                     </div>
                     <div>
                         <input type="checkbox" class="custom-control-input" id="includeInflected" checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                        <label class="custom-control-label" for="includeInflected">Include countries that have reached an inflection point</label>
+                        <label class="custom-control-label" for="includeInflected">Include groups that have reached an inflection point</label>
                     </div>
                 </div>
                 <div class="col-sm-6 displayTheSectionsWeWant">
@@ -173,6 +181,7 @@
 <script>
     $( window ).ready(function() {
         mpgSoftware.growthFactorLauncher.prepareDisplay("${createLink(controller: 'growthFactor', action:'infectionDataPerCountry')}",
+            "${createLink(controller: 'growthFactor', action:'infectionDataPerState')}",
             window);
     });
 </script>
