@@ -13,6 +13,7 @@ baget.growthFactor = (function () {
     let countryColorObject;
     let linearNotLog= true;
     let idOfThePlaceToStoreData;
+    let idOfThePlaceWhereThePlotGoes;
     let instance = {};
 
 
@@ -205,24 +206,27 @@ const calculateGrowthFactorByCountry = function (data){
     let dataByCountry =d3.nest() // nest function to group by country
         .key(function(d) { return d.countryName;} )
         .entries(data);
-    // additional processing by state
-    let modifiedDataByCountry = [];
-    _.forEach(dataByCountry,function (v, k){
-        const daysSinceFifthDeath = _.filter (v.values,d=>d.y>5);
-        if (daysSinceFifthDeath.length>0){
-            const sortedDaysSinceFifthDeath = _.orderBy (daysSinceFifthDeath,d=>new Date(d.date).getTime());
-            const firstDayAfterFifthDeath = _.first (sortedDaysSinceFifthDeath);
-            const dateAfterFifthDeath = new Date(firstDayAfterFifthDeath.date).getTime()/1000;
-            const dataWithCalculatedXAddedIn = _.map(sortedDaysSinceFifthDeath,function (d){
-                let tempRec = d;
-                tempRec['x']=((new Date(d.date).getTime()/1000)-dateAfterFifthDeath)/86400;
-                return tempRec;
-            });
-            modifiedDataByCountry.push({key:_.first(dataWithCalculatedXAddedIn).code,
-                values:_.uniqBy(dataWithCalculatedXAddedIn,'x')});
-        }
-    });
-    dataByCountry = modifiedDataByCountry;
+
+    // if X values don't exist then calculate them from the dates
+    if (_.filter (dataByCountry,v=>_.filter (v.values,d=>(typeof d.x==='undefined')).length>0).length>0){
+        let modifiedDataByCountry = [];
+        _.forEach(dataByCountry,function (v, k){
+            const daysSinceFifthDeath = _.filter (v.values,d=>d.y>5);
+            if (daysSinceFifthDeath.length>0){
+                const sortedDaysSinceFifthDeath = _.orderBy (daysSinceFifthDeath,d=>new Date(d.date).getTime());
+                const firstDayAfterFifthDeath = _.first (sortedDaysSinceFifthDeath);
+                const dateAfterFifthDeath = new Date(firstDayAfterFifthDeath.date).getTime()/1000;
+                const dataWithCalculatedXAddedIn = _.map(sortedDaysSinceFifthDeath,function (d){
+                    let tempRec = d;
+                    tempRec['x']=((new Date(d.date).getTime()/1000)-dateAfterFifthDeath)/86400;
+                    return tempRec;
+                });
+                modifiedDataByCountry.push({key:_.first(dataWithCalculatedXAddedIn).code,
+                    values:_.uniqBy(dataWithCalculatedXAddedIn,'x')});
+            }
+        });
+        dataByCountry = modifiedDataByCountry;
+    }
 
     const filterTheDataWeCareAbout = function (values){return _.filter (values,d=>(d.y>0) &&(d.x>0) )};
     growthFactorByCountry = _.map(   dataByCountry,
@@ -398,7 +402,7 @@ const calculateGrowthFactorByCountry = function (data){
                 .attr("x2", width)
                 .attr("stroke-opacity", 0.1));
 
-        var dynamicLineSelection = d3.select("#growthFactorPlot");
+        var dynamicLineSelection = d3.select("#"+idOfThePlaceWhereThePlotGoes);
 
         dynamicLineSelection.selectAll("svg.growthFactorPlot")
             .data ([1])
@@ -628,6 +632,11 @@ const calculateGrowthFactorByCountry = function (data){
     instance.idOfThePlaceToStoreData= function (x) {
         if (!arguments.length) return idOfThePlaceToStoreData;
         idOfThePlaceToStoreData = x;
+        return instance;
+    };
+    instance.idOfThePlaceWhereThePlotGoes= function (x) {
+        if (!arguments.length) return idOfThePlaceWhereThePlotGoes;
+        idOfThePlaceWhereThePlotGoes = x;
         return instance;
     };
 

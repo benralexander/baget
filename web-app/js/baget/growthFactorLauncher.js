@@ -20,10 +20,22 @@ mpgSoftware.growthFactorLauncher = (function () {
     const rememberTheseData = function (identifier,dataToRemember){
         $( "#"+identifier ).data( "store", {dataToRemember:dataToRemember} );
     };
+    const supplementTheseData = function (identifier,fieldName,dataToStore){
+        const storedDataObject = $( "#"+identifier ).data( "store");
+        if ( typeof storedDataObject !== 'undefined'){
+            storedDataObject[fieldName] = dataToStore;
+        }
+    };
     const recallData = function (identifier){
         const storedDataObject = $( "#"+identifier ).data( "store");
         if ( typeof storedDataObject !== 'undefined'){
             return storedDataObject.dataToRemember;
+        }
+    }
+    const recallSupplementedData = function (identifier, fieldName){
+        const storedDataObject = $( "#"+identifier ).data( "store");
+        if ( typeof storedDataObject !== 'undefined'){
+            return storedDataObject[fieldName];
         }
     }
 
@@ -36,6 +48,8 @@ mpgSoftware.growthFactorLauncher = (function () {
     };
     const changeWhatIsDisplayed = function (callingObject){
         const callingObjectId = $(callingObject).attr('id');
+        const allClassesForObject = $(callingObject).attr("class").split(/\s+/);
+        let plotToLaunch = "country";
         const callingObjectIsChecked = $(callingObject).prop("checked") === true;
         if (callingObjectId==="includeCountries"){
             showCountries = callingObjectIsChecked;
@@ -44,16 +58,21 @@ mpgSoftware.growthFactorLauncher = (function () {
 
         }else if (callingObjectId==="includeCombinations"){
             showCombinations  = callingObjectIsChecked;
-        }else if (callingObjectId==="include" +
-            "Inflected"){
+        }else if (callingObjectId==="includeInflectedCountries" ){
             showCountriesWithInflectionPoints  = callingObjectIsChecked;
-        }else if (callingObjectId==="includeNotInflected"){
+        }else if (callingObjectId==="includeNotInflectedCountries"){
             showCountriesWithoutInflectionPoints  = callingObjectIsChecked;
+        }else if (callingObjectId==="includeNotInflectedStates"){
+            showCountriesWithoutInflectionPoints  = callingObjectIsChecked;
+            plotToLaunch = "states";
+        }else if (callingObjectId==="includeInflectedStates" ){
+            showCountriesWithInflectionPoints  = callingObjectIsChecked;
+            plotToLaunch = "states";
         }else if (callingObjectId==="includeNewAdditions"){
 
 
         }
-        buildThePlotWithRememberedData ("country");
+        buildThePlotWithRememberedData (plotToLaunch);
     };
     const changeGroupCheckbox = function (callingObject){
         const callingObjectId = $(callingObject);
@@ -177,6 +196,7 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     const buildThePlot= function (idOfThePlaceToStoreData) {
         const allData = recallData (idOfThePlaceToStoreData);
+        const idOfThePlaceWhereThePlotGoes = recallSupplementedData(idOfThePlaceToStoreData,'idOfThePlaceWhereThePlotGoes');
         const thingsToDisplay = filterTheData (allData, true);
         const postAnalysisFilter = filterTheData (allData, false);
         $('div.everyGroupToDisplay').empty ();
@@ -195,6 +215,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             .height (height)
             .width(width)
             .idOfThePlaceToStoreData (idOfThePlaceToStoreData)
+            .idOfThePlaceWhereThePlotGoes (idOfThePlaceWhereThePlotGoes)
             .buildGrowthFactorPlot(allData,
             thingsToDisplay,
                 postAnalysisFilter
@@ -207,32 +228,10 @@ mpgSoftware.growthFactorLauncher = (function () {
     }
 
 
-    const prepareDisplay = function(dataUrl, dataAssignmentFunction,  idOfThePlaceToStoreData, window){
+    const prepareDisplay = function(dataUrl, dataAssignmentFunction,  idOfThePlaceToStoreData,idOfThePlaceWhereThePlotGoes, window){
 
         try{
             const countryData = d3.csv(dataUrl,dataAssignmentFunction
-
-                // function(d) {
-                //     return {countryName: d["Entity"],
-                //             code: d["Code"],
-                //             date: d["Date"],
-                //         y:+d[" (deaths)"],
-                //     x:+d["Days since the 5th total confirmed death"]};
-                //     }
-                //
-                // );
-            // function(d) {
-            //     const dateString  = d["date"];
-            //     const currentDay = +dateString.substring (6, 8);
-            //     const currentMonth = +dateString.substring (4, 6);
-            //     const currentYear = +dateString.substring (0, 4);
-            //     const currentDate = new Date (currentYear,currentMonth,currentDay);
-            //
-            //     return {countryName: d["state"],
-            //         code: d["state"],
-            //         date: ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear(),
-            //         y:+d["death"]};
-            // }
 
         );
             countryData.then(
@@ -240,7 +239,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                 function (allData) {
                     rememberData = _.filter (allData,datum => ((!(datum.countryName.search('excl.')>=0)))&&
                         (!isNaN(datum.y)));
-                    rememberTheseData (idOfThePlaceToStoreData,rememberData)
+                    rememberTheseData (idOfThePlaceToStoreData,rememberData);
+                    supplementTheseData (idOfThePlaceToStoreData,'idOfThePlaceWhereThePlotGoes',idOfThePlaceWhereThePlotGoes)
                     setStartDate(new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
                     setEndDate(new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
                     buildThePlot(idOfThePlaceToStoreData);
