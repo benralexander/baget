@@ -23,7 +23,7 @@
 
 <h2>Comparing growth factors for Covid-19 across countries</h2>
 
-<div class="container" style="width: 100%">
+<div class="container" style="width: 80%">
 
 
 
@@ -34,14 +34,14 @@
 
     <div class="container" style="width: 100%">
 
-        <ul class="nav nav-tabs" role="tablist">
+        <ul class="nav nav-tabs" role="tablist" style="font-size: 20px">
             <li class="active">
                 <a href="#country" role="tab" data-toggle="tab">
-                    <icon class="fa fa-country"></icon>COVID-19 by country
+                    COVID-19 by country
                 </a>
             </li>
             <li><a href="#states" role="tab" data-toggle="tab">
-                <i class="fa fa-user"></i>COVID-19 by US States
+                COVID-19 by US States
             </a>
             </li>
 
@@ -49,38 +49,40 @@
 
         <!-- Tab panes -->
         <div class="tab-content">
-            <div class="tab-pane fade active in" id="country">
+            <div class="tab-pane fade active in coreObject" id="country" style="text-align: left">
                 <div class="row">
-                    <div class="col-sm-12 dataChoosingSection">
+                    <div class="col-sm-2"></div>
+                    <div class="col-sm-10  dataChoosingSection">
                         <div class="sectionDescription">
                             Data we will analyze
                         </div>
                         <div class="row">
                             <div class="col-sm-6 clickOnSectionsWeWant">
                                 <div>
-                                    <input type="checkbox" class="custom-control-input" id="includeCountries"  checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                                    <label class="custom-control-label" for="includeCountries">Include data for individual countries</label>
+                                    <input type="checkbox" class="custom-control-input displayControl" id="includeCountries"
+                                           checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)" style="margin: 0">
+                                    <label class="custom-control-label displayControl" for="includeCountries">Include data for individual countries</label>
                                 </div>
-                                <div>
-                                    <input type="checkbox" class="custom-control-input" id="includeCombinations"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                                    <label class="custom-control-label" for="includeCombinations">Include county combinations</label>
-                                </div>
-                                <div>
-                                    <input type="checkbox" class="custom-control-input" id="includeCategories"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                                    <label class="custom-control-label" for="includeCategories">Include other categories of data</label>
-                                </div>
-                                <div>
-                                    <input type="checkbox" class="custom-control-input" id="includeNewAdditions"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                                    <label class="custom-control-label" for="includeNewAdditions">Include countries that we have been tracking for less than 10 days</label>
-                                </div>
-                                <div>
+%{--                                <div>--}%
+%{--                                    <input type="checkbox" class="custom-control-input" id="includeCombinations"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">--}%
+%{--                                    <label class="custom-control-label" for="includeCombinations">Include county combinations</label>--}%
+%{--                                </div>--}%
+%{--                                <div>--}%
+%{--                                    <input type="checkbox" class="custom-control-input" id="includeCategories"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">--}%
+%{--                                    <label class="custom-control-label" for="includeCategories">Include other categories of data</label>--}%
+%{--                                </div>--}%
+%{--                                <div>--}%
+%{--                                    <input type="checkbox" class="custom-control-input" id="includeNewAdditions"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">--}%
+%{--                                    <label class="custom-control-label" for="includeNewAdditions">Include countries that we have been tracking for less than 10 days</label>--}%
+%{--                                </div>--}%
+                               <div>
                                     <p>
                                         <label for="amount">Date range:</label>
                                         <input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" size="100"/>
                                     </p>
 
-                                    <div id="dateSlider"></div>
-                                </div>
+                                <div class="dateSlider"></div>
+                               </div>
                             </div>
                             <div class="col-sm-6 displayTheSectionsWeWant">
                                 <div>
@@ -91,6 +93,9 @@
 
 
                     </div>
+                    <div class="col-sm-2"></div>
+                </div>
+                <div class="row">
                     <div class="col-sm-12  dataChoosingSection">
                         <div class="sectionDescription">
                             Analyses to present
@@ -108,8 +113,8 @@
                             </div>
                             <div class="col-sm-6 displayTheSectionsWeWant">
                                 <div class="pull-right">
-                                    <input type="checkbox" class="custom-control-input" id="logVersusLinear" checked onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)">
-                                    <label class="custom-control-label" for="logVersusLinear">Linear scale</label>
+                                    <input type="checkbox" class="custom-control-input" id="logVersusLinearCountries" checked onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)">
+                                    <label class="custom-control-label" for="logVersusLinearCountries">Linear scale</label>
                                 </div>
                             </div>
                         </div>
@@ -121,7 +126,7 @@
                     <span  class="pull-right"><button onclick="mpgSoftware.growthFactorLauncher.buildThePlotWithRememberedData('country')">refresh data</button></span>
                 </div>
 
-                <div class="jumbotron">
+                <div class="jumbotron" style = "padding: 0">
                     <div class="container">
 
                         <div class="btn-toolbar">
@@ -179,7 +184,7 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade" id="states">
+            <div class="tab-pane fade coreObject" id="states" style="text-align: left">
 
 %{--                <div class="tab-pane fade active in" id="country">--}%
                     <div class="row">
@@ -205,14 +210,14 @@
 %{--                                        <input type="checkbox" class="custom-control-input" id="includeNewAdditions"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">--}%
 %{--                                        <label class="custom-control-label" for="includeNewAdditions">Include countries that we have been tracking for less than 10 days</label>--}%
 %{--                                    </div>--}%
-%{--                                    <div>--}%
-%{--                                        <p>--}%
-%{--                                            <label for="amount">Date range:</label>--}%
-%{--                                            <input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" size="100"/>--}%
-%{--                                        </p>--}%
+                                    <div>
+                                        <p>
+                                            <label for="amount">Date range:</label>
+                                            <input type="text" class="amount" style="border: 0; color: #f6931f; font-weight: bold;" size="100"/>
+                                        </p>
 
-%{--                                        <div id="dateSlider"></div>--}%
-%{--                                    </div>--}%
+                                        <div class="dateSlider"></div>
+                                    </div>
                                 </div>
                                 <div class="col-sm-6 displayTheSectionsWeWant">
                                     <div>
@@ -241,7 +246,7 @@
                                 <div class="col-sm-6 displayTheSectionsWeWant">
                                     <div class="pull-right">
                                         <input type="checkbox" class="custom-control-input" id="logVersusLinearStates" checked onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)">
-                                        <label class="custom-control-label" for="logVersusLinear">Linear scale</label>
+                                        <label class="custom-control-label" for="logVersusLinearStates">Linear scale</label>
                                     </div>
                                 </div>
                             </div>
@@ -329,27 +334,25 @@
 
 <script>
     $( window ).ready(function() {
-//"https://covid.ourworldindata.org/data/owid-covid-data.csv"
-//         iso_code,location,date,total_cases,new_cases,total_deaths,new_deaths,total_cases_per_million,new_cases_per_million,total_deaths_per_million,new_deaths_per_million,total_tests,new_tests,total_tests_per_thousand,new_tests_per_thousand,tests_units
-//         ABW,Aruba,2020-03-13,2,2,0,0,18.733,18.733,0.0,0.0,,,,,
-//             ABW,Aruba,2020-03-20,4,2,0,0,37.465,18.733,0.0,0.0,,,,,
+
+        // you might also consider https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv
+        const months = [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec'
+        ];
 
             mpgSoftware.growthFactorLauncher.prepareDisplay("https://covidtracking.com/api/v1/states/daily.csv",
             function(d) {
-                const months = [
-                    'Jan',
-                    'Feb',
-                    'Mar',
-                    'Apr',
-                    'May',
-                    'Jun',
-                    'Jul',
-                    'Aug',
-                    'Sep',
-                    'Oct',
-                    'Nov',
-                    'Dec'
-                ];
                 const dateString  = d["date"];
                 const currentDay = +dateString.substring (6, 8);
                 const currentMonth = +dateString.substring (4, 6);
@@ -383,16 +386,21 @@
         %{--    "country",--}%
         %{--    "growthFactorPlotCountries",--}%
         %{--    window);--}%
-        mpgSoftware.growthFactorLauncher.prepareDisplay("${createLink(controller: 'growthFactor', action:'infectionDataPerCountry')}",
+        mpgSoftware.growthFactorLauncher.prepareDisplay("https://covid.ourworldindata.org/data/owid-covid-data.csv",
             function(d) {
+                const dateString  = d["date"];
+                const currentDay = +dateString.substring (8, 10);
+                const currentMonth = +dateString.substring (5, 7);
+                const currentYear = +dateString.substring (0, 4);
+                const currentDate = new Date (currentYear,currentMonth,currentDay);
 
 
-                return {countryName: d["Entity"],
-                    code: d["Code"],
-                    date: d["Date"],
+                return {countryName: d["location"],
+                    //code: d["iso_code"],
+                    code: d["location"],
+                    date: ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear(),
                     // y:+d["Total confirmed deaths (deaths)"],
-                    y:+d[" (deaths)"],
-                    x:+d["Days since the 5th total confirmed death"]};
+                    y:+d["total_deaths"]};
 
             },
             "country",

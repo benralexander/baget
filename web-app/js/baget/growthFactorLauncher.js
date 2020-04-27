@@ -17,6 +17,7 @@ mpgSoftware.growthFactorLauncher = (function () {
     let startDate = new Date ();
     let endDate = new Date ();
 
+
     const rememberTheseData = function (identifier,dataToRemember){
         $( "#"+identifier ).data( "store", {dataToRemember:dataToRemember} );
     };
@@ -30,6 +31,8 @@ mpgSoftware.growthFactorLauncher = (function () {
         const storedDataObject = $( "#"+identifier ).data( "store");
         if ( typeof storedDataObject !== 'undefined'){
             return storedDataObject.dataToRemember;
+        }else {
+
         }
     }
     const recallSupplementedData = function (identifier, fieldName){
@@ -39,43 +42,91 @@ mpgSoftware.growthFactorLauncher = (function () {
         }
     }
 
+    class DataGrouping {
+        constructor (identifier){
+            rememberTheseData (identifier, this);
+        }
+         showGroupsWithInflectionPoints =  true;
+         showGroupsWithoutInflectionPoints =  false;
+         showCountries =  true;
+         showCombinations =  false;
+         showCategories =  false;
+         useLinearNotLog = true;
+         rememberData = [];
+         height = 600;
+         width = 1000;
+         startDate = new Date ();
+         endDate = new Date ();
+    };
+    const retrieveData = function (identifier,fieldName){
+        const dataGroupingHolder = recallData (identifier);
+        if( typeof  dataGroupingHolder !== 'object'){
+            console.log('data group holder was missing');
+        }else if( typeof   dataGroupingHolder[fieldName] === 'undefined'){
+            console.log('unexpected field name = '+fieldName);
+        }else {
+            return dataGroupingHolder[fieldName];
+        }
+    };
+    const setData = function (identifier,fieldName, value){
+        let dataGroupingHolder = recallData (identifier);
+        if( typeof  dataGroupingHolder !== 'object'){
+            const dataGrouping = new DataGrouping(identifier);
+            dataGroupingHolder = recallData (identifier);
+        }
+        dataGroupingHolder[fieldName] = value;
+
+
+    };
+
+
+
+
 
     const logVersusLinear= function (callingObject){
-        const callingObjectId = $(callingObject).attr('id');
         const callingObjectIsChecked = $(callingObject).prop("checked") === true;
+        const callingObjectCoreParents = $(callingObject).closest("div.coreObject");
         useLinearNotLog = callingObjectIsChecked;
-        buildThePlotWithRememberedData ("country");
+        buildThePlotWithRememberedData (callingObjectCoreParents.attr('id'));
     };
     const changeWhatIsDisplayed = function (callingObject){
+        const identifier = $(callingObject).closest("div.coreObject").attr('id');
         const callingObjectId = $(callingObject).attr('id');
-        const allClassesForObject = $(callingObject).attr("class").split(/\s+/);
-        let plotToLaunch = "country";
+        // const allClassesForObject = $(callingObject).attr("class").split(/\s+/);
+        // let plotToLaunch = "country";
         const callingObjectIsChecked = $(callingObject).prop("checked") === true;
         if (callingObjectId==="includeCountries"){
+            setData(identifier,"showCountries", callingObjectIsChecked);
             showCountries = callingObjectIsChecked;
         }else if (callingObjectId==="includeCategories"){
+            setData(identifier,"showCategories", callingObjectIsChecked);
             showCategories  = callingObjectIsChecked;
-
         }else if (callingObjectId==="includeCombinations"){
+            setData(identifier,"showCombinations", callingObjectIsChecked);
             showCombinations  = callingObjectIsChecked;
         }else if (callingObjectId==="includeInflectedCountries" ){
-            showCountriesWithInflectionPoints  = callingObjectIsChecked;
+            setData(identifier,"showGroupsWithInflectionPoints", callingObjectIsChecked);
+            showGroupsWithInflectionPoints  = callingObjectIsChecked;
         }else if (callingObjectId==="includeNotInflectedCountries"){
-            showCountriesWithoutInflectionPoints  = callingObjectIsChecked;
+            setData(identifier,"showGroupsWithoutInflectionPoints", callingObjectIsChecked);
+            showGroupsWithoutInflectionPoints  = callingObjectIsChecked;
         }else if (callingObjectId==="includeNotInflectedStates"){
-            showCountriesWithoutInflectionPoints  = callingObjectIsChecked;
+            setData(identifier,"showGroupsWithoutInflectionPoints", callingObjectIsChecked);
+            showGroupsWithoutInflectionPoints  = callingObjectIsChecked;
             plotToLaunch = "states";
         }else if (callingObjectId==="includeInflectedStates" ){
-            showCountriesWithInflectionPoints  = callingObjectIsChecked;
+            setData(identifier,"showGroupsWithInflectionPoints", callingObjectIsChecked);
+            showGroupsWithInflectionPoints  = callingObjectIsChecked;
             plotToLaunch = "states";
         }else if (callingObjectId==="includeNewAdditions"){
 
 
         }
-        buildThePlotWithRememberedData (plotToLaunch);
+        buildThePlotWithRememberedData (identifier);
     };
-    const changeGroupCheckbox = function (callingObject){
+    const changeGroupCheckbox = function (callingObject, identifier){
         const callingObjectId = $(callingObject);
+        buildThePlot (identifier, false);
     };
 
     const calculatePositionMultipliers = function (length){
@@ -99,23 +150,29 @@ mpgSoftware.growthFactorLauncher = (function () {
         width = currentWidtth;
     };
 
-    const initializeDateSlider = function (){
-        $( "#dateSlider" ).slider({
+    const initializeDateSlider = function (identifier){
+        const startDate = retrieveData (identifier, "startDate");
+        const endDate = retrieveData (identifier, "endDate");
+        const currentDateSlider = '#' +identifier +' div.dateSlider';
+        const currentDateIndicator = '#' +identifier +' div.amount';
+        $( currentDateSlider ).slider({
             range: true,
             min: new Date(startDate).getTime() / 1000,
             max: new Date(endDate).getTime() / 1000,
             step: 86400,
             values: [ new Date(startDate).getTime() / 1000, new Date(endDate).getTime() / 1000 ],
             slide: function( event, ui ) {
-                $( "#amount" ).val( (new Date(ui.values[ 0 ] *1000).toDateString() ) + " - " + (new Date(ui.values[ 1 ] *1000)).toDateString() );
-                setStartDate(new Date(ui.values[ 0 ] *1000));
-                setEndDate(new Date(ui.values[ 1 ] *1000));
-                buildThePlotWithRememberedData ("country");
+                $( currentDateIndicator ).val( (new Date(ui.values[ 0 ] *1000).toDateString() ) + " - " + (new Date(ui.values[ 1 ] *1000)).toDateString() );
+                setData (identifier, "startDate",new Date(ui.values[ 0 ] *1000));
+                setData (identifier, "endDate",new Date(ui.values[ 1 ] *1000));
+                // setStartDate(new Date(ui.values[ 0 ] *1000));
+                // setEndDate(new Date(ui.values[ 1 ] *1000));
+                buildThePlot (identifier, true);
 
             }
         });
-        $( "#amount" ).val( (new Date($( "#dateSlider" ).slider( "values", 0 )*1000).toDateString()) +
-            " - " + (new Date($( "#dateSlider" ).slider( "values", 1 )*1000)).toDateString());
+        $( currentDateIndicator ).val( (new Date($( currentDateSlider ).slider( "values", 0 )*1000).toDateString()) +
+            " - " + (new Date($( currentDateSlider ).slider( "values", 1 )*1000)).toDateString());
     };
 
     const calculateWeightedMovingAverage = function (dataVector){
@@ -128,88 +185,145 @@ mpgSoftware.growthFactorLauncher = (function () {
     return developingAverage /vectorLength;
     };
 
-    const filterTheData = function (dataToFilter,prefilter){
-        if (prefilter){
-            let orFilterArray = [];
-            let andFilterArray = [];
 
-            if (showCountries){
-                //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
-                orFilterArray.push (datum => (datum.code.length > 0) &&
-                    (!(datum.countryName.search('World')>=0))
-                );
-            }
-            if (showCategories){
-                orFilterArray.push (datum => datum.code.length === 0);
-            }
-            if (showCombinations){
-                orFilterArray.push (datum => ((datum.countryName.search('World')>=0)||
-                    (datum.countryName.search('Europe')>=0)||
-                    (datum.countryName.search('Asia')>=0)));
-            }
-            andFilterArray.push (datum => (((new Date(datum.date).getTime() / 1000)>=(new Date(startDate).getTime() / 1000))  &&
-                ((new Date(datum.date).getTime() / 1000)<=(new Date(endDate).getTime() / 1000))));
-            // &&
-            //     ()))
+    const preFilterToGenerateListOfGroups = function (identifier){
+        let orFilterArray = [];
+        let andFilterArray = [];
+       if (retrieveData (identifier, "showCountries")){
+            //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
+            orFilterArray.push (datum => (datum.code.length > 0) &&
+                (!(datum.countryName.search('World')>=0))
+            );
+        }
+        if (retrieveData (identifier, "showCategories")){
+            orFilterArray.push (datum => datum.code.length === 0);
+        }
+        if (retrieveData (identifier, "showCombinations")){
+            orFilterArray.push (datum => ((datum.countryName.search('World')>=0)||
+                (datum.countryName.search('Europe')>=0)||
+                (datum.countryName.search('Asia')>=0)));
+        }
+        const startDate = retrieveData (identifier, "startDate");
+        const endDate = retrieveData (identifier, "endDate");
 
-            return function(data){
-                return _.filter (data, function (oneRec){
-                    let finalAnswer = false;
-                    // first OR together attributes of things that we want to include
-                    _.forEach(orFilterArray,function(oneFilter){
-                        if (oneFilter(oneRec)){
-                            finalAnswer = true;
-                            return false;
-                        }
-                    });
-                    // now strip out anything that we absolutely have to skip
-                    if (!finalAnswer){return finalAnswer;}
-                    _.forEach(andFilterArray,function(oneFilter){
-                        if (!oneFilter(oneRec)){
-                            finalAnswer = false;
-                            return false;
-                        }
-                    });
-                    return finalAnswer;
-                })
-            }
-        }else {
-            return function (data){
-                if (showCountriesWithInflectionPoints&&!showCountriesWithoutInflectionPoints){
-                    return _.filter (data, datum => datum.values.type == 'inflection')
-                } else if (!showCountriesWithInflectionPoints&&showCountriesWithoutInflectionPoints){
-                    return _.filter (data, datum => datum.values.type == 'noinflection')
-                }else if (showCountriesWithInflectionPoints&&showCountriesWithoutInflectionPoints){
-                    return _.filter (data, datum => (datum.values.type == 'noinflection')||(datum.values.type == 'inflection'))
-                }else if (!showCountriesWithInflectionPoints&&!showCountriesWithoutInflectionPoints){
-                    //return _.filter (data, datum => datum.values.type !== 'noinflection' &&datum.values.type !== 'inflection' )
-                    return _.filter (data, datum => datum.values.type === 'inflectionUndetermined')
+        andFilterArray.push (datum => (((new Date(datum.date).getTime() / 1000)>=(new Date(startDate).getTime() / 1000))  &&
+            ((new Date(datum.date).getTime() / 1000)<=(new Date(endDate).getTime() / 1000))));
 
-                }
+        return function(data){
+            return _.filter (data, function (oneRec){
+                let finalAnswer = false;
+                // first OR together attributes of things that we want to include
+                _.forEach(orFilterArray,function(oneFilter){
+                    if (oneFilter(oneRec)){
+                        finalAnswer = true;
+                        return false;
+                    }
+                });
+                // now strip out anything that we absolutely have to skip
+                if (!finalAnswer){return finalAnswer;}
+                _.forEach(andFilterArray,function(oneFilter){
+                    if (!oneFilter(oneRec)){
+                        finalAnswer = false;
+                        return false;
+                    }
+                });
+                return finalAnswer;
+            })
+        }
 
-            }
+    };
+    const filterOnlyOnListOfGroups = function (identifier){
+        let orFilterArray = [];
+        let andFilterArray = [];
+        const selectedGroups = _.map ($("#" + identifier +" div.everyGroupToDisplay input.displayControl:checked").next("label"),d=>$(d).text());
+
+        andFilterArray.push (datum => _.includes (selectedGroups,datum.countryName ));
+
+        return function(data){
+            return _.filter (data, function (oneRec){
+                let finalAnswer = true;
+                // first OR together attributes of things that we want to include
+
+                // now strip out anything that we absolutely have to skip
+                if (!finalAnswer){return finalAnswer;}
+                _.forEach(andFilterArray,function(oneFilter){
+                    if (!oneFilter(oneRec)){
+                        finalAnswer = false;
+                        return false;
+                    }
+                });
+                return finalAnswer;
+            })
         }
 
 
-    }
+    };
+    const filterBasedOnAnalysis = function (identifier){
+        return function (data){
+            // if (showCountriesWithInflectionPoints&&!showCountriesWithoutInflectionPoints){
+            //     return _.filter (data, datum => datum.values.type == 'inflection')
+            // } else if (!showCountriesWithInflectionPoints&&showCountriesWithoutInflectionPoints){
+            //     return _.filter (data, datum => datum.values.type == 'noinflection')
+            // }else if (showCountriesWithInflectionPoints&&showCountriesWithoutInflectionPoints){
+            //     return _.filter (data, datum => (datum.values.type == 'noinflection')||(datum.values.type == 'inflection'))
+            // }else if (!showCountriesWithInflectionPoints&&!showCountriesWithoutInflectionPoints){
+            //     //return _.filter (data, datum => datum.values.type !== 'noinflection' &&datum.values.type !== 'inflection' )
+            //     return _.filter (data, datum => datum.values.type === 'inflectionUndetermined')
+            //
+            // }
+            if (retrieveData (identifier, "showGroupsWithInflectionPoints")&&
+                !retrieveData (identifier, "showGroupsWithoutInflectionPoints")){
+                return _.filter (data, datum => datum.values.type == 'inflection')
+            } else if (!retrieveData (identifier, "showGroupsWithInflectionPoints")&&
+                retrieveData (identifier, "showGroupsWithoutInflectionPoints")){
+                return _.filter (data, datum => datum.values.type == 'noinflection')
+            }else if (retrieveData (identifier, "showGroupsWithInflectionPoints")&&
+                retrieveData (identifier, "showGroupsWithoutInflectionPoints")){
+                return _.filter (data, datum => (datum.values.type == 'noinflection')||(datum.values.type == 'inflection'))
+            }else if (!retrieveData (identifier, "showGroupsWithInflectionPoints")&&
+                !retrieveData (identifier, "showGroupsWithoutInflectionPoints")){
+                //return _.filter (data, datum => datum.values.type !== 'noinflection' &&datum.values.type !== 'inflection' )
+                return _.filter (data, datum => datum.values.type === 'inflectionUndetermined')
+
+            }
+
+        }
+    };
 
 
-    const buildThePlot= function (idOfThePlaceToStoreData) {
-        const allData = recallData (idOfThePlaceToStoreData);
-        const idOfThePlaceWhereThePlotGoes = recallSupplementedData(idOfThePlaceToStoreData,'idOfThePlaceWhereThePlotGoes');
-        const thingsToDisplay = filterTheData (allData, true);
-        const postAnalysisFilter = filterTheData (allData, false);
-        $('div.everyGroupToDisplay').empty ();
-        const startTheGroup = $('div.everyGroupToDisplay');
-        let listOfGroups = '<div>';
-        _.forEach(_.uniqBy(thingsToDisplay(allData),'countryName'),function (v,k){
-            listOfGroups+='<div>'+
-                '<input type="checkbox" class="custom-control-input" id="includeNewAdditions"  checked onclick="mpgSoftware.growthFactorLauncher.changeGroupCheckbox (this)">' +
-                '<label class="custom-control-label" for="includeNewAdditions">'+((v)?v.countryName:"")+'</label>'+
-                '</div>';
-        });
-        listOfGroups+='</div>'
-        startTheGroup.append(listOfGroups);
+
+
+
+    const buildThePlot= function (idOfThePlaceToStoreData, initialize) {
+
+        const allData = retrieveData (idOfThePlaceToStoreData,"rawData");
+        //const allData = recallData (idOfThePlaceToStoreData);
+        //const idOfThePlaceWhereThePlotGoes = recallSupplementedData(idOfThePlaceToStoreData,'idOfThePlaceWhereThePlotGoes');
+        const idOfThePlaceWhereThePlotGoes = retrieveData(idOfThePlaceToStoreData,'idOfThePlaceWhereThePlotGoes');
+        const postAnalysisFilter = filterBasedOnAnalysis (idOfThePlaceToStoreData);
+        let preAnalysisFilter;
+        if (initialize){//pre-filter, and then update the list of groups
+            preAnalysisFilter = preFilterToGenerateListOfGroups (idOfThePlaceToStoreData);
+            $('#' +idOfThePlaceToStoreData +' div.everyGroupToDisplay').empty ();
+            const startTheGroup = $('div.everyGroupToDisplay');
+            let listOfGroups = '<div>';
+            _.forEach(_.uniqBy(_.orderBy(preAnalysisFilter(allData),'countryName'),'countryName'),function (v,k){
+                listOfGroups+='<div class="item checkboxHolder">'+
+                    '<input type="checkbox" class="custom-control-input  displayControl"  checked onclick="mpgSoftware.growthFactorLauncher.changeGroupCheckbox (this,\'' +idOfThePlaceToStoreData +'\')">' +
+                    '<label class="custom-control-label  displayControl" >'+((v)?v.countryName:"")+'</label>'+
+                    '</div>';
+            });
+            listOfGroups+='</div>'
+            startTheGroup.append(listOfGroups);
+        }else {
+            // use the selected groups to filter the raw data
+            preAnalysisFilter = filterOnlyOnListOfGroups(idOfThePlaceToStoreData);
+
+        }
+
+
+
+
         var growthFactorPlot = baget.growthFactor
             .linearNotLog(useLinearNotLog)
             .height (height)
@@ -217,7 +331,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             .idOfThePlaceToStoreData (idOfThePlaceToStoreData)
             .idOfThePlaceWhereThePlotGoes (idOfThePlaceWhereThePlotGoes)
             .buildGrowthFactorPlot(allData,
-            thingsToDisplay,
+                preAnalysisFilter,
                 postAnalysisFilter
             );
     };
@@ -239,13 +353,15 @@ mpgSoftware.growthFactorLauncher = (function () {
                 function (allData) {
                     rememberData = _.filter (allData,datum => ((!(datum.countryName.search('excl.')>=0)))&&
                         (!isNaN(datum.y)));
-                    rememberTheseData (idOfThePlaceToStoreData,rememberData);
-                    supplementTheseData (idOfThePlaceToStoreData,'idOfThePlaceWhereThePlotGoes',idOfThePlaceWhereThePlotGoes)
-                    setStartDate(new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
-                    setEndDate(new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
-                    buildThePlot(idOfThePlaceToStoreData);
+                    setData (idOfThePlaceToStoreData, "rawData",rememberData);
+                    setData (idOfThePlaceToStoreData, "idOfThePlaceWhereThePlotGoes",idOfThePlaceWhereThePlotGoes);
+                    setData (idOfThePlaceToStoreData, "startDate",new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
+                    setData (idOfThePlaceToStoreData, "endDate",new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
+                    const allData2 = retrieveData (idOfThePlaceToStoreData,"rawData");
+
+                    buildThePlot(idOfThePlaceToStoreData, true);
                     d3.select(window).on('resize', baget.growthFactor.resize);
-                    initializeDateSlider ();
+                    initializeDateSlider (idOfThePlaceToStoreData);
                 }
 
             );

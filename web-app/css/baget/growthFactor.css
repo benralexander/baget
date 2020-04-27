@@ -80,3 +80,10 @@ text.describeDateRangeOfData {
     text-align: center;
     padding: 10px;
 }
+.displayControl {
+    align: left;
+    margin: 0;
+}
+div.checkboxHolder input {
+    text-align: left;
+}
