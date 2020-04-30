@@ -77,8 +77,8 @@
 %{--                                </div>--}%
                                <div>
                                     <p>
-                                        <label for="amount">Date range:</label>
-                                        <input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" size="100"/>
+                                        <label for="countryAmount">Date range:</label>
+                                        <input type="text" id="countryAmount" class="amount" style="border: 0; color: #f6931f; font-weight: bold;" size="100"/>
                                     </p>
 
                                 <div class="dateSlider"></div>
@@ -212,8 +212,8 @@
 %{--                                    </div>--}%
                                     <div>
                                         <p>
-                                            <label for="amount">Date range:</label>
-                                            <input type="text" class="amount" style="border: 0; color: #f6931f; font-weight: bold;" size="100"/>
+                                            <label for="stateAmount">Date range:</label>
+                                            <input type="text" id="stateAmount" class="amount" style="border: 0; color: #f6931f; font-weight: bold;" size="100"/>
                                         </p>
 
                                         <div class="dateSlider"></div>

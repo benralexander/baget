@@ -41,11 +41,48 @@ baget.growthFactor = (function () {
         returnValue = (returnValue < 1000) ?  returnValue : 1000;
         return   returnValue;
     }
-    let line;
+    // let line;
     let path;
 
+    const highlight = function (svg, topLevelSvg) {
+        const allCountryLabels = svg.selectAll("text.countryLabel");
+        const rememberTopLevelSvg = topLevelSvg;
+        if ("ontouchstart" in document) svg
+            .style("-webkit-tap-highlight-color", "transparent")
+            .on("touchmove", moved)
+            .on("touchstart", entered)
+            .on("touchend", left)
+        else svg
+            .on("mousemove", moved)
+            .on("mouseenter", entered)
+            .on("mouseleave", left);
 
-    function hover(svg, topLevelSvg) {
+        function moved(d, i) {
+            d3.select(this).select ("path.dataLine").attr('stroke-width', '3');
+            d3.select(this).select ("text.countryLabel").style('font-size', '8pt');
+            console.log ('moved');
+        }
+
+        function entered(d, i) {
+            d3.select(this).select ("path.dataLine").attr('stroke-width', '3');
+            d3.select(this).select ("text.countryLabel").style('font-size', '8pt');
+
+            console.log ('entered');
+        }
+
+        function left(d, i) {
+            const x = topLevelSvg.selectAll("g");
+            d3.select(this).select ("path.dataLine").attr('stroke-width', '1');
+            d3.select(this).select ("text.countryLabel").style('font-size', '6pt');
+
+            console.log ('left');
+        }
+    }
+
+
+
+
+    const hover = function (svg, topLevelSvg) {
 
         const shiftPopUpMessage = 20;
 
@@ -109,7 +146,7 @@ baget.growthFactor = (function () {
                 .attr("alignment-baseline", "hanging")
                 .attr('dy', '1.2em')
                 .attr("x", d=>x(chooseValueFunction (d).x)+shiftPopUpMessage)
-                .text( d =>"in "+chooseValueFunction (d).countryName+' by day '+chooseValueFunction (d).x)
+                .text( d =>"in "+chooseValueFunction (d).countryName+' by day '+Math.round (chooseValueFunction (d).x))
                 .append('tspan')
                 .attr("class", "countryInflectionLabel")
                 .attr("alignment-baseline", "hanging")
@@ -151,29 +188,7 @@ baget.growthFactor = (function () {
             };
 
             const circleToDescribe = d3.select(this).datum();
-            // const classList = circleToDescribe
-            //     .attr("class");
-            // if (classList){
-            //     const countryCode = classList.split (" ");
-            //     if (countryCode.length > 1){
-            //         let ountryRecord =  _.filter (growthFactorByCountry,
-            //             function(element){
-            //             return ((element.values.inflection)&&(element.values.inflection.code ===countryCode [0]))
-            //         }
-            //         );
-            //         if (ountryRecord.length > 0){
-            //             createInflectionPointPopUp (topLevelSvg,ountryRecord, d => d.inflection, "Inflection point detected" );
-            //
-            //         }else {
-            //             let bestNoninflectionPoint =  _.filter (growthFactorByCountry,
-            //                 function(element){
-            //                     return ((element.values.noinflection)&&(element.values.noinflection.code ===countryCode [0]))
-            //                 }
-            //             );
-            //             createInflectionPointPopUp(topLevelSvg,bestNoninflectionPoint,d => d.noinflection, "No inflection detected");
-            //         }
-            //     }
-            // }
+
             if(circleToDescribe.values.inflection){
                 createInflectionPointPopUp (topLevelSvg,circleToDescribe, d => d.inflection, "Inflection point detected" );
             }else {
@@ -306,9 +321,7 @@ const calculateGrowthFactorByCountry = function (data){
         });
 
     _.forEach(dataByCountry, function (v,k) {
-        // if (v.values[0].code.length===0){
-        //     v['type']='noncountry';
-        // }else {
+
             const countryGrowthFactorRecord = _.find (growthFactorByCountry, d => d.key==v.values[0].countryName);
             if (countryGrowthFactorRecord.values.inflection){
                 countryGrowthFactorRecord.values['type']='inflection';
@@ -323,7 +336,7 @@ const calculateGrowthFactorByCountry = function (data){
                 }
 
             }
-        // }
+
     });
     return growthFactorByCountry;
 }
@@ -467,10 +480,20 @@ const calculateGrowthFactorByCountry = function (data){
             .remove();
 
         // data lines for each country or category
-        path =svg.selectAll("path.dataLine")
+        let groupHolder = svg.selectAll("g.gh");
+        const rememberLastValue = {};
+        _.forEach (groupHolder.data (),  function (element) {
+            const lastValue = _.last (element.values.rawValues);
+            if ( typeof lastValue === 'undefined') return true;
+            rememberLastValue [element.key] = {x:lastValue.x, y:lastValue.y, len:element.values.rawValues.length };
+        });
+        groupHolder =groupHolder
             .data(growthFactorByCountry,d=>d.key);
-
-        path.enter()
+        const groupHolderEnter = groupHolder.enter()
+            .append("g")
+            .attr("class",'gh');
+        // add the path
+        groupHolderEnter
             .append("path")
             .attr("class", d => (((d.values.rawValues[0].code.length> 0)? "countryLine":"categoryLine") + " dataLine "+d.type))
             .attr("fill", "none")
@@ -478,8 +501,8 @@ const calculateGrowthFactorByCountry = function (data){
             .attr("stroke-width", 1)
             .attr("d", function(d,k){
                 return d3.line()
-                    .x(function(d) { return x(0); })
-                    .y(function(d) { return y(yLower); })
+                    .x(function(d) { return (rememberLastValue [d.key])?(rememberLastValue [d.key].x):x(0); })
+                    .y(function(d) { return (rememberLastValue [d.key])?(rememberLastValue [d.key].y):y(yLower); })
                     (d.values.rawValues)
             })
             .transition().duration (transitionTime)
@@ -489,24 +512,9 @@ const calculateGrowthFactorByCountry = function (data){
                     .y(function(d) { return y(+d.y); })
                     (d.values.rawValues)
             });
-
-        path.transition().duration (transitionTime)
-            .attr("d", function(d,k){
-                return d3.line()
-                    .x(function(d) { return x(+d.x); })
-                    .y(function(d) { return y(+d.y); })
-                    (d.values.rawValues)
-            });
-
-        path.exit()
-            .remove();
-
-        // data line label for each country or category
-        const dataLineLabel = svg.selectAll("text.countryLabel")
-            .data(growthFactorByCountry,d=>d.key);
-        dataLineLabel.enter()
+        // add the text
+        groupHolderEnter
             .append("text")
-           // .merge(dataLineLabel)
             .attr("class", d => "countryLabel ")
             .attr("text-anchor", "last")
             .text(function(d,i){
@@ -525,17 +533,134 @@ const calculateGrowthFactorByCountry = function (data){
             .attr("y", function(d,i){
                 return y(_.last(d.values.rawValues,'y').y);
             });
+// update the line
+        groupHolder.select ("path.dataLine")
+            .transition().duration (transitionTime)
+            .attr("d", function(d,k){
+                return d3.line()
+                    .x(function(d, index) {
+                        const lastValue = rememberLastValue [d.key];
+                        return (lastValue && (index >= lastValue.len))?x(rememberLastValue [d.key].x): x(+d.x);
+                    })
+                    .y(function(d, index) {
+                        const lastValue = rememberLastValue [d.key];
+                        return (lastValue && (index >= lastValue.len))?y(rememberLastValue [d.key].y):y(+d.y);
+                    })
+                    (d.values.rawValues)
+            })
+            .transition().duration (transitionTime)
+            .attr("d", function(d,k){
+                return d3.line()
+                    .x(function(d) { return x(+d.x); })
+                    .y(function(d) { return y(+d.y); })
+                    (d.values.rawValues)
+            });
 
-        dataLineLabel.transition().duration (transitionTime)
+        // update the text
+        groupHolder.select ("text.countryLabel")
+            .transition().duration (transitionTime)
             .attr("x", function(d,i){
                 return x(_.last(d.values.rawValues,'x').x);
             })
             .attr("y", function(d,i){
                 return y(_.last(d.values.rawValues,'y').y);
-            })
+            });
 
-        dataLineLabel.exit()
+        groupHolder.exit()
             .remove();
+
+        //
+        // path =svg.selectAll("g.gh>path.dataLine");
+        // const rememberLastValue = {};
+        // _.forEach (path.data (),  function (element) {
+        //     const lastValue = _.last (element.values.rawValues);
+        //     if ( typeof lastValue === 'undefined') return true;
+        //     rememberLastValue [element.key] = {x:lastValue.x, y:lastValue.y, len:element.values.rawValues.length };
+        // });
+        // path =path
+        //     .data(growthFactorByCountry,d=>d.key);
+        // path.enter()
+        //     .append("g")
+        //     .attr("class",'gh')
+        //     .append("path")
+        //     .attr("class", d => (((d.values.rawValues[0].code.length> 0)? "countryLine":"categoryLine") + " dataLine "+d.type))
+        //     .attr("fill", "none")
+        //     .attr("stroke", function(d){ return countryColor(d.key) })
+        //     .attr("stroke-width", 1)
+        //     .attr("d", function(d,k){
+        //         return d3.line()
+        //             .x(function(d) { return (rememberLastValue [d.key])?(rememberLastValue [d.key].x):x(0); })
+        //             .y(function(d) { return (rememberLastValue [d.key])?(rememberLastValue [d.key].y):y(yLower); })
+        //             (d.values.rawValues)
+        //     })
+        //     .transition().duration (transitionTime)
+        //     .attr("d", function(d,k){
+        //         return d3.line()
+        //             .x(function(d) { return x(+d.x); })
+        //             .y(function(d) { return y(+d.y); })
+        //             (d.values.rawValues)
+        //     });
+        //
+        // path
+        //     .attr("d", function(d,k){
+        //         return d3.line()
+        //             .x(function(d, index) {
+        //                 const lastValue = rememberLastValue [d.key];
+        //                 return (lastValue && (index >= lastValue.len))?x(rememberLastValue [d.key].x): x(+d.x);
+        //             })
+        //             .y(function(d, index) {
+        //                 const lastValue = rememberLastValue [d.key];
+        //                 return (lastValue && (index >= lastValue.len))?y(rememberLastValue [d.key].y):y(+d.y);
+        //             })
+        //             (d.values.rawValues)
+        //     })
+        //     .transition().duration (transitionTime)
+        //     .attr("d", function(d,k){
+        //         return d3.line()
+        //             .x(function(d) { return x(+d.x); })
+        //             .y(function(d) { return y(+d.y); })
+        //             (d.values.rawValues)
+        //     });
+        //
+        // path.exit()
+        //     .remove();
+
+
+        // data line label for each country or category
+        // const dataLineLabel = svg.selectAll("text.countryLabel")
+        //     .data(growthFactorByCountry,d=>d.key);
+        // dataLineLabel.enter()
+        //     .append("text")
+        //     .attr("class", d => "countryLabel ")
+        //     .attr("text-anchor", "last")
+        //     .text(function(d,i){
+        //         return d.key;
+        //     })
+        //     .attr("x", function(d,i){
+        //         return x(0);
+        //     })
+        //     .attr("y", function(d,i){
+        //         return y(yLower);
+        //     })
+        //     .transition().duration (transitionTime)
+        //     .attr("x", function(d,i){
+        //         return x(_.last(d.values.rawValues,'x').x);
+        //     })
+        //     .attr("y", function(d,i){
+        //         return y(_.last(d.values.rawValues,'y').y);
+        //     });
+        //
+        // dataLineLabel
+        //     .transition().duration (transitionTime)
+        //     .attr("x", function(d,i){
+        //         return x(_.last(d.values.rawValues,'x').x);
+        //     })
+        //     .attr("y", function(d,i){
+        //         return y(_.last(d.values.rawValues,'y').y);
+        //     });
+        //
+        // dataLineLabel.exit()
+        //     .remove();
 
         // inflection point for each line, if it exists
         const inflectionPoint = svg.selectAll("circle.inflectionPoint")
@@ -602,7 +727,7 @@ const calculateGrowthFactorByCountry = function (data){
 
         svg.selectAll("circle.inflectionPoint").call(hover, svg);
         svg.selectAll("circle.noinflection").call(hover, svg);
-
+        svg.selectAll("g.gh").call (highlight, svg);
 
 
 
@@ -643,8 +768,5 @@ const calculateGrowthFactorByCountry = function (data){
 
 
     return instance;
-    // return {
-    //     resize:resize,
-    //     buildGrowthFactorPlot: buildGrowthFactorPlot
-    // }
+
 })();
