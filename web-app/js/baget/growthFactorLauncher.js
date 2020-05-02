@@ -15,12 +15,7 @@ mpgSoftware.growthFactorLauncher = (function () {
     const rememberTheseData = function (identifier,dataToRemember){
         $( "#"+identifier ).data( "store", {dataToRemember:dataToRemember} );
     };
-    const supplementTheseData = function (identifier,fieldName,dataToStore){
-        const storedDataObject = $( "#"+identifier ).data( "store");
-        if ( typeof storedDataObject !== 'undefined'){
-            storedDataObject[fieldName] = dataToStore;
-        }
-    };
+
     const recallData = function (identifier){
         const storedDataObject = $( "#"+identifier ).data( "store");
         if ( typeof storedDataObject !== 'undefined'){
@@ -28,13 +23,8 @@ mpgSoftware.growthFactorLauncher = (function () {
         }else {
 
         }
-    }
-    const recallSupplementedData = function (identifier, fieldName){
-        const storedDataObject = $( "#"+identifier ).data( "store");
-        if ( typeof storedDataObject !== 'undefined'){
-            return storedDataObject[fieldName];
-        }
-    }
+    };
+
 
     class DataGrouping {
         constructor (identifier){
@@ -51,6 +41,8 @@ mpgSoftware.growthFactorLauncher = (function () {
          width = 1000;
          startDate = new Date ();
          endDate = new Date ();
+        movingAverageWindow = 5;
+        daysOfNonExponentialGrowthRequired = 4;
     };
     const retrieveData = function (identifier,fieldName){
         const dataGroupingHolder = recallData (identifier);
@@ -73,8 +65,59 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     };
 
+    const setUpInteractiveDisplay = function (){
+        const spinnerAverage1 = $('#country input.spinner.movingAverageWindow');
+        spinnerAverage1.spinner({
+            step: 2,
+            min: 1,
+            max: 99,
+            stop: function (event, ui){
+                const identifier = $(event.target).closest("div.coreObject").attr('id');
+                setData(identifier,"movingAverageWindow", spinnerAverage1.val ());
+                buildThePlotWithRememberedData (identifier);
+            }
+        });
+        spinnerAverage1.spinner( "value", 5 );
+        const spinnerAverage = $('#states input.spinner.movingAverageWindow');
+        spinnerAverage.spinner({
+            step: 2,
+            min: 1,
+            max: 99,
+            stop: function (event, ui){
+                const identifier = $(event.target).closest("div.coreObject").attr('id');
+                setData(identifier,"movingAverageWindow", spinnerAverage.val ());
+                buildThePlotWithRememberedData (identifier);
+            }
+        });
+        spinnerAverage.spinner( "value", 5 );
+        const spinnerThreshold1 = $('#country input.spinner.daysOfNonExponentialGrowthRequired');
+        spinnerThreshold1.spinner({
+            step: 1,
+            min: 1,
+            max: 100,
+            stop: function (event, ui){
+                const identifier = $(event.target).closest("div.coreObject").attr('id');
+                setData(identifier,"daysOfNonExponentialGrowthRequired",spinnerThreshold1.val());
+                buildThePlotWithRememberedData (identifier);
+            }
 
+        });
+        spinnerThreshold1.spinner( "value", 7 );
+        const spinnerThreshold = $('#states input.spinner.daysOfNonExponentialGrowthRequired');
+        spinnerThreshold.spinner({
+            step: 1,
+            min: 1,
+            max: 100,
+            stop: function (event, ui){
+                const identifier = $(event.target).closest("div.coreObject").attr('id');
+                setData(identifier,"daysOfNonExponentialGrowthRequired", spinnerThreshold.val());
+                buildThePlotWithRememberedData (identifier);
+            }
 
+        });
+        spinnerThreshold.spinner( "value", 7 );
+
+    }
 
 
     const logVersusLinear= function (callingObject){
@@ -87,32 +130,21 @@ mpgSoftware.growthFactorLauncher = (function () {
     const changeWhatIsDisplayed = function (callingObject){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
         const callingObjectId = $(callingObject).attr('id');
-        // const allClassesForObject = $(callingObject).attr("class").split(/\s+/);
-        // let plotToLaunch = "country";
         const callingObjectIsChecked = $(callingObject).prop("checked") === true;
         if (callingObjectId==="includeCountries"){
             setData(identifier,"showCountries", callingObjectIsChecked);
-            showCountries = callingObjectIsChecked;
         }else if (callingObjectId==="includeCategories"){
             setData(identifier,"showCategories", callingObjectIsChecked);
-            showCategories  = callingObjectIsChecked;
-        }else if (callingObjectId==="includeCombinations"){
+         }else if (callingObjectId==="includeCombinations"){
             setData(identifier,"showCombinations", callingObjectIsChecked);
-            showCombinations  = callingObjectIsChecked;
         }else if (callingObjectId==="includeInflectedCountries" ){
             setData(identifier,"showGroupsWithInflectionPoints", callingObjectIsChecked);
-            showGroupsWithInflectionPoints  = callingObjectIsChecked;
         }else if (callingObjectId==="includeNotInflectedCountries"){
             setData(identifier,"showGroupsWithoutInflectionPoints", callingObjectIsChecked);
-            showGroupsWithoutInflectionPoints  = callingObjectIsChecked;
         }else if (callingObjectId==="includeNotInflectedStates"){
             setData(identifier,"showGroupsWithoutInflectionPoints", callingObjectIsChecked);
-            showGroupsWithoutInflectionPoints  = callingObjectIsChecked;
-            plotToLaunch = "states";
         }else if (callingObjectId==="includeInflectedStates" ){
             setData(identifier,"showGroupsWithInflectionPoints", callingObjectIsChecked);
-            showGroupsWithInflectionPoints  = callingObjectIsChecked;
-            plotToLaunch = "states";
         }else if (callingObjectId==="includeNewAdditions"){
 
 
@@ -123,11 +155,6 @@ mpgSoftware.growthFactorLauncher = (function () {
         const callingObjectId = $(callingObject);
         buildThePlot (identifier, false);
     };
-
-    const calculatePositionMultipliers = function (length){
-        return _.fill(Array(length), 1);
-    };
-
 
     const setHeight = function (currentHeight){
         height = currentHeight;
@@ -159,6 +186,11 @@ mpgSoftware.growthFactorLauncher = (function () {
         $( currentDateIndicator ).val( (new Date($( currentDateSlider ).slider( "values", 0 )*1000).toDateString()) +
             " - " + (new Date($( currentDateSlider ).slider( "values", 1 )*1000)).toDateString());
     };
+
+    const calculatePositionMultipliers = function (length){
+        return _.fill(Array(length), 1);
+    };
+
 
     const calculateWeightedMovingAverage = function (dataVector){
         const vectorLength = dataVector.length;
@@ -260,7 +292,6 @@ mpgSoftware.growthFactorLauncher = (function () {
                 return _.filter (data, datum => (datum.values.type == 'noinflection')||(datum.values.type == 'inflection'))
             }else if (!retrieveData (identifier, "showGroupsWithInflectionPoints")&&
                 !retrieveData (identifier, "showGroupsWithoutInflectionPoints")){
-                //return _.filter (data, datum => datum.values.type !== 'noinflection' &&datum.values.type !== 'inflection' )
                 return _.filter (data, datum => datum.values.type === 'inflectionUndetermined')
 
             }
@@ -306,6 +337,8 @@ mpgSoftware.growthFactorLauncher = (function () {
             .width(width)
             .idOfThePlaceToStoreData (idOfThePlaceToStoreData)
             .idOfThePlaceWhereThePlotGoes (idOfThePlaceWhereThePlotGoes)
+            .movingAverageWindow(retrieveData(idOfThePlaceToStoreData,'movingAverageWindow'))
+            .daysOfNonExponentialGrowthRequired (retrieveData(idOfThePlaceToStoreData,'daysOfNonExponentialGrowthRequired'))
             .buildGrowthFactorPlot(allData,
                 preAnalysisFilter,
                 postAnalysisFilter
@@ -319,7 +352,7 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
     const prepareDisplay = function(dataUrl, dataAssignmentFunction,  idOfThePlaceToStoreData,idOfThePlaceWhereThePlotGoes, window){
-
+        setUpInteractiveDisplay ();
         try{
             const countryData = d3.csv(dataUrl,dataAssignmentFunction
 
@@ -338,6 +371,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                     buildThePlot(idOfThePlaceToStoreData, true);
                     d3.select(window).on('resize', baget.growthFactor.resize);
                     initializeDateSlider (idOfThePlaceToStoreData);
+                    baget.growthFactor.resize();
+
                 }
 
             );

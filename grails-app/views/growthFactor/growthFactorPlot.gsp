@@ -101,7 +101,7 @@
                             Analyses to present
                         </div>
                         <div class="row">
-                            <div class="col-sm-6 clickOnSectionsWeWant">
+                            <div class="col-sm-4 clickOnSectionsWeWant">
                                 <div>
                                     <input type="checkbox" class="custom-control-input" id="includeNotInflectedCountries"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
                                     <label class="custom-control-label" for="includeNotInflectedCountries">Include states that have NOT reached an inflection point</label>
@@ -111,7 +111,18 @@
                                     <label class="custom-control-label" for="includeInflectedCountries">Include groups that have reached an inflection point</label>
                                 </div>
                             </div>
-                            <div class="col-sm-6 displayTheSectionsWeWant">
+                            <div class="col-sm-4 clickOnSectionsWeWant">
+                                <div>
+                                    <input type="text" class="spinner movingAverageWindow"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)"/>
+                                    <label class="custom-control-label" for="includeNotInflectedStates">Moving average window</label>
+                                </div>
+                                <div>
+                                    <input type="text" class="spinner daysOfNonExponentialGrowthRequired"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)"/>
+                                    <label class="custom-control-label" for="includeInflectedStates">days of declining growth required</label>
+                                </div>
+
+                            </div>
+                            <div class="col-sm-4 displayTheSectionsWeWant">
                                 <div class="pull-right">
                                     <input type="checkbox" class="custom-control-input" id="logVersusLinearCountries" checked onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)">
                                     <label class="custom-control-label" for="logVersusLinearCountries">Linear scale</label>
@@ -233,7 +244,7 @@
                                 Analyses to present
                             </div>
                             <div class="row">
-                                <div class="col-sm-6 clickOnSectionsWeWant">
+                                <div class="col-sm-4 clickOnSectionsWeWant">
                                     <div>
                                         <input type="checkbox" class="custom-control-input" id="includeNotInflectedStates"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
                                         <label class="custom-control-label" for="includeNotInflectedStates">Include states that have NOT reached an inflection point</label>
@@ -243,7 +254,18 @@
                                         <label class="custom-control-label" for="includeInflectedStates">Include states that have reached an inflection point</label>
                                     </div>
                                 </div>
-                                <div class="col-sm-6 displayTheSectionsWeWant">
+                                <div class="col-sm-4 clickOnSectionsWeWant">
+                                    <div>
+                                        <input type="text" class="spinner movingAverageWindow"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)"/>
+                                        <label class="custom-control-label" for="includeNotInflectedStates">Moving average window</label>
+                                    </div>
+                                    <div>
+                                        <input type="text" class="spinner daysOfNonExponentialGrowthRequired"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)"/>
+                                        <label class="custom-control-label" for="includeInflectedStates">days of declining growth required</label>
+                                    </div>
+
+                                </div>
+                                <div class="col-sm-4 displayTheSectionsWeWant">
                                     <div class="pull-right">
                                         <input type="checkbox" class="custom-control-input" id="logVersusLinearStates" checked onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)">
                                         <label class="custom-control-label" for="logVersusLinearStates">Linear scale</label>

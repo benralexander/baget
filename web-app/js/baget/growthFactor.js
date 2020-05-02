@@ -15,6 +15,8 @@ baget.growthFactor = (function () {
     let idOfThePlaceToStoreData;
     let idOfThePlaceWhereThePlotGoes;
     let instance = {};
+    let movingAverageWindow = 5;
+    let daysOfNonExponentialGrowthRequired = 4;
 
 
     function halo(text) {
@@ -243,7 +245,10 @@ const calculateGrowthFactorByCountry = function (data){
         dataByCountry = modifiedDataByCountry;
     }
 
-    const filterTheDataWeCareAbout = function (values){return _.filter (values,d=>(d.y>0) &&(d.x>0) )};
+    const filterTheDataWeCareAbout = function   (values){return _.filter (values,d=>(d.y>0) &&(d.x>0) )};
+
+    const halfMWindow = Math.floor(movingAverageWindow/2);
+    var remainder = movingAverageWindow % 2;
     growthFactorByCountry = _.map(   dataByCountry,
         function (v){
 
@@ -252,11 +257,13 @@ const calculateGrowthFactorByCountry = function (data){
 
 
             _.forEach(valuesWeCareAbout,  function(value, index){
-                if (valuesWeCareAbout.length < 2)return true;
+                if (valuesWeCareAbout.length < halfMWindow)return true;
 
                     if ((index > 2) && (index < valuesWeCareAbout.length-2)){
-                    const v1 = _.map (_.slice(valuesWeCareAbout, index-2,index+1), o=>o.y);
-                    const v2 = _.map (_.slice(valuesWeCareAbout, index-1,index+2), o=>o.y);
+                    // const v1 = _.map (_.slice(valuesWeCareAbout, index-2,index+1), o=>o.y);
+                    // const v2 = _.map (_.slice(valuesWeCareAbout, index-1,index+2), o=>o.y);
+                        const v1 = _.map (_.slice(valuesWeCareAbout, index-halfMWindow,index+halfMWindow-1), o=>o.y);
+                        const v2 = _.map (_.slice(valuesWeCareAbout, index-halfMWindow+1,index+halfMWindow), o=>o.y);
 
                     const n1 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v1);
                     const n2 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v2);
@@ -284,12 +291,19 @@ const calculateGrowthFactorByCountry = function (data){
                 }
             });
             let analComplete = {inflection: null, noinflection: null  };
-            const numberOfDays = 3;
+
             _.forEach(growthRateArray, function (rate, index){
-                if(index > (numberOfDays-1)) {
-                    if ((growthRateArray[index].growthFactor<= 1) &&
-                        (growthRateArray[index-1].growthFactor <= 1)&&
-                        (growthRateArray[index-2].growthFactor <= 1)) {
+                if(index > (daysOfNonExponentialGrowthRequired-1)) {
+                    // if ((growthRateArray[index].growthFactor<= 1) &&
+                    //     (growthRateArray[index-1].growthFactor <= 1)&&
+                    //     (growthRateArray[index-2].growthFactor <= 1)) {
+                    let nonExponentialGrowthFactorMaintained = true;
+                    _.forEach(_.range(0,daysOfNonExponentialGrowthRequired), function (windowIndex){
+                        if(growthRateArray[index-windowIndex].growthFactor >  1){
+                            nonExponentialGrowthFactorMaintained = false
+                        }
+                    });
+                    if (nonExponentialGrowthFactorMaintained) {
                         analComplete['inflection'] = {
                             index: index,
                             x: growthRateArray[index].x,
@@ -309,7 +323,7 @@ const calculateGrowthFactorByCountry = function (data){
                             date:_.find(valuesWeCareAbout,d=>d.x===growthRateArray[index].x).date
                         };
                         return true;
-                        l            }
+                       }
                 } else {
                     return true;
                 }
@@ -569,98 +583,6 @@ const calculateGrowthFactorByCountry = function (data){
         groupHolder.exit()
             .remove();
 
-        //
-        // path =svg.selectAll("g.gh>path.dataLine");
-        // const rememberLastValue = {};
-        // _.forEach (path.data (),  function (element) {
-        //     const lastValue = _.last (element.values.rawValues);
-        //     if ( typeof lastValue === 'undefined') return true;
-        //     rememberLastValue [element.key] = {x:lastValue.x, y:lastValue.y, len:element.values.rawValues.length };
-        // });
-        // path =path
-        //     .data(growthFactorByCountry,d=>d.key);
-        // path.enter()
-        //     .append("g")
-        //     .attr("class",'gh')
-        //     .append("path")
-        //     .attr("class", d => (((d.values.rawValues[0].code.length> 0)? "countryLine":"categoryLine") + " dataLine "+d.type))
-        //     .attr("fill", "none")
-        //     .attr("stroke", function(d){ return countryColor(d.key) })
-        //     .attr("stroke-width", 1)
-        //     .attr("d", function(d,k){
-        //         return d3.line()
-        //             .x(function(d) { return (rememberLastValue [d.key])?(rememberLastValue [d.key].x):x(0); })
-        //             .y(function(d) { return (rememberLastValue [d.key])?(rememberLastValue [d.key].y):y(yLower); })
-        //             (d.values.rawValues)
-        //     })
-        //     .transition().duration (transitionTime)
-        //     .attr("d", function(d,k){
-        //         return d3.line()
-        //             .x(function(d) { return x(+d.x); })
-        //             .y(function(d) { return y(+d.y); })
-        //             (d.values.rawValues)
-        //     });
-        //
-        // path
-        //     .attr("d", function(d,k){
-        //         return d3.line()
-        //             .x(function(d, index) {
-        //                 const lastValue = rememberLastValue [d.key];
-        //                 return (lastValue && (index >= lastValue.len))?x(rememberLastValue [d.key].x): x(+d.x);
-        //             })
-        //             .y(function(d, index) {
-        //                 const lastValue = rememberLastValue [d.key];
-        //                 return (lastValue && (index >= lastValue.len))?y(rememberLastValue [d.key].y):y(+d.y);
-        //             })
-        //             (d.values.rawValues)
-        //     })
-        //     .transition().duration (transitionTime)
-        //     .attr("d", function(d,k){
-        //         return d3.line()
-        //             .x(function(d) { return x(+d.x); })
-        //             .y(function(d) { return y(+d.y); })
-        //             (d.values.rawValues)
-        //     });
-        //
-        // path.exit()
-        //     .remove();
-
-
-        // data line label for each country or category
-        // const dataLineLabel = svg.selectAll("text.countryLabel")
-        //     .data(growthFactorByCountry,d=>d.key);
-        // dataLineLabel.enter()
-        //     .append("text")
-        //     .attr("class", d => "countryLabel ")
-        //     .attr("text-anchor", "last")
-        //     .text(function(d,i){
-        //         return d.key;
-        //     })
-        //     .attr("x", function(d,i){
-        //         return x(0);
-        //     })
-        //     .attr("y", function(d,i){
-        //         return y(yLower);
-        //     })
-        //     .transition().duration (transitionTime)
-        //     .attr("x", function(d,i){
-        //         return x(_.last(d.values.rawValues,'x').x);
-        //     })
-        //     .attr("y", function(d,i){
-        //         return y(_.last(d.values.rawValues,'y').y);
-        //     });
-        //
-        // dataLineLabel
-        //     .transition().duration (transitionTime)
-        //     .attr("x", function(d,i){
-        //         return x(_.last(d.values.rawValues,'x').x);
-        //     })
-        //     .attr("y", function(d,i){
-        //         return y(_.last(d.values.rawValues,'y').y);
-        //     });
-        //
-        // dataLineLabel.exit()
-        //     .remove();
 
         // inflection point for each line, if it exists
         const inflectionPoint = svg.selectAll("circle.inflectionPoint")
@@ -684,25 +606,25 @@ const calculateGrowthFactorByCountry = function (data){
             .remove()
         ;
 
-        // a point to describe lack of inflection
-        const noinflectionPoint = svg.selectAll("circle.noinflection")
-            .data(_.filter (growthFactorByCountry,function(o){return ((o.values.noinflection)  && (!o.values.inflection))})
-                ,d=>d.key);
-        noinflectionPoint.enter()
-            .append("circle")
-            .attr("class",  d => d.values.noinflection.code+" noinflection "+d.type)
-            .attr("r", 3)
-            .attr("fill", function(d){ return countryColor(d.key) })
-            .attr("cx", d => x(0))
-            .attr("cy", d => y(yLower))
-            .transition().duration (transitionTime)
-            .attr("cx", d => x(d.values.noinflection.x))
-            .attr("cy", d => y(d.values.noinflection.y));
-        noinflectionPoint.transition().duration (transitionTime)
-            .attr("cx", d => x(d.values.noinflection.x))
-            .attr("cy", d => y(d.values.noinflection.y))
-        noinflectionPoint.exit()
-            .remove();
+        // // a point to describe lack of inflection
+        // const noinflectionPoint = svg.selectAll("circle.noinflection")
+        //     .data(_.filter (growthFactorByCountry,function(o){return ((o.values.noinflection)  && (!o.values.inflection))})
+        //         ,d=>d.key);
+        // noinflectionPoint.enter()
+        //     .append("circle")
+        //     .attr("class",  d => d.values.noinflection.code+" noinflection "+d.type)
+        //     .attr("r", 3)
+        //     .attr("fill", function(d){ return countryColor(d.key) })
+        //     .attr("cx", d => x(0))
+        //     .attr("cy", d => y(yLower))
+        //     .transition().duration (transitionTime)
+        //     .attr("cx", d => x(d.values.noinflection.x))
+        //     .attr("cy", d => y(d.values.noinflection.y));
+        // noinflectionPoint.transition().duration (transitionTime)
+        //     .attr("cx", d => x(d.values.noinflection.x))
+        //     .attr("cy", d => y(d.values.noinflection.y))
+        // noinflectionPoint.exit()
+        //     .remove();
 
         // label the axes
         svg.append("text")
@@ -726,7 +648,7 @@ const calculateGrowthFactorByCountry = function (data){
 
 
         svg.selectAll("circle.inflectionPoint").call(hover, svg);
-        svg.selectAll("circle.noinflection").call(hover, svg);
+        // svg.selectAll("circle.noinflection").call(hover, svg);
         svg.selectAll("g.gh").call (highlight, svg);
 
 
@@ -764,6 +686,17 @@ const calculateGrowthFactorByCountry = function (data){
         idOfThePlaceWhereThePlotGoes = x;
         return instance;
     };
+    instance.movingAverageWindow= function (x) {
+        if (!arguments.length) return movingAverageWindow;
+        movingAverageWindow = x;
+        return instance;
+    };
+    instance.daysOfNonExponentialGrowthRequired= function (x) {
+        if (!arguments.length) return daysOfNonExponentialGrowthRequired;
+        daysOfNonExponentialGrowthRequired = x;
+        return instance;
+    };
+
 
 
 

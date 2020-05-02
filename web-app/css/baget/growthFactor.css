@@ -87,3 +87,9 @@ text.describeDateRangeOfData {
 div.checkboxHolder input {
     text-align: left;
 }
+input.movingAverageWindow {
+    width: 15px;
+}
+input.daysOfNonExponentialGrowthRequired {
+    width: 15px;
+}
