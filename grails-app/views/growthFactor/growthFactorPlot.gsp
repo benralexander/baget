@@ -49,46 +49,42 @@
 
         <!-- Tab panes -->
         <div class="tab-content">
-            <div class="tab-pane fade active in coreObject" id="country" style="text-align: left">
+        <div class="tab-pane fade active in coreObject" id="country" >
                 <div class="row">
                     <div class="col-sm-2"></div>
                     <div class="col-sm-10  dataChoosingSection">
                         <div class="sectionDescription">
-                            Data we will analyze
+                            Choose data for analysis
                         </div>
                         <div class="row">
-                            <div class="col-sm-6 clickOnSectionsWeWant">
-                                <div>
-                                    <input type="checkbox" class="custom-control-input displayControl" id="includeCountries"
-                                           checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)" style="margin: 0">
-                                    <label class="custom-control-label displayControl" for="includeCountries">Include data for individual countries</label>
+                            <div class="col-sm-3 clickOnSectionsWeWant">
+                                <div class='dateChooserContainer'>
+                                    <div>
+                                        <input type="checkbox" class="custom-control-input displayControl"
+                                               checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'includeTopLevelGroups')">
+                                        <label class="custom-control-label displayControl">Include data for individual countries</label>
+                                    </div>
+                                    <div>
+                                        <input type="checkbox" class="custom-control-input displayControl"
+                                                onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'includeSummaryGroups')">
+                                        <label class="custom-control-label displayControl">Include data for the world</label>
+                                    </div>
                                 </div>
-%{--                                <div>--}%
-%{--                                    <input type="checkbox" class="custom-control-input" id="includeCombinations"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">--}%
-%{--                                    <label class="custom-control-label" for="includeCombinations">Include county combinations</label>--}%
-%{--                                </div>--}%
-%{--                                <div>--}%
-%{--                                    <input type="checkbox" class="custom-control-input" id="includeCategories"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">--}%
-%{--                                    <label class="custom-control-label" for="includeCategories">Include other categories of data</label>--}%
-%{--                                </div>--}%
-%{--                                <div>--}%
-%{--                                    <input type="checkbox" class="custom-control-input" id="includeNewAdditions"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">--}%
-%{--                                    <label class="custom-control-label" for="includeNewAdditions">Include countries that we have been tracking for less than 10 days</label>--}%
-%{--                                </div>--}%
-                               <div>
-                                    <p>
-                                        <label for="countryAmount">Date range:</label>
-                                        <input type="text" id="countryAmount" class="amount" style="border: 0; color: #f6931f; font-weight: bold;" size="100"/>
-                                    </p>
+                               <div class='text-center dateSliderContainer'>
 
-                                <div class="dateSlider"></div>
+                                        <label >Date range:</label>
+                                        <input type="text" class="amount" style="margin-top: 10px" width="150"/>
+                                         <div class="dateSlider" style="margin-top: 10px"></div>
+
+
                                </div>
                             </div>
-                            <div class="col-sm-6 displayTheSectionsWeWant">
+                            <div class="col-sm-9 displayTheSectionsWeWant">
                                 <div>
                                     <span  class="pull-right"><div class="everyGroupToDisplay"></div></span>
                                 </div>
                             </div>
+
                         </div>
 
 
@@ -96,36 +92,46 @@
                     <div class="col-sm-2"></div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-12  dataChoosingSection">
+                    <div class="col-sm-2"></div>
+                    <div class="col-sm-10  dataChoosingSection">
                         <div class="sectionDescription">
-                            Analyses to present
+                            Adjust analyses
                         </div>
                         <div class="row">
                             <div class="col-sm-4 clickOnSectionsWeWant">
                                 <div>
-                                    <input type="checkbox" class="custom-control-input" id="includeNotInflectedCountries"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                                    <label class="custom-control-label" for="includeNotInflectedCountries">Include states that have NOT reached an inflection point</label>
+                                    <input type="checkbox" class="custom-control-input"
+                                           onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithoutInflectionPoints')">
+                                    <label class="custom-control-label" >Include countries that have NOT reached an inflection point</label>
                                 </div>
                                 <div>
-                                    <input type="checkbox" class="custom-control-input" id="includeInflectedCountries" checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                                    <label class="custom-control-label" for="includeInflectedCountries">Include groups that have reached an inflection point</label>
+                                    <input type="checkbox" class="custom-control-input"checked
+                                           onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithInflectionPoints')">
+                                    <label class="custom-control-label">Include countries that have reached an inflection point</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" class="custom-control-input"  checked
+                                           onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithInsufficientData')">
+                                    <label class="custom-control-label">Include countries with insufficient data for analysis</label>
                                 </div>
                             </div>
                             <div class="col-sm-4 clickOnSectionsWeWant">
                                 <div>
-                                    <input type="text" class="spinner movingAverageWindow"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)"/>
-                                    <label class="custom-control-label" for="includeNotInflectedStates">Moving average window</label>
+                                    <input type="text" class="spinner movingAverageWindow"/>
+                                    <label class="custom-control-label">Days in moving average window</label>
                                 </div>
                                 <div>
-                                    <input type="text" class="spinner daysOfNonExponentialGrowthRequired"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)"/>
-                                    <label class="custom-control-label" for="includeInflectedStates">days of declining growth required</label>
+                                    <input type="text" class="spinner daysOfNonExponentialGrowthRequired"/>
+                                    <label class="custom-control-label">Number of days of declining growth</label>
                                 </div>
 
                             </div>
                             <div class="col-sm-4 displayTheSectionsWeWant">
-                                <div class="pull-right">
-                                    <input type="checkbox" class="custom-control-input" id="logVersusLinearCountries" checked onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)">
-                                    <label class="custom-control-label" for="logVersusLinearCountries">Linear scale</label>
+                                <div class="pull-right" style = "margin:10px">
+                                    <button type="button" class="btn btn-outline-primary" onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)"
+                                    style="font-size: 16px; border:1px solid blue; margin:10px">Change to log scale</button>
+%{--                                    <input type="checkbox" class="custom-control-input" id="logVersusLinearCountries" checked onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)">--}%
+%{--                                    <label class="custom-control-label" for="logVersusLinearCountries">Linear scale</label>--}%
                                 </div>
                             </div>
                         </div>
@@ -138,42 +144,42 @@
                 </div>
 
                 <div class="jumbotron" style = "padding: 0">
-                    <div class="container">
+%{--                    <div class="container">--}%
 
-                        <div class="btn-toolbar">
-                            <div class="pull-left"></div>
+%{--                        <div class="btn-toolbar">--}%
+%{--                            <div class="pull-left"></div>--}%
 
-                            <div class="pull-right">
-                                <div class="btn-group">
-                                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                                        JavaScript
-                                        <span class="caret"></span>
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li class="btn"
-                                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/growthFactorLauncher.js')">growthFactorLauncher.js</li>
-                                        <li class="btn"
-                                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/growthFactor.js')">growthFactor.js</li>
-                                    </ul>
-                                </div>
+%{--                            <div class="pull-right">--}%
+%{--                                <div class="btn-group">--}%
+%{--                                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">--}%
+%{--                                        JavaScript--}%
+%{--                                        <span class="caret"></span>--}%
+%{--                                    </a>--}%
+%{--                                    <ul class="dropdown-menu">--}%
+%{--                                        <li class="btn"--}%
+%{--                                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/growthFactorLauncher.js')">growthFactorLauncher.js</li>--}%
+%{--                                        <li class="btn"--}%
+%{--                                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'js/baget/growthFactor.js')">growthFactor.js</li>--}%
+%{--                                    </ul>--}%
+%{--                                </div>--}%
 
-                                <div class="btn-group">
-                                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                                        Stylesheets
-                                        <span class="caret"></span>
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li class="btn"
-                                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'css/baget/growthFactor.css')">growthFactor.css</li>
-                                    </ul>
-                                </div>
-                            </div>
+%{--                                <div class="btn-group">--}%
+%{--                                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">--}%
+%{--                                        Stylesheets--}%
+%{--                                        <span class="caret"></span>--}%
+%{--                                    </a>--}%
+%{--                                    <ul class="dropdown-menu">--}%
+%{--                                        <li class="btn"--}%
+%{--                                            onclick="UTILS.openTheWindow('<g:createLink controller='qqPlot' action ='index'/>', 'css/baget/growthFactor.css')">growthFactor.css</li>--}%
+%{--                                    </ul>--}%
+%{--                                </div>--}%
+%{--                            </div>--}%
 
 
 
-                        </div>
+%{--                        </div>--}%
 
-                    </div>
+%{--                    </div>--}%
 
 
 
@@ -206,8 +212,9 @@
                             <div class="row">
                                 <div class="col-sm-6 clickOnSectionsWeWant">
                                     <div>
-                                        <input type="checkbox" class="custom-control-input includeCountries" checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                                        <label class="custom-control-label" for="includeCountries">Include data for individual countries</label>
+                                        <input type="checkbox" class="custom-control-input displayControl" checked
+                                               onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'includeTopLevelGroups')">
+                                        <label class="custom-control-label">Include data for individual countries</label>
                                     </div>
 %{--                                    <div>--}%
 %{--                                        <input type="checkbox" class="custom-control-input" id="includeCombinations"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">--}%
@@ -246,22 +253,29 @@
                             <div class="row">
                                 <div class="col-sm-4 clickOnSectionsWeWant">
                                     <div>
-                                        <input type="checkbox" class="custom-control-input" id="includeNotInflectedStates"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                                        <label class="custom-control-label" for="includeNotInflectedStates">Include states that have NOT reached an inflection point</label>
+                                        <input type="checkbox" class="custom-control-input"
+                                               onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithoutInflectionPoints')">
+                                        <label class="custom-control-label">Include states that have NOT reached an inflection point</label>
                                     </div>
                                     <div>
-                                        <input type="checkbox" class="custom-control-input" id="includeInflectedStates" checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)">
-                                        <label class="custom-control-label" for="includeInflectedStates">Include states that have reached an inflection point</label>
+                                        <input type="checkbox" class="custom-control-input"  checked
+                                               onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithInflectionPoints')">
+                                        <label class="custom-control-label">Include states that have reached an inflection point</label>
+                                    </div>
+                                    <div>
+                                        <input type="checkbox" class="custom-control-input"  checked
+                                               onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithInsufficientData')">
+                                        <label class="custom-control-label">Include states with insufficient data for analysis</label>
                                     </div>
                                 </div>
                                 <div class="col-sm-4 clickOnSectionsWeWant">
                                     <div>
-                                        <input type="text" class="spinner movingAverageWindow"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)"/>
-                                        <label class="custom-control-label" for="includeNotInflectedStates">Moving average window</label>
+                                        <input type="text" class="spinner movingAverageWindow"/>
+                                        <label class="custom-control-label" >Moving average window</label>
                                     </div>
                                     <div>
-                                        <input type="text" class="spinner daysOfNonExponentialGrowthRequired"  onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this)"/>
-                                        <label class="custom-control-label" for="includeInflectedStates">days of declining growth required</label>
+                                        <input type="text" class="spinner daysOfNonExponentialGrowthRequired"/>
+                                        <label class="custom-control-label">days of declining growth required</label>
                                     </div>
 
                                 </div>

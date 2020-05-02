@@ -8,8 +8,6 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     let height = 600;
     let width = 1000;
-    // let startDate = new Date ();
-    // let endDate = new Date ();
 
 
     const rememberTheseData = function (identifier,dataToRemember){
@@ -32,17 +30,30 @@ mpgSoftware.growthFactorLauncher = (function () {
         }
          showGroupsWithInflectionPoints =  true;
          showGroupsWithoutInflectionPoints =  false;
-         showCountries =  true;
-         showCombinations =  false;
-         showCategories =  false;
+         showGroupsWithInsufficientData = true;
          useLinearNotLog = true;
          rememberData = [];
+         includeTopLevelGroups = true;
+         includeSummaryGroups = false;
          height = 600;
          width = 1000;
          startDate = new Date ();
          endDate = new Date ();
-        movingAverageWindow = 5;
-        daysOfNonExponentialGrowthRequired = 4;
+         movingAverageWindow = 5;
+         daysOfNonExponentialGrowthRequired = 4;
+         changesRequiringDataInitialization = function (dataChanged){
+             let initializationRequired = false;
+             switch(buildThePlot){
+                 case 'includeTopLevelGroups':
+                 case 'includeSummaryGroups':
+                     initializationRequired = true;
+                     break;
+                 default:
+                     initializationRequired = true;
+                     break;
+             }
+             return initializationRequired;
+         }
     };
     const retrieveData = function (identifier,fieldName){
         const dataGroupingHolder = recallData (identifier);
@@ -65,52 +76,30 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     };
 
+    /***
+     * Set up the  moving window spinners
+     */
     const setUpInteractiveDisplay = function (){
-        const spinnerAverage1 = $('#country input.spinner.movingAverageWindow');
-        spinnerAverage1.spinner({
-            step: 2,
-            min: 1,
-            max: 99,
-            stop: function (event, ui){
-                const identifier = $(event.target).closest("div.coreObject").attr('id');
-                setData(identifier,"movingAverageWindow", spinnerAverage1.val ());
-                buildThePlotWithRememberedData (identifier);
-            }
-        });
-        spinnerAverage1.spinner( "value", 5 );
-        const spinnerAverage = $('#states input.spinner.movingAverageWindow');
+        const spinnerAverage = $('input.spinner.movingAverageWindow');
         spinnerAverage.spinner({
             step: 2,
             min: 1,
             max: 99,
-            stop: function (event, ui){
+            spin: function (event, ui){
                 const identifier = $(event.target).closest("div.coreObject").attr('id');
-                setData(identifier,"movingAverageWindow", spinnerAverage.val ());
+                setData(identifier,"movingAverageWindow", ui.value);
                 buildThePlotWithRememberedData (identifier);
             }
         });
         spinnerAverage.spinner( "value", 5 );
-        const spinnerThreshold1 = $('#country input.spinner.daysOfNonExponentialGrowthRequired');
-        spinnerThreshold1.spinner({
-            step: 1,
-            min: 1,
-            max: 100,
-            stop: function (event, ui){
-                const identifier = $(event.target).closest("div.coreObject").attr('id');
-                setData(identifier,"daysOfNonExponentialGrowthRequired",spinnerThreshold1.val());
-                buildThePlotWithRememberedData (identifier);
-            }
-
-        });
-        spinnerThreshold1.spinner( "value", 7 );
-        const spinnerThreshold = $('#states input.spinner.daysOfNonExponentialGrowthRequired');
+        const spinnerThreshold = $('input.spinner.daysOfNonExponentialGrowthRequired');
         spinnerThreshold.spinner({
             step: 1,
             min: 1,
             max: 100,
-            stop: function (event, ui){
+            spin: function (event, ui){
                 const identifier = $(event.target).closest("div.coreObject").attr('id');
-                setData(identifier,"daysOfNonExponentialGrowthRequired", spinnerThreshold.val());
+                setData(identifier,"daysOfNonExponentialGrowthRequired", ui.value);
                 buildThePlotWithRememberedData (identifier);
             }
 
@@ -121,35 +110,21 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
     const logVersusLinear= function (callingObject){
-        const callingObjectIsChecked = $(callingObject).prop("checked") === true;
-        const callingObjectCoreParents = $(callingObject).closest("div.coreObject");
-        setData(callingObjectCoreParents.attr('id'),"useLinearNotLog", callingObjectIsChecked);
-        // useLinearNotLog = callingObjectIsChecked;
-        buildThePlotWithRememberedData (callingObjectCoreParents.attr('id'));
-    };
-    const changeWhatIsDisplayed = function (callingObject){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
-        const callingObjectId = $(callingObject).attr('id');
-        const callingObjectIsChecked = $(callingObject).prop("checked") === true;
-        if (callingObjectId==="includeCountries"){
-            setData(identifier,"showCountries", callingObjectIsChecked);
-        }else if (callingObjectId==="includeCategories"){
-            setData(identifier,"showCategories", callingObjectIsChecked);
-         }else if (callingObjectId==="includeCombinations"){
-            setData(identifier,"showCombinations", callingObjectIsChecked);
-        }else if (callingObjectId==="includeInflectedCountries" ){
-            setData(identifier,"showGroupsWithInflectionPoints", callingObjectIsChecked);
-        }else if (callingObjectId==="includeNotInflectedCountries"){
-            setData(identifier,"showGroupsWithoutInflectionPoints", callingObjectIsChecked);
-        }else if (callingObjectId==="includeNotInflectedStates"){
-            setData(identifier,"showGroupsWithoutInflectionPoints", callingObjectIsChecked);
-        }else if (callingObjectId==="includeInflectedStates" ){
-            setData(identifier,"showGroupsWithInflectionPoints", callingObjectIsChecked);
-        }else if (callingObjectId==="includeNewAdditions"){
-
-
+        const changeToLinear = $(callingObject).text () === "Change to linear scale";
+        if (changeToLinear){
+            $(callingObject).text ("Change to log scale");
+        } else {
+            $(callingObject).text ("Change to linear scale");
         }
-        buildThePlotWithRememberedData (identifier);
+        setData(identifier,"useLinearNotLog", changeToLinear);
+        buildThePlot(identifier,retrieveData(identifier,'changesRequiringDataInitialization') ("useLinearNotLog"));
+    };
+    const changeWhatIsDisplayed = function (callingObject,callingObjectId){
+        const identifier = $(callingObject).closest("div.coreObject").attr('id');
+        const callingObjectIsChecked = $(callingObject).prop("checked") === true;
+        setData(identifier,callingObjectId, callingObjectIsChecked);
+        buildThePlot (identifier,retrieveData(identifier,'changesRequiringDataInitialization') (callingObjectId));
     };
     const changeGroupCheckbox = function (callingObject, identifier){
         const callingObjectId = $(callingObject);
@@ -203,101 +178,111 @@ mpgSoftware.growthFactorLauncher = (function () {
     };
 
 
-    const preFilterToGenerateListOfGroups = function (identifier){
-        let orFilterArray = [];
-        let andFilterArray = [];
-       if (retrieveData (identifier, "showCountries")){
-            //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
-            orFilterArray.push (datum => (datum.code.length > 0) &&
-                (!(datum.countryName.search('World')>=0))
-            );
-        }
-        if (retrieveData (identifier, "showCategories")){
-            orFilterArray.push (datum => datum.code.length === 0);
-        }
-        if (retrieveData (identifier, "showCombinations")){
-            orFilterArray.push (datum => ((datum.countryName.search('World')>=0)||
-                (datum.countryName.search('Europe')>=0)||
-                (datum.countryName.search('Asia')>=0)));
-        }
-
-        const startDate = retrieveData (identifier, "startDate");
-        const endDate = retrieveData (identifier, "endDate");
-        andFilterArray.push (datum => (((new Date(datum.date).getTime() / 1000)>=(new Date(startDate).getTime() / 1000))  &&
-            ((new Date(datum.date).getTime() / 1000)<=(new Date(endDate).getTime() / 1000))));
-
-        return function(data){
-            return _.filter (data, function (oneRec){
-                let finalAnswer = false;
-                // first OR together attributes of things that we want to include
-                _.forEach(orFilterArray,function(oneFilter){
-                    if (oneFilter(oneRec)){
-                        finalAnswer = true;
-                        return false;
+    const filterModule = (function () {
+        // private routine that builds up the filters as a callable function
+        const andOrFilterModule = function (orFilterArray,andFilterArray){
+            return function(data){
+                return _.filter (data, function (oneRec){
+                    let finalAnswer = false;
+                    if(orFilterArray.length > 0 ){  // we have some OR filters to check
+                        finalAnswer = false; // for OR filters, assume the answer is false, unless one or more of the filters is true
+                        _.forEach(orFilterArray,function(oneFilter){
+                            if (oneFilter(oneRec)){
+                                finalAnswer = true;
+                                return false;
+                            }
+                        });
+                    }else{
+                        if(andFilterArray.length > 0 ){// we didn't have OR filters. Do we have AND filters, or should we assume the answer is false
+                            finalAnswer =true;
+                        }else {
+                            finalAnswer =false;
+                        }
                     }
-                });
-                // now strip out anything that we absolutely have to skip
-                if (!finalAnswer){return finalAnswer;}
-                _.forEach(andFilterArray,function(oneFilter){
-                    if (!oneFilter(oneRec)){
-                        finalAnswer = false;
-                        return false;
+                    if (!finalAnswer){
+                        return finalAnswer;
                     }
-                });
-                return finalAnswer;
-            })
-        }
+                    // for the AND filters, start with the assumption that the answer is true,but change the answer if any of the filters is false
+                    _.forEach(andFilterArray,function(oneFilter){
+                        if (!oneFilter(oneRec)){
+                            finalAnswer = false;
+                            return false;
+                        }
+                    });
+                    return finalAnswer;
+                })
+            };
+        };
 
-    };
-    const filterOnlyOnListOfGroups = function (identifier){
+        const preFilterToGenerateListOfGroups = function (identifier){
+            let orFilterArray = [];
+            let andFilterArray = [];
 
-        let andFilterArray = [];
-        const selectedGroups = _.map ($("#" + identifier +" div.everyGroupToDisplay input.displayControl:checked").next("label"),d=>$(d).text());
-        andFilterArray.push (datum => _.includes (selectedGroups,datum.countryName ));
-
-        const startDate = retrieveData (identifier, "startDate");
-        const endDate = retrieveData (identifier, "endDate");
-        andFilterArray.push (datum => (((new Date(datum.date).getTime() / 1000)>=(new Date(startDate).getTime() / 1000))  &&
-            ((new Date(datum.date).getTime() / 1000)<=(new Date(endDate).getTime() / 1000))));
-
-        return function(data){
-            return _.filter (data, function (oneRec){
-                let finalAnswer = true;
-                // first OR together attributes of things that we want to include
-
-                // now strip out anything that we absolutely have to skip
-                if (!finalAnswer){return finalAnswer;}
-                _.forEach(andFilterArray,function(oneFilter){
-                    if (!oneFilter(oneRec)){
-                        finalAnswer = false;
-                        return false;
-                    }
-                });
-                return finalAnswer;
-            })
-        }
-
-
-    };
-    const filterBasedOnAnalysis = function (identifier){
-        return function (data){
-            if (retrieveData (identifier, "showGroupsWithInflectionPoints")&&
-                !retrieveData (identifier, "showGroupsWithoutInflectionPoints")){
-                return _.filter (data, datum => datum.values.type == 'inflection')
-            } else if (!retrieveData (identifier, "showGroupsWithInflectionPoints")&&
-                retrieveData (identifier, "showGroupsWithoutInflectionPoints")){
-                return _.filter (data, datum => datum.values.type == 'noinflection')
-            }else if (retrieveData (identifier, "showGroupsWithInflectionPoints")&&
-                retrieveData (identifier, "showGroupsWithoutInflectionPoints")){
-                return _.filter (data, datum => (datum.values.type == 'noinflection')||(datum.values.type == 'inflection'))
-            }else if (!retrieveData (identifier, "showGroupsWithInflectionPoints")&&
-                !retrieveData (identifier, "showGroupsWithoutInflectionPoints")){
-                return _.filter (data, datum => datum.values.type === 'inflectionUndetermined')
-
+            if (retrieveData (identifier, "includeTopLevelGroups")){
+                //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
+                orFilterArray.push (datum => !(datum.countryName.search('World')>=0));
+            }
+            if (retrieveData (identifier, "includeSummaryGroups")){
+                //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
+                orFilterArray.push (datum => (datum.countryName.search('World')>=0));
             }
 
+            // In this case, if neither or filter is selected then we want the graft be blank. Therefore let's insert a fake and filter which will always fail
+            if (orFilterArray.length === 0){
+                andFilterArray.push (datum =>false);
+            }
+
+
+            const startDate = retrieveData (identifier, "startDate");
+            const endDate = retrieveData (identifier, "endDate");
+            andFilterArray.push (datum => (((new Date(datum.date).getTime() / 1000)>=(new Date(startDate).getTime() / 1000))  &&
+                ((new Date(datum.date).getTime() / 1000)<=(new Date(endDate).getTime() / 1000))));
+
+            return andOrFilterModule (orFilterArray,andFilterArray);
+
+        };
+        const filterOnlyOnListOfGroups = function (identifier){
+
+            let andFilterArray = [];
+            const selectedGroups = _.map ($("#" + identifier +" div.everyGroupToDisplay input.displayControl:checked").next("label"),d=>$(d).text());
+            andFilterArray.push (datum => _.includes (selectedGroups,datum.countryName ));
+
+            const startDate = retrieveData (identifier, "startDate");
+            const endDate = retrieveData (identifier, "endDate");
+            andFilterArray.push (datum => (((new Date(datum.date).getTime() / 1000)>=(new Date(startDate).getTime() / 1000))  &&
+                ((new Date(datum.date).getTime() / 1000)<=(new Date(endDate).getTime() / 1000))));
+
+            return andOrFilterModule ([],andFilterArray);
+
+
+        };
+        const filterBasedOnAnalysis = function (identifier){
+            let orFilterArray = [];
+            let andFilterArray = [];
+            if (retrieveData (identifier, "showGroupsWithInflectionPoints")){
+                //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
+                orFilterArray.push (datum => datum.values.type === 'inflection');
+            }
+            if (retrieveData (identifier, "showGroupsWithoutInflectionPoints")){
+                orFilterArray.push (datum => datum.values.type == 'noinflection');
+            }
+            if (retrieveData (identifier, "showGroupsWithInsufficientData")){
+                orFilterArray.push (datum => datum.values.type == 'inflectionUndetermined');
+            }
+
+            return andOrFilterModule (orFilterArray,andFilterArray);
+        };
+
+
+        return {
+            preFilterToGenerateListOfGroups:preFilterToGenerateListOfGroups,
+            filterOnlyOnListOfGroups:filterOnlyOnListOfGroups,
+            filterBasedOnAnalysis:filterBasedOnAnalysis
         }
-    };
+    } ());
+
+
+
 
 
 
@@ -307,10 +292,10 @@ mpgSoftware.growthFactorLauncher = (function () {
 
         const allData = retrieveData (idOfThePlaceToStoreData,"rawData");
         const idOfThePlaceWhereThePlotGoes = retrieveData(idOfThePlaceToStoreData,'idOfThePlaceWhereThePlotGoes');
-        const postAnalysisFilter = filterBasedOnAnalysis (idOfThePlaceToStoreData);
+        const postAnalysisFilter = filterModule.filterBasedOnAnalysis (idOfThePlaceToStoreData);
         let preAnalysisFilter;
         if (initialize){//pre-filter, and then update the list of groups
-            preAnalysisFilter = preFilterToGenerateListOfGroups (idOfThePlaceToStoreData);
+            preAnalysisFilter = filterModule.preFilterToGenerateListOfGroups (idOfThePlaceToStoreData);
             $('#' +idOfThePlaceToStoreData +' div.everyGroupToDisplay').empty ();
             const startTheGroup = $('#' +idOfThePlaceToStoreData +' div.everyGroupToDisplay');
             let listOfGroups = '<div>';
@@ -324,11 +309,9 @@ mpgSoftware.growthFactorLauncher = (function () {
             startTheGroup.append(listOfGroups);
         }else {
             // use the selected groups to filter the raw data
-            preAnalysisFilter = filterOnlyOnListOfGroups(idOfThePlaceToStoreData);
+            preAnalysisFilter = filterModule.filterOnlyOnListOfGroups(idOfThePlaceToStoreData);
 
         }
-
-
 
 
         var growthFactorPlot = baget.growthFactor
@@ -347,7 +330,7 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     const buildThePlotWithRememberedData = function (idOfThePlaceToStoreData){
 
-        buildThePlot (idOfThePlaceToStoreData);
+        buildThePlot (idOfThePlaceToStoreData, false);
     }
 
 

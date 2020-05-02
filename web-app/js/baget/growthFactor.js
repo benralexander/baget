@@ -404,11 +404,15 @@ const calculateGrowthFactorByCountry = function (data){
                 .domain([yLower,yUpper]).nice()
                 .range([height - margin.bottom, margin.top]);
         }
+        let dateExtentObject = [];
+        if (data.length>0){
+            const timeParse = d3.timeParse("%b %e, %Y");
+            const dateExtent = d3.extent(data, function(d){
+                return timeParse(d.date);
+            });
+            dateExtentObject = [dateExtent];
+        }
 
-        const timeParse = d3.timeParse("%b %e, %Y");
-        const dateExtent = d3.extent(data, function(d){
-            return timeParse(d.date);
-        });
 
 
 
@@ -475,7 +479,7 @@ const calculateGrowthFactorByCountry = function (data){
         const dateFormat = d3.timeFormat("%B %d, %Y");
         const printDateRange=svg
             .selectAll("text.describeDateRangeOfData")
-            .data([dateExtent]);
+            .data(dateExtentObject);
         printDateRange.enter()
             .append("text")
             .attr("class", 'describeDateRangeOfData')
