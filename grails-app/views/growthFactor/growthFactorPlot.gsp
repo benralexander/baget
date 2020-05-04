@@ -51,91 +51,110 @@
         <div class="tab-content">
         <div class="tab-pane fade active in coreObject" id="country" >
                 <div class="row">
-                    <div class="col-sm-2"></div>
-                    <div class="col-sm-10  dataChoosingSection">
-                        <div class="sectionDescription">
-                            Choose data for analysis
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-3 clickOnSectionsWeWant">
-                                <div class='dateChooserContainer'>
-                                    <div>
-                                        <input type="checkbox" class="custom-control-input displayControl"
-                                               checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'includeTopLevelGroups')">
-                                        <label class="custom-control-label displayControl">Include data for individual countries</label>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" class="custom-control-input displayControl"
-                                                onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'includeSummaryGroups')">
-                                        <label class="custom-control-label displayControl">Include data for the world</label>
+                    <div class="col-sm-8 col-sm-offset-2">
+                        <div class="dataChoosingSection">
+                            <div class="sectionDescription">
+                                Choose data for analysis
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4 clickOnSectionsWeWant">
+                                    <div class='dateChooserContainer'>
+                                        <div>
+                                            <input type="checkbox" class="custom-control-input displayControl"
+                                                   checked onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'includeTopLevelGroups')">
+                                            <label class="custom-control-label displayControl">Include data for individual countries</label>
+                                        </div>
+                                        <div>
+                                            <input type="checkbox" class="custom-control-input displayControl"
+                                                   onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'includeSummaryGroups')">
+                                            <label class="custom-control-label displayControl">Include data for the world</label>
+                                        </div>
                                     </div>
                                 </div>
-                               <div class='text-center dateSliderContainer'>
+                                <div class="col-sm-4 clickOnSectionsWeWant">
+                                    <div class='text-center dateSliderContainer'>
 
                                         <label >Date range:</label>
                                         <input type="text" class="amount" style="margin-top: 10px" width="150"/>
-                                         <div class="dateSlider" style="margin-top: 10px"></div>
+                                        <div class="dateSlider" style="margin-top: 10px"></div>
 
 
-                               </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 displayTheSectionsWeWant holdTheExpandableBlock" >
+                                    <div class="everyGroupToDisplayHolder smaller" >
+                                        <div class="expander">
+                                            <span class = "pull-left describeWhatWeAreExpanding">Countries</span>
+                                            <span class = "pull-right expanderText" onclick="mpgSoftware.growthFactorLauncher.toggleDisplayOfSelectableElements(this)">Expand</span>
+                                        </div>
+                                        <div class="everyGroupToDisplay"></div>
+                                    </div>
+
+
+                                </div>
+
                             </div>
-                            <div class="col-sm-9 displayTheSectionsWeWant">
-                                <div>
-                                    <span  class="pull-right"><div class="everyGroupToDisplay"></div></span>
+                        </div>
+                     </div>
+                    <div class="col-sm-2"></div>
+                </div>
+                <div class="row">
+
+                    <div class="col-sm-6 col-sm-offset-2" style="height: 190px">
+                        <div class="dataChoosingSection">
+                            <div class="sectionDescription">
+                                Adjust analyses
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-7 clickOnSectionsWeWant">
+                                    <div class='dateChooserContainer' >
+                                        <div>
+                                            <input type="checkbox" class="custom-control-input"
+                                                   onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithoutInflectionPoints')">
+                                            <label class="custom-control-label" >Include countries that have NOT reached an inflection point</label>
+                                        </div>
+                                        <div>
+                                            <input type="checkbox" class="custom-control-input"checked
+                                                   onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithInflectionPoints')">
+                                            <label class="custom-control-label">Include countries that have reached an inflection point</label>
+                                        </div>
+                                        <div>
+                                            <input type="checkbox" class="custom-control-input"  checked
+                                                   onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithInsufficientData')">
+                                            <label class="custom-control-label">Include countries with insufficient data for analysis</label>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="col-sm-5 clickOnSectionsWeWant">
+                                    <div class='dateChooserContainer' >
+                                        <div>
+                                            <input type="text" class="spinner movingAverageWindow"/>
+                                            <label class="custom-control-label">Days in moving average window</label>
+                                        </div>
+                                        <div>
+                                            <input type="text" class="spinner daysOfNonExponentialGrowthRequired"/>
+                                            <label class="custom-control-label">Number of days of declining growth</label>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
-
                         </div>
 
 
                     </div>
-                    <div class="col-sm-2"></div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-2"></div>
-                    <div class="col-sm-10  dataChoosingSection">
-                        <div class="sectionDescription">
-                            Adjust analyses
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4 clickOnSectionsWeWant">
-                                <div>
-                                    <input type="checkbox" class="custom-control-input"
-                                           onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithoutInflectionPoints')">
-                                    <label class="custom-control-label" >Include countries that have NOT reached an inflection point</label>
-                                </div>
-                                <div>
-                                    <input type="checkbox" class="custom-control-input"checked
-                                           onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithInflectionPoints')">
-                                    <label class="custom-control-label">Include countries that have reached an inflection point</label>
-                                </div>
-                                <div>
-                                    <input type="checkbox" class="custom-control-input"  checked
-                                           onclick="mpgSoftware.growthFactorLauncher.changeWhatIsDisplayed (this,'showGroupsWithInsufficientData')">
-                                    <label class="custom-control-label">Include countries with insufficient data for analysis</label>
-                                </div>
+                    <div class="col-sm-2" style="height: 190px">
+                        <div class="dataChoosingSection">
+                           <div class="sectionDescription">
+                                Adjust display
                             </div>
-                            <div class="col-sm-4 clickOnSectionsWeWant">
-                                <div>
-                                    <input type="text" class="spinner movingAverageWindow"/>
-                                    <label class="custom-control-label">Days in moving average window</label>
-                                </div>
-                                <div>
-                                    <input type="text" class="spinner daysOfNonExponentialGrowthRequired"/>
-                                    <label class="custom-control-label">Number of days of declining growth</label>
-                                </div>
 
-                            </div>
-                            <div class="col-sm-4 displayTheSectionsWeWant">
-                                <div class="pull-right" style = "margin:10px">
-                                    <button type="button" class="btn btn-outline-primary" onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)"
-                                    style="font-size: 16px; border:1px solid blue; margin:10px">Change to log scale</button>
-%{--                                    <input type="checkbox" class="custom-control-input" id="logVersusLinearCountries" checked onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)">--}%
-%{--                                    <label class="custom-control-label" for="logVersusLinearCountries">Linear scale</label>--}%
-                                </div>
+                            <div class="text-center" >
+                                <button type="button" class="btn btn-outline-primary logLinChg align-middle" onclick="mpgSoftware.growthFactorLauncher.logVersusLinear (this)"
+                                        style="">Change to log scale</button>
                             </div>
                         </div>
-
                     </div>
                 </div>
 

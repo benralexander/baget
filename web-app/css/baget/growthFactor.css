@@ -17,14 +17,16 @@ div.sectionDescription{
     font-family: sans-serif;
     font-weight: bold;
     font-size: 18pt;
+    text-decoration: underline;
+
 }
 div.dataChoosingSection {
     font-family: sans-serif;
     font-weight: bold;
     font-size: 14px;
     border: 1px solid black;
-    margin:  5px;
     padding: 3px;
+    margin: 5px;
     -moz-border-radius: 10px;
     -webkit-border-radius: 10px;
     border-radius: 10px; /* future proofing */
@@ -35,12 +37,48 @@ div.everyGroupToDisplay {
     margin:  5px;
     padding: 3px;
     width: 300px;
-    height: 200px;
     overflow-x: hidden;
     overflow-y: auto;
+    position: absolute;
+    top: 15px;
+    z-index: 1;
+    background: #eee;
 }
+
+
 div.everyGroupToDisplay ul {
     list-style-type: none;
+}
+div.holdTheExpandableBlock{
+
+}
+div.expander{
+ }
+div.everyGroupToDisplayHolder {
+    position: relative;
+    width:305px;
+}
+div.everyGroupToDisplayHolder.greater div.everyGroupToDisplay {
+    height: 600px;
+}
+div.everyGroupToDisplayHolder.smaller div.everyGroupToDisplay {
+    height: 100px;
+}
+div.everyGroupToDisplayHolder {
+    width:305px;
+}
+div.describeWhatWeAreExpanding{
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 10px;
+}
+span.expanderText {
+    font-family: sans-serif;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 8pt;
+    color: blue;
+    text-decoration: underline;
 }
 text.describeDateRangeOfData {
     font-family: 'Lato';
@@ -124,5 +162,30 @@ div.dateChooserContainer {
     -webkit-border-radius: 4px;
     border-radius: 4px; /* future proofing */
     -khtml-border-radius: 4px; /* for old Konqueror browsers */
-
 }
+/*button.logLinChg {*/
+/*    font-size: 16px;*/
+/*    border:1px solid blue;*/
+/*    margin: 30px;*/
+/*}*/
+button.logLinChg{
+    display:inline-block;
+    padding:1em 1.8em;
+    margin:30px 0.3em 0.3em 0;
+    border-radius:5px;
+    box-sizing: border-box;
+    text-decoration:none;
+    font-family:sans-serif;
+    font-size:16px;
+    font-weight:bold;
+    color:#000;
+    background-color:#E5E9EB;
+    border:1px outset blue;
+    text-align:center;
+    transition: all 0.2s;
+}
+button.logLinChg:hover{
+    background-color:#C0CFDA;
+}
+
+

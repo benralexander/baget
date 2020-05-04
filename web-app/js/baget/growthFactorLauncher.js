@@ -107,7 +107,19 @@ mpgSoftware.growthFactorLauncher = (function () {
         spinnerThreshold.spinner( "value", 7 );
 
     }
-
+    const toggleDisplayOfSelectableElements = function (callingObject){
+        const identifier = $(callingObject).closest("div.everyGroupToDisplayHolder");
+        const shallWeExpand = $(callingObject).text () === "Expand";
+        if (shallWeExpand){
+            $(callingObject).text ("Contract");
+            $(identifier).removeClass('smaller');
+            $(identifier).addClass('greater');
+        } else {
+            $(callingObject).text ("Expand");
+            $(identifier).removeClass('greater');
+            $(identifier).addClass('smaller');
+        }
+    };
 
     const logVersusLinear= function (callingObject){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
@@ -379,7 +391,8 @@ mpgSoftware.growthFactorLauncher = (function () {
         calculateWeightedMovingAverage:calculateWeightedMovingAverage,
         changeWhatIsDisplayed:changeWhatIsDisplayed,
         changeGroupCheckbox:changeGroupCheckbox,
-        logVersusLinear:logVersusLinear
+        logVersusLinear:logVersusLinear,
+        toggleDisplayOfSelectableElements:toggleDisplayOfSelectableElements
     }
 
 }());
