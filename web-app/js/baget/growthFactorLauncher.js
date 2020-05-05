@@ -8,6 +8,72 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     let height = 600;
     let width = 1000;
+    const displayOrganizer = {
+        country: [{
+            id:"country",
+            initialClasses:"active in",
+            dataChoosers: [
+                {
+                    title:"Include data for individual countries",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"includeTopLevelGroups",
+                    checked: "checked"
+                },
+                {
+                    title:"Include data for the world",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"includeSummaryGroups",
+                    checked: ""
+                }
+            ],
+            dataFilters: [1],
+            specificDeactivators: [
+                {
+                    title: "Countries"
+                }
+            ],
+            analysisSelection: [
+                {
+                    title:"Include countries that have NOT reached an inflection point",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"showGroupsWithoutInflectionPoints",
+                    checked: ""
+
+                },
+                {
+                    title:"Include countries that have reached an inflection point",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"showGroupsWithInflectionPoints",
+                    checked: "checked"
+
+                },
+                {
+                    title:"Include countries with insufficient data for analysis",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"showGroupsWithInsufficientData",
+                    checked: "checked"
+
+                }
+            ],
+            calculationAdjustment: [
+                {
+                    className:"movingAverageWindow",
+                    title:"Days in moving average window"
+                },
+                {
+                    className:"daysOfNonExponentialGrowthRequired",
+                    title:"Number of days of declining growth"
+                }
+            ],
+            displayAdjustment: [
+                {
+                    methodCallBack:"logVersusLinear",
+                    title:"Change to log scale"
+                }
+            ]
+
+        }]
+    };
 
 
     const rememberTheseData = function (identifier,dataToRemember){
@@ -379,6 +445,12 @@ mpgSoftware.growthFactorLauncher = (function () {
         }
     }
 
+    const initializePageToHoldDisplay  = function (sectionSelector,data){
+        // $(sectionSelector).empty().append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,{}));
+        $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,displayOrganizer.country));
+
+    }
+
 
 // public routines are declared below
     return {
@@ -392,7 +464,8 @@ mpgSoftware.growthFactorLauncher = (function () {
         changeWhatIsDisplayed:changeWhatIsDisplayed,
         changeGroupCheckbox:changeGroupCheckbox,
         logVersusLinear:logVersusLinear,
-        toggleDisplayOfSelectableElements:toggleDisplayOfSelectableElements
+        toggleDisplayOfSelectableElements:toggleDisplayOfSelectableElements,
+        initializePageToHoldDisplay:initializePageToHoldDisplay
     }
 
 }());

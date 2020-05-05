@@ -21,6 +21,9 @@ modules = {
         resource url:'https://code.jquery.com/ui/1.12.1/jquery-ui.js'
         resource url:'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'
     }
+    mustache {
+        resource url: 'https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js'
+    }
     core {
         dependsOn "jquery,bootstrap"
 
@@ -68,7 +71,7 @@ modules = {
         resource url: 'css/baget/dynaline.css'
     }
     growthFactor{
-        dependsOn 'jquery12'
+        dependsOn 'jquery12','mustache'
         resource url: 'https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js'
         resource url: 'js/baget/growthFactor.js'
         resource url: 'js/baget/growthFactorLauncher.js'

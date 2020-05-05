@@ -80,6 +80,9 @@ span.expanderText {
     color: blue;
     text-decoration: underline;
 }
+span.expanderText:hover {
+cursor: pointer;
+}
 text.describeDateRangeOfData {
     font-family: 'Lato';
     font-weight: bold;
