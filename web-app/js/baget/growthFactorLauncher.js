@@ -70,9 +70,68 @@ mpgSoftware.growthFactorLauncher = (function () {
                     methodCallBack:"logVersusLinear",
                     title:"Change to log scale"
                 }
-            ]
+            ],
+            plotGoesHere: [{"id":"growthFactorPlotCountries"}]
+        }],
+        states: [{
+            id:"states",
+            initialClasses:"",
+            dataChoosers: [
+                {
+                    title:"Include data for individual states",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"includeTopLevelGroups",
+                    checked: "checked"
+                }
+            ],
+            dataFilters: [1],
+            specificDeactivators: [
+                {
+                    title: "States"
+                }
+            ],
+            analysisSelection: [
+                {
+                    title:"Include states that have NOT reached an inflection point",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"showGroupsWithoutInflectionPoints",
+                    checked: ""
 
+                },
+                {
+                    title:"Include states that have reached an inflection point",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"showGroupsWithInflectionPoints",
+                    checked: "checked"
+
+                },
+                {
+                    title:"Include states with insufficient data for analysis",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"showGroupsWithInsufficientData",
+                    checked: "checked"
+
+                }
+            ],
+            calculationAdjustment: [
+                {
+                    className:"movingAverageWindow",
+                    title:"Days in moving average window"
+                },
+                {
+                    className:"daysOfNonExponentialGrowthRequired",
+                    title:"Number of days of declining growth"
+                }
+            ],
+            displayAdjustment: [
+                {
+                    methodCallBack:"logVersusLinear",
+                    title:"Change to log scale"
+                }
+            ],
+            plotGoesHere: [{"id":"growthFactorPlotStates"}]
         }]
+
     };
 
 
@@ -446,8 +505,8 @@ mpgSoftware.growthFactorLauncher = (function () {
     }
 
     const initializePageToHoldDisplay  = function (sectionSelector,data){
-        // $(sectionSelector).empty().append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,{}));
         $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,displayOrganizer.country));
+        $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,displayOrganizer.states));
 
     }
 

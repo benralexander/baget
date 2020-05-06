@@ -103,8 +103,9 @@
     </div>
 
     <div class="jumbotron" style = "padding: 0">
-
-        <div id="growthFactorPlotCountries"></div>
+        {{#plotGoesHere}}
+        <div id="{{id}}"></div>
+        {{/plotGoesHere}}
     </div>
 
 </div>
