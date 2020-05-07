@@ -71,7 +71,10 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"Change to log scale"
                 }
             ],
-            plotGoesHere: [{"id":"growthFactorPlotCountries"}]
+            plotGoesHere: [{"id":"growthFactorPlotCountries"}],
+            tabDescription: "COVID-19 by country",
+            tabActive: "active"
+
         }],
         states: [{
             id:"states",
@@ -129,8 +132,21 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"Change to log scale"
                 }
             ],
-            plotGoesHere: [{"id":"growthFactorPlotStates"}]
+            plotGoesHere: [{"id":"growthFactorPlotStates"}],
+            tabDescription: "COVID-19 by state",
+            tabActive: ""
         }]
+
+    };
+    const tabHeaderOrganizer = {
+        topSection:[
+            {
+            headers: [
+                displayOrganizer.country,
+                displayOrganizer.states
+            ]
+            }
+        ]
 
     };
 
@@ -227,6 +243,12 @@ mpgSoftware.growthFactorLauncher = (function () {
                 setData(identifier,"daysOfNonExponentialGrowthRequired", ui.value);
                 buildThePlotWithRememberedData (identifier);
             }
+            // ,
+            // change: function (event, ui){
+            //     const identifier = $(event.target).closest("div.coreObject").attr('id');
+            //     setData(identifier,"daysOfNonExponentialGrowthRequired", $(this).spinner('value'));
+            //     buildThePlotWithRememberedData (identifier);
+            // }
 
         });
         spinnerThreshold.spinner( "value", 7 );
@@ -504,7 +526,8 @@ mpgSoftware.growthFactorLauncher = (function () {
         }
     }
 
-    const initializePageToHoldDisplay  = function (sectionSelector,data){
+    const initializePageToHoldDisplay  = function (headerSection,sectionSelector){
+        $(headerSection).prepend(Mustache.render( $('#headerSectionAboveControls')[0].innerHTML,tabHeaderOrganizer));
         $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,displayOrganizer.country));
         $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,displayOrganizer.states));
 

@@ -1,6 +1,27 @@
+<script  id="headerSectionAboveControls"  type="x-tmpl-mustache">
+{{#topSection}}
+        <ul class="nav nav-tabs" role="tablist" style="font-size: 20px">
+            {{#headers}}
+            {{#.}}
+            <li class="{{tabActive}}">
+                <a href="#{{id}}" role="tab" data-toggle="tab">
+                    {{tabDescription}}
+%{--                    COVID-19 by country--}%
+                </a>
+            </li>
+            {{/.}}
+            {{/headers}}
+%{--            <li><a href="#states" role="tab" data-toggle="tab">--}%
+%{--                COVID-19 by US States--}%
+%{--            </a>--}%
+%{--            </li>--}%
+
+        </ul>
+{{/topSection}}
+</script>
+
+
 <script  id="tabContainingControlsAndPlot"  type="x-tmpl-mustache">
-
-
 {{#.}}
 <div class="tab-pane fade coreObject {{initialClasses}}" id="{{id}}" >
     <div class="row">

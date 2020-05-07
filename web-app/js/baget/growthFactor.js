@@ -8,7 +8,6 @@ baget.growthFactor = (function () {
     let height;
     let width;
     let margin = ({top: 100, right: 50, bottom: 35, left: 60});
-    let growthFactorByCountry;
     let color ;
     let countryColorObject;
     let linearNotLog= true;
@@ -249,7 +248,7 @@ const calculateGrowthFactorByCountry = function (data){
 
     const halfMWindow = Math.floor(movingAverageWindow/2);
     var remainder = movingAverageWindow % 2;
-    growthFactorByCountry = _.map(   dataByCountry,
+    const growthFactorByCountry = _.map(   dataByCountry,
         function (v){
 
             let differenceArray = [];
@@ -260,8 +259,6 @@ const calculateGrowthFactorByCountry = function (data){
                 if (valuesWeCareAbout.length < halfMWindow)return true;
 
                     if ((index > 2) && (index < valuesWeCareAbout.length-2)){
-                    // const v1 = _.map (_.slice(valuesWeCareAbout, index-2,index+1), o=>o.y);
-                    // const v2 = _.map (_.slice(valuesWeCareAbout, index-1,index+2), o=>o.y);
                         const v1 = _.map (_.slice(valuesWeCareAbout, index-halfMWindow,index+halfMWindow-1), o=>o.y);
                         const v2 = _.map (_.slice(valuesWeCareAbout, index-halfMWindow+1,index+halfMWindow), o=>o.y);
 
@@ -294,9 +291,6 @@ const calculateGrowthFactorByCountry = function (data){
 
             _.forEach(growthRateArray, function (rate, index){
                 if(index > (daysOfNonExponentialGrowthRequired-1)) {
-                    // if ((growthRateArray[index].growthFactor<= 1) &&
-                    //     (growthRateArray[index-1].growthFactor <= 1)&&
-                    //     (growthRateArray[index-2].growthFactor <= 1)) {
                     let nonExponentialGrowthFactorMaintained = true;
                     _.forEach(_.range(0,daysOfNonExponentialGrowthRequired), function (windowIndex){
                         if(growthRateArray[index-windowIndex].growthFactor >  1){
@@ -339,7 +333,6 @@ const calculateGrowthFactorByCountry = function (data){
             const countryGrowthFactorRecord = _.find (growthFactorByCountry, d => d.key==v.values[0].countryName);
             if (countryGrowthFactorRecord.values.inflection){
                 countryGrowthFactorRecord.values['type']='inflection';
-                // countryGrowthFactorRecord.values['type']='inflection';
             }else if ((!countryGrowthFactorRecord.values.inflection) && (countryGrowthFactorRecord.values.noinflection)){
                 countryGrowthFactorRecord.values['type']='noinflection';
             }else {
