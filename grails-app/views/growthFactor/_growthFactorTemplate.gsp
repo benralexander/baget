@@ -2,20 +2,14 @@
 {{#topSection}}
         <ul class="nav nav-tabs" role="tablist" style="font-size: 20px">
             {{#headers}}
-            {{#.}}
-            <li class="{{tabActive}}">
-                <a href="#{{id}}" role="tab" data-toggle="tab">
-                    {{tabDescription}}
-%{--                    COVID-19 by country--}%
-                </a>
-            </li>
-            {{/.}}
+                {{#.}}
+                    <li class="{{tabActive}}">
+                        <a href="#{{id}}" role="tab" data-toggle="tab">
+                            {{tabDescription}}
+                        </a>
+                    </li>
+                {{/.}}
             {{/headers}}
-%{--            <li><a href="#states" role="tab" data-toggle="tab">--}%
-%{--                COVID-19 by US States--}%
-%{--            </a>--}%
-%{--            </li>--}%
-
         </ul>
 {{/topSection}}
 </script>
@@ -25,7 +19,7 @@
 {{#.}}
 <div class="tab-pane fade coreObject {{initialClasses}}" id="{{id}}" >
     <div class="row">
-        <div class="col-sm-8 col-sm-offset-2">
+        <div class="col-lg-8 col-lg-offset-2 col-sm-12">
             <div class="dataChoosingSection">
                 <div class="sectionDescription">
                     Choose data for analysis
@@ -70,11 +64,11 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-2"></div>
+        <div class="col-lg-2"></div>
     </div>
-    <div class="row">
+    <div class="row col-container">
 
-        <div class="col-sm-6 col-sm-offset-2" style="height: 190px">
+        <div class="col-lg-6 col-lg-offset-2 col-sm-8 col">
             <div class="dataChoosingSection">
                 <div class="sectionDescription">
                     Adjust analyses
@@ -108,9 +102,9 @@
 
 
         </div>
-        <div class="col-sm-2" style="height: 190px">
-            <div class="dataChoosingSection">
-                <div class="sectionDescription">
+        <div class="col-lg-2 col-sm-4 col">
+            <div class="displayAdjustmentSection">
+                <div class="sectionDescription" style="margin-bottom:25px">
                     Adjust display
                 </div>
                 {{#displayAdjustment}}
@@ -120,6 +114,8 @@
                 </div>
                 {{/displayAdjustment}}
             </div>
+        </div>
+        <div class="col-lg-2 col">
         </div>
     </div>
 

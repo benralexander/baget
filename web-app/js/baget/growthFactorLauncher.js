@@ -68,7 +68,11 @@ mpgSoftware.growthFactorLauncher = (function () {
             displayAdjustment: [
                 {
                     methodCallBack:"logVersusLinear",
-                    title:"Change to log scale"
+                    title:"Log scale"
+                },
+                {
+                    methodCallBack:"logVersusLinear",
+                    title:" Date dependence"
                 }
             ],
             plotGoesHere: [{"id":"growthFactorPlotCountries"}],
@@ -129,7 +133,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             displayAdjustment: [
                 {
                     methodCallBack:"logVersusLinear",
-                    title:"Change to log scale"
+                    title:"Log scale"
                 }
             ],
             plotGoesHere: [{"id":"growthFactorPlotStates"}],
@@ -180,8 +184,8 @@ mpgSoftware.growthFactorLauncher = (function () {
          width = 1000;
          startDate = new Date ();
          endDate = new Date ();
-         movingAverageWindow = 5;
-         daysOfNonExponentialGrowthRequired = 4;
+         movingAverageWindow = 7;
+         daysOfNonExponentialGrowthRequired = 7;
          changesRequiringDataInitialization = function (dataChanged){
              let initializationRequired = false;
              switch(buildThePlot){
@@ -232,7 +236,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 buildThePlotWithRememberedData (identifier);
             }
         });
-        spinnerAverage.spinner( "value", 5 );
+        spinnerAverage.spinner( "value", 7 );
         const spinnerThreshold = $('input.spinner.daysOfNonExponentialGrowthRequired');
         spinnerThreshold.spinner({
             step: 1,
@@ -270,11 +274,11 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     const logVersusLinear= function (callingObject){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
-        const changeToLinear = $(callingObject).text () === "Change to linear scale";
+        const changeToLinear = $(callingObject).text () === "Linear scale";
         if (changeToLinear){
-            $(callingObject).text ("Change to log scale");
+            $(callingObject).text ("Log scale");
         } else {
-            $(callingObject).text ("Change to linear scale");
+            $(callingObject).text ("Linear scale");
         }
         setData(identifier,"useLinearNotLog", changeToLinear);
         buildThePlot(identifier,retrieveData(identifier,'changesRequiringDataInitialization') ("useLinearNotLog"));

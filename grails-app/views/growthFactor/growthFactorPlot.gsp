@@ -1,23 +1,11 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: ben
-  Date: 3/30/2020
-  Time: 2:27 PM
---%>
+
 <%@ page contentType="text/html;charset=UTF-8" %>
 <html>
 <head>
     <meta name="layout" content="core"/>
     <r:require modules="core,growthFactor"/>
     <r:layoutResources/>
-    <style>
-    text.y {
-        font-size: 12pt;
-    }
-    text.x {
-        font-size: 12pt;
-    }
-    </style>
+
 </head>
 <body>
 

@@ -14,11 +14,10 @@ text.countryInflectionLabel.titleLine{
 }
 div.sectionDescription{
     text-align: center;
-    font-family: sans-serif;
+    font-family: 'Lato';
     font-weight: bold;
-    font-size: 18pt;
-    text-decoration: underline;
-
+    font-size:  18pt;
+    color: black;
 }
 div.dataChoosingSection {
     font-family: sans-serif;
@@ -32,11 +31,23 @@ div.dataChoosingSection {
     border-radius: 10px; /* future proofing */
     -khtml-border-radius: 10px; /* for old Konqueror browsers */
 }
+div.displayAdjustmentSection {
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 3px;
+    margin: 5px;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px; /* future proofing */
+    -khtml-border-radius: 10px; /* for old Konqueror browsers */
+}
 div.everyGroupToDisplay {
     border: 1px solid black;
     margin:  5px;
     padding: 3px;
-    width: 300px;
+    /*width: 300px;*/
+    width: 95%;
     overflow-x: hidden;
     overflow-y: auto;
     position: absolute;
@@ -50,13 +61,14 @@ div.everyGroupToDisplay ul {
     list-style-type: none;
 }
 div.holdTheExpandableBlock{
-
+    min-height: 130px;
 }
 div.expander{
  }
 div.everyGroupToDisplayHolder {
     position: relative;
-    width:305px;
+    /*width:305px;*/
+    width:100%;
 }
 div.everyGroupToDisplayHolder.greater div.everyGroupToDisplay {
     height: 600px;
@@ -65,7 +77,8 @@ div.everyGroupToDisplayHolder.smaller div.everyGroupToDisplay {
     height: 100px;
 }
 div.everyGroupToDisplayHolder {
-    width:305px;
+    /*width:305px;*/
+    width:100%;
 }
 div.describeWhatWeAreExpanding{
     font-family: sans-serif;
@@ -173,8 +186,8 @@ div.dateChooserContainer {
 /*}*/
 button.logLinChg{
     display:inline-block;
-    padding:1em 1.8em;
-    margin:30px 0.3em 0.3em 0;
+    padding:3%;
+    margin:2%;
     border-radius:5px;
     box-sizing: border-box;
     text-decoration:none;
@@ -190,5 +203,17 @@ button.logLinChg{
 button.logLinChg:hover{
     background-color:#C0CFDA;
 }
-
-
+.aligned-row {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+}
+/*.col-container {*/
+/*    display: flex;*/
+/*    width: 100%;*/
+/*}*/
+/*.col {*/
+/*    flex: 1;*/
+/*    padding: 16px;*/
+/*}*/
