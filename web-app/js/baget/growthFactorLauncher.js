@@ -71,8 +71,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"Log scale"
                 },
                 {
-                    methodCallBack:"logVersusLinear",
-                    title:" Date dependence"
+                    methodCallBack:"collapseToCommonStart",
+                    title:" Date dependent"
                 }
             ],
             plotGoesHere: [{"id":"growthFactorPlotCountries"}],
@@ -134,6 +134,10 @@ mpgSoftware.growthFactorLauncher = (function () {
                 {
                     methodCallBack:"logVersusLinear",
                     title:"Log scale"
+                },
+                {
+                    methodCallBack:"collapseToCommonStart",
+                    title:" Date dependent"
                 }
             ],
             plotGoesHere: [{"id":"growthFactorPlotStates"}],
@@ -186,6 +190,7 @@ mpgSoftware.growthFactorLauncher = (function () {
          endDate = new Date ();
          movingAverageWindow = 7;
          daysOfNonExponentialGrowthRequired = 7;
+         collapseToCommonStart = true;
          changesRequiringDataInitialization = function (dataChanged){
              let initializationRequired = false;
              switch(buildThePlot){
@@ -282,6 +287,17 @@ mpgSoftware.growthFactorLauncher = (function () {
         }
         setData(identifier,"useLinearNotLog", changeToLinear);
         buildThePlot(identifier,retrieveData(identifier,'changesRequiringDataInitialization') ("useLinearNotLog"));
+    };
+    const collapseToCommonStart= function (callingObject){
+        const identifier = $(callingObject).closest("div.coreObject").attr('id');
+        const shallWeCollapseToCommonStart = $(callingObject).text () === "Shared start";
+        if (shallWeCollapseToCommonStart){
+            $(callingObject).text ("Date dependent");
+        } else {
+            $(callingObject).text ("Shared start");
+        }
+        setData(identifier,"collapseToCommonStart", shallWeCollapseToCommonStart);
+        buildThePlot(identifier,retrieveData(identifier,'changesRequiringDataInitialization') ("shallWeCollapseToCommonStart"));
     };
     const changeWhatIsDisplayed = function (callingObject,callingObjectId){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
@@ -485,6 +501,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             .idOfThePlaceWhereThePlotGoes (idOfThePlaceWhereThePlotGoes)
             .movingAverageWindow(retrieveData(idOfThePlaceToStoreData,'movingAverageWindow'))
             .daysOfNonExponentialGrowthRequired (retrieveData(idOfThePlaceToStoreData,'daysOfNonExponentialGrowthRequired'))
+            .collapseToCommonStart (retrieveData(idOfThePlaceToStoreData,'collapseToCommonStart'))
             .buildGrowthFactorPlot(allData,
                 preAnalysisFilter,
                 postAnalysisFilter
@@ -550,6 +567,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         changeWhatIsDisplayed:changeWhatIsDisplayed,
         changeGroupCheckbox:changeGroupCheckbox,
         logVersusLinear:logVersusLinear,
+        collapseToCommonStart:collapseToCommonStart,
         toggleDisplayOfSelectableElements:toggleDisplayOfSelectableElements,
         initializePageToHoldDisplay:initializePageToHoldDisplay
     }

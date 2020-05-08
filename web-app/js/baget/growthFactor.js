@@ -16,6 +16,7 @@ baget.growthFactor = (function () {
     let instance = {};
     let movingAverageWindow = 5;
     let daysOfNonExponentialGrowthRequired = 4;
+    let collapseToCommonStart = true;
 
 
     function halo(text) {
@@ -362,7 +363,13 @@ const calculateGrowthFactorByCountry = function (data){
         }
     };
 
-
+    const xValue = function (d){
+        if (collapseToCommonStart){
+            return +d.x;
+        }else {
+            return new Date(d.date);
+        }
+    }
 
 
 
@@ -384,9 +391,9 @@ const calculateGrowthFactorByCountry = function (data){
 
         const growthFactorByCountry = postAnalysisFilter(calculateGrowthFactorByCountry (data));
 
-        x = d3.scaleLinear()
-            .domain(d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.x)).nice()
-            .range([margin.left, width - margin.right]);
+
+
+
         let [yLower,yUpper] = d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.y);
         if (linearNotLog){
             y = d3.scaleLinear()
@@ -396,6 +403,19 @@ const calculateGrowthFactorByCountry = function (data){
             y = d3.scaleLog()
                 .domain([yLower,yUpper]).nice()
                 .range([height - margin.bottom, margin.top]);
+        }
+        let [xLower,xUpper] = [0, 0];
+        if(collapseToCommonStart){
+            [xLower,xUpper] = d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.x);
+            x = d3.scaleLinear([xLower,xUpper])
+                .domain([xLower,xUpper]).nice()
+                .range([margin.left, width - margin.right]);
+
+        }else {
+            [xLower,xUpper] = d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => new Date(d.date));
+            var x = d3.scaleTime()
+                .domain([xLower,xUpper])
+                .range([margin.left, width - margin.right]);
         }
         let dateExtentObject = [];
         if (data.length>0){
@@ -512,14 +532,14 @@ const calculateGrowthFactorByCountry = function (data){
             .attr("stroke-width", 1)
             .attr("d", function(d,k){
                 return d3.line()
-                    .x(function(d) { return (rememberLastValue [d.key])?(rememberLastValue [d.key].x):x(0); })
+                    .x(function(d) { return (rememberLastValue [d.key])?(rememberLastValue [d.key].x):x(xLower); })
                     .y(function(d) { return (rememberLastValue [d.key])?(rememberLastValue [d.key].y):y(yLower); })
                     (d.values.rawValues)
             })
             .transition().duration (transitionTime)
             .attr("d", function(d,k){
                 return d3.line()
-                    .x(function(d) { return x(+d.x); })
+                    .x(function(d) { return x(xValue (d)); })
                     .y(function(d) { return y(+d.y); })
                     (d.values.rawValues)
             });
@@ -532,14 +552,15 @@ const calculateGrowthFactorByCountry = function (data){
                 return d.key;
             })
             .attr("x", function(d,i){
-                return x(0);
+                return x(xLower);
             })
             .attr("y", function(d,i){
                 return y(yLower);
             })
             .transition().duration (transitionTime)
             .attr("x", function(d,i){
-                return x(_.last(d.values.rawValues,'x').x);
+                // return x(_.last(d.values.rawValues,'x').x);
+                return x(xValue (_.last(d.values.rawValues,'x')));
             })
             .attr("y", function(d,i){
                 return y(_.last(d.values.rawValues,'y').y);
@@ -551,7 +572,7 @@ const calculateGrowthFactorByCountry = function (data){
                 return d3.line()
                     .x(function(d, index) {
                         const lastValue = rememberLastValue [d.key];
-                        return (lastValue && (index >= lastValue.len))?x(rememberLastValue [d.key].x): x(+d.x);
+                        return (lastValue && (index >= lastValue.len))?x(xValue (rememberLastValue [d.key])): x(xValue (d));
                     })
                     .y(function(d, index) {
                         const lastValue = rememberLastValue [d.key];
@@ -562,7 +583,7 @@ const calculateGrowthFactorByCountry = function (data){
             .transition().duration (transitionTime)
             .attr("d", function(d,k){
                 return d3.line()
-                    .x(function(d) { return x(+d.x); })
+                    .x(function(d) { return x(xValue (d)); })
                     .y(function(d) { return y(+d.y); })
                     (d.values.rawValues)
             });
@@ -571,7 +592,7 @@ const calculateGrowthFactorByCountry = function (data){
         groupHolder.select ("text.countryLabel")
             .transition().duration (transitionTime)
             .attr("x", function(d,i){
-                return x(_.last(d.values.rawValues,'x').x);
+                return x(xValue (_.last(d.values.rawValues,'x')));
             })
             .attr("y", function(d,i){
                 return y(_.last(d.values.rawValues,'y').y);
@@ -591,13 +612,14 @@ const calculateGrowthFactorByCountry = function (data){
             .attr("fill", function(d){ return countryColor(d.key) })
             .attr("stroke", 'black')
             .attr("stroke-width", 1)
-            .attr("cx", d => x(0))
+            .attr("cx", d => x(xLower))
             .attr("cy", d => y(yLower))
             .transition().duration (transitionTime)
-            .attr("cx", d => x(d.values.inflection.x))
+            // .attr("cx", d => x(d.values.inflection.x))
+            .attr("cx", d => x(xValue (d.values.inflection)))
             .attr("cy", d => y(d.values.inflection.y));
         inflectionPoint.transition().duration (transitionTime)
-            .attr("cx", d => x(d.values.inflection.x))
+            .attr("cx", d => x(xValue (d.values.inflection)))
             .attr("cy", d => y(d.values.inflection.y));
         inflectionPoint.exit()
             .remove()
@@ -693,6 +715,12 @@ const calculateGrowthFactorByCountry = function (data){
         daysOfNonExponentialGrowthRequired = x;
         return instance;
     };
+    instance.collapseToCommonStart= function (x) {
+        if (!arguments.length) return collapseToCommonStart;
+        collapseToCommonStart = x;
+        return instance;
+    };
+
 
 
 
