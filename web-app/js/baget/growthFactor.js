@@ -62,14 +62,11 @@ baget.growthFactor = (function () {
         function moved(d, i) {
             d3.select(this).select ("path.dataLine").attr('stroke-width', '3');
             d3.select(this).select ("text.countryLabel").style('font-size', '8pt');
-            console.log ('moved');
         }
 
         function entered(d, i) {
             d3.select(this).select ("path.dataLine").attr('stroke-width', '3');
             d3.select(this).select ("text.countryLabel").style('font-size', '8pt');
-
-            console.log ('entered');
         }
 
         function left(d, i) {
@@ -77,14 +74,13 @@ baget.growthFactor = (function () {
             d3.select(this).select ("path.dataLine").attr('stroke-width', '1');
             d3.select(this).select ("text.countryLabel").style('font-size', '6pt');
 
-            console.log ('left');
         }
     }
 
 
 
 
-    const hover = function (svg, topLevelSvg) {
+    const hover = function (svg, topLevelSvg,xValue) {
 
         const shiftPopUpMessage = 20;
 
@@ -107,7 +103,7 @@ baget.growthFactor = (function () {
                 .attr("class", "countryInflectionLabelHolder")
                 .append("rect")
                 .attr("x", function(d,i){
-                    return x(chooseValueFunction (d).x)+shiftPopUpMessage-5;
+                    return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage-5;
                 })
                 .attr("y", function(d,i){
                     return y(chooseValueFunction (d).y)-shiftPopUpMessage-5;
@@ -118,7 +114,7 @@ baget.growthFactor = (function () {
             ;
             labelHolder
                 .attr("x", function(d,i){
-                    return x(chooseValueFunction (d).x)+shiftPopUpMessage-5;
+                    return x(xValue(chooseValueFunction (d)))+shiftPopUpMessage-5;
                 })
                 .attr("y", function(d,i){
                     return y(chooseValueFunction (d).y)-shiftPopUpMessage-5;
@@ -135,7 +131,7 @@ baget.growthFactor = (function () {
                 .attr("text-anchor", "last")
                 .attr("alignment-baseline", "hanging")
                 .attr("x", function(d,i){
-                    return x(chooseValueFunction (d).x)+shiftPopUpMessage;
+                    return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage;
                 })
                 .attr("y", function(d,i){
                     return y(chooseValueFunction (d).y)-shiftPopUpMessage;
@@ -147,14 +143,21 @@ baget.growthFactor = (function () {
                 .attr("class", "countryInflectionLabel")
                 .attr("alignment-baseline", "hanging")
                 .attr('dy', '1.2em')
-                .attr("x", d=>x(chooseValueFunction (d).x)+shiftPopUpMessage)
-                .text( d =>"in "+chooseValueFunction (d).countryName+' by day '+Math.round (chooseValueFunction (d).x))
+                .attr("x", d=>x(xValue (chooseValueFunction (d)))+shiftPopUpMessage)
+                .text( function(d){
+                    if (typeof xValue(chooseValueFunction (d))==="number"){
+                       return "in "+chooseValueFunction (d).countryName+' by day '+Math.round (xValue(chooseValueFunction (d)));
+                    } else {
+                        return "in "+chooseValueFunction (d).countryName+' on '+d3.timeFormat("%B %d, %Y")(xValue(chooseValueFunction (d)));
+                    }
+
+                })
                 .append('tspan')
                 .attr("class", "countryInflectionLabel")
                 .attr("alignment-baseline", "hanging")
                 .attr('dy', '1.2em')
                 .attr("x", function(d,i){
-                    return x(chooseValueFunction (d).x)+shiftPopUpMessage;
+                    return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage;
                 })
                 .text( function(d,i){return "("+chooseValueFunction (d).date+")"});
             if ("Inflection point detected"===title){
@@ -165,7 +168,7 @@ baget.growthFactor = (function () {
                     .attr("alignment-baseline", "hanging")
                     .attr('dy', '1.2em')
                     .attr("x", function(d,i){
-                        return x(chooseValueFunction (d).x)+shiftPopUpMessage;
+                        return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage;
                     });
             }
             popUpLabelHolder.exit()
@@ -369,7 +372,7 @@ const calculateGrowthFactorByCountry = function (data){
         }else {
             return new Date(d.date);
         }
-    }
+    };
 
 
 
@@ -413,7 +416,7 @@ const calculateGrowthFactorByCountry = function (data){
 
         }else {
             [xLower,xUpper] = d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => new Date(d.date));
-            var x = d3.scaleTime()
+            x = d3.scaleTime()
                 .domain([xLower,xUpper])
                 .range([margin.left, width - margin.right]);
         }
@@ -666,7 +669,7 @@ const calculateGrowthFactorByCountry = function (data){
 
 
 
-        svg.selectAll("circle.inflectionPoint").call(hover, svg);
+        svg.selectAll("circle.inflectionPoint").call(hover, svg, xValue);
         // svg.selectAll("circle.noinflection").call(hover, svg);
         svg.selectAll("g.gh").call (highlight, svg);
 
