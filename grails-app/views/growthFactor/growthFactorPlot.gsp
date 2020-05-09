@@ -40,7 +40,12 @@
 <script>
     $( window ).ready(function() {
 
-        mpgSoftware.growthFactorLauncher.initializePageToHoldDisplay ("#headerSection","div.tab-content");
+        mpgSoftware.growthFactorLauncher.initializePageToHoldDisplay ("#headerSection","div.tab-content", window);
+        jQuery.noConflict();
+        // $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+        //
+        //     alert(e.target.href);
+        // })
 
         // you might also consider https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv
         const months = [
@@ -58,7 +63,7 @@
             'Dec'
         ];
 
-        mpgSoftware.growthFactorLauncher.prepareDisplay("https://covidtracking.com/api/v1/states/daily.csv",
+        mpgSoftware.growthFactorLauncher.prepareToDisplay("https://covidtracking.com/api/v1/states/daily.csv",
             function(d) {
                 const dateString  = d["date"];
                 const currentDay = +dateString.substring (6, 8);
@@ -72,10 +77,9 @@
                     y:+d["death"]};
             },
                 "states",
-                "growthFactorPlotStates",
-            window);
+                "growthFactorPlotStates");
 
-        mpgSoftware.growthFactorLauncher.prepareDisplay("https://covid.ourworldindata.org/data/owid-covid-data.csv",
+        mpgSoftware.growthFactorLauncher.prepareToDisplay("https://covid.ourworldindata.org/data/owid-covid-data.csv",
             function(d) {
                 const dateString  = d["date"];
                 const currentDay = +dateString.substring (8, 10);
@@ -93,8 +97,26 @@
 
             },
             "country",
-            "growthFactorPlotCountries",
-            window);
+            "growthFactorPlotCountries");
+
+        mpgSoftware.growthFactorLauncher.prepareToDisplay("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv",
+            function(d) {
+                const dateString  = d["date"];
+                const currentDay = +dateString.substring (8, 10);
+                const currentMonth = +dateString.substring (5, 7);
+                const currentYear = +dateString.substring (0, 4);
+                const currentDate = new Date (currentYear,currentMonth,currentDay);
+
+
+                return {countryName: d["county"],
+                    code: d["county"],
+                    date: ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear(),
+                    y:+d["deaths"]};
+
+            },
+            "county",
+            "growthFactorPlotCounties");
+
 
 
     });

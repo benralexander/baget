@@ -143,7 +143,73 @@ mpgSoftware.growthFactorLauncher = (function () {
             plotGoesHere: [{"id":"growthFactorPlotStates"}],
             tabDescription: "COVID-19 by state",
             tabActive: ""
-        }]
+        }],
+        county: [{
+            id:"county",
+            initialClasses:"",
+            dataChoosers: [
+                {
+                    title:"Include data for individual counties",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"includeTopLevelGroups",
+                    checked: "checked"
+                }
+            ],
+            dataFilters: [1],
+            specificDeactivators: [
+                {
+                    title: "US counties"
+                }
+            ],
+            analysisSelection: [
+                {
+                    title:"Include counties that have NOT reached an inflection point",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"showGroupsWithoutInflectionPoints",
+                    checked: ""
+
+                },
+                {
+                    title:"Include counties that have reached an inflection point",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"showGroupsWithInflectionPoints",
+                    checked: "checked"
+
+                },
+                {
+                    title:"Include counties with insufficient data for analysis",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"showGroupsWithInsufficientData",
+                    checked: "checked"
+
+                }
+            ],
+            calculationAdjustment: [
+                {
+                    className:"movingAverageWindow",
+                    title:"Days in moving average window"
+                },
+                {
+                    className:"daysOfNonExponentialGrowthRequired",
+                    title:"Number of days of declining growth"
+                }
+            ],
+            displayAdjustment: [
+                {
+                    methodCallBack:"logVersusLinear",
+                    title:"Log scale"
+                },
+                {
+                    methodCallBack:"collapseToCommonStart",
+                    title:" Date dependent"
+                }
+            ],
+            plotGoesHere: [{"id":"growthFactorPlotCounties"}],
+            tabDescription: "COVID-19 by county",
+            tabActive: ""
+
+        }],
+
 
     };
     const tabHeaderOrganizer = {
@@ -151,7 +217,8 @@ mpgSoftware.growthFactorLauncher = (function () {
             {
             headers: [
                 displayOrganizer.country,
-                displayOrganizer.states
+                displayOrganizer.states,
+                displayOrganizer.county
             ]
             }
         ]
@@ -514,8 +581,8 @@ mpgSoftware.growthFactorLauncher = (function () {
     }
 
 
-    const prepareDisplay = function(dataUrl, dataAssignmentFunction,  idOfThePlaceToStoreData,idOfThePlaceWhereThePlotGoes, window){
-        setUpInteractiveDisplay ();
+    const prepareDisplay = function(dataUrl, dataAssignmentFunction,  idOfThePlaceToStoreData,idOfThePlaceWhereThePlotGoes){
+
         try{
             const countryData = d3.csv(dataUrl,dataAssignmentFunction
 
@@ -523,7 +590,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             countryData.then(
 
                 function (allData) {
-                    rememberData = _.filter (allData,datum => ((!(datum.countryName.search('excl.')>=0)))&&
+                    const rememberData = _.filter (allData,datum => ((!(datum.countryName.search('excl.')>=0)))&&
                         (!isNaN(datum.y)));
                     setData (idOfThePlaceToStoreData, "rawData",rememberData);
                     setData (idOfThePlaceToStoreData, "idOfThePlaceWhereThePlotGoes",idOfThePlaceWhereThePlotGoes);
@@ -532,7 +599,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                     const allData2 = retrieveData (idOfThePlaceToStoreData,"rawData");
 
                     buildThePlot(idOfThePlaceToStoreData, true);
-                    d3.select(window).on('resize', baget.growthFactor.resize);
+                    //d3.select(window).on('resize', baget.growthFactor.resize);
                     initializeDateSlider (idOfThePlaceToStoreData);
                     baget.growthFactor.resize();
 
@@ -545,12 +612,80 @@ mpgSoftware.growthFactorLauncher = (function () {
         } catch(e){
             console.log('f');
         }
+    };
+
+
+    const prepareToDisplay = function(dataUrl, dataAssignmentFunction,  idOfThePlaceToStoreData,idOfThePlaceWhereThePlotGoes, window){
+        setData (idOfThePlaceToStoreData, "dataRetrieved",false);
+
+        setData (idOfThePlaceToStoreData, "dataUrl",dataUrl);
+        setData (idOfThePlaceToStoreData, "dataAssignmentFunction",dataAssignmentFunction);
+        setData (idOfThePlaceToStoreData, "idOfThePlaceWhereThePlotGoes",idOfThePlaceWhereThePlotGoes);
+        if (displayOrganizer[idOfThePlaceToStoreData][0].tabActive=== "active"){
+            displayPlotRetrievingIfNecessary(idOfThePlaceToStoreData);
+        }
+
+    };
+
+    const displayPlotRetrievingIfNecessary = function(idOfThePlaceToStoreData){
+        const dataRetrieved = retrieveData  (idOfThePlaceToStoreData, "dataRetrieved");
+        if (!dataRetrieved){
+            const dataUrl = retrieveData (idOfThePlaceToStoreData, "dataUrl");
+            const dataAssignmentFunction = retrieveData (idOfThePlaceToStoreData, "dataAssignmentFunction");
+            const idOfThePlaceWhereThePlotGoes = retrieveData (idOfThePlaceToStoreData, "idOfThePlaceWhereThePlotGoes");
+            try{
+                const countryData = d3.csv(dataUrl,dataAssignmentFunction
+
+                );
+                countryData.then(
+
+                    function (allData) {
+                        setUpInteractiveDisplay ();
+                        const rememberData = _.filter (allData,datum => ((!(datum.countryName.search('excl.')>=0)))&&
+                            (!isNaN(datum.y)));
+                        setData (idOfThePlaceToStoreData, "rawData",rememberData);
+                        setData (idOfThePlaceToStoreData, "idOfThePlaceWhereThePlotGoes",idOfThePlaceWhereThePlotGoes);
+                        setData (idOfThePlaceToStoreData, "startDate",new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
+                        setData (idOfThePlaceToStoreData, "endDate",new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
+                        const allData2 = retrieveData (idOfThePlaceToStoreData,"rawData");
+
+                        buildThePlot(idOfThePlaceToStoreData, true);
+                        //d3.select(window).on('resize', baget.growthFactor.resize);
+                        initializeDateSlider (idOfThePlaceToStoreData);
+                        baget.growthFactor.resize();
+                        setData (idOfThePlaceToStoreData, "dataRetrieved",true);
+
+                    }
+
+                );
+
+
+
+            } catch(e){
+                console.log('f');
+            }
+        }
+
+
     }
 
-    const initializePageToHoldDisplay  = function (headerSection,sectionSelector){
+
+
+
+    const initializePageToHoldDisplay  = function (headerSection,sectionSelector, window){
+
         $(headerSection).prepend(Mustache.render( $('#headerSectionAboveControls')[0].innerHTML,tabHeaderOrganizer));
-        $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,displayOrganizer.country));
-        $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,displayOrganizer.states));
+        _.forEach(tabHeaderOrganizer.topSection[0].headers,function(element){
+            $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,element));
+        });
+        // $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,displayOrganizer.country));
+        // $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,displayOrganizer.states));
+        // $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,displayOrganizer.county));
+        d3.select(window).on('resize', baget.growthFactor.resize);
+        jQuery.noConflict();
+        $('ul.nav-tabs a').on('show.bs.tab', function(event){
+            displayPlotRetrievingIfNecessary ($(event.target).attr('href').substring(1));
+        });
 
     }
 
@@ -562,6 +697,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         // setEndDate:setEndDate,
         // setStartDate:setStartDate,
         buildThePlotWithRememberedData:buildThePlotWithRememberedData,
+        prepareToDisplay:prepareToDisplay,
         prepareDisplay:prepareDisplay,
         calculateWeightedMovingAverage:calculateWeightedMovingAverage,
         changeWhatIsDisplayed:changeWhatIsDisplayed,
