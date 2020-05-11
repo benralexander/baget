@@ -19,6 +19,12 @@ div.sectionDescription{
     font-size:  18pt;
     color: black;
 }
+div.sectionDescription.displayButtonAdjuster{
+    margin-bottom: 20px;
+}
+div.sectionDescription.displayButtonAdjuster.slim{
+    margin-bottom: 5px;
+}
 div.dataChoosingSection {
     font-family: sans-serif;
     font-weight: bold;
@@ -42,6 +48,7 @@ div.displayAdjustmentSection {
     border-radius: 10px; /* future proofing */
     -khtml-border-radius: 10px; /* for old Konqueror browsers */
 }
+
 div.everyGroupToDisplay {
     border: 1px solid black;
     margin:  5px;
@@ -96,6 +103,13 @@ span.expanderText {
 span.expanderText:hover {
 cursor: pointer;
 }
+button.expanderControlButtons {
+    font-family: Times;
+    font-weight: bold;
+    font-size: 8pt;
+    color: blue;
+    text-decoration: underline;
+}
 text.describeDateRangeOfData {
     font-family: 'Lato';
     font-weight: bold;
@@ -142,6 +156,19 @@ input.displayControl {
 div.checkboxHolder input {
     text-align: left;
 }
+div.item.checkboxHolder.active input{
+    disabled:false;
+}
+div.item.checkboxHolder.passive input{
+    disabled:true;
+}
+div.item.checkboxHolder.active label{
+    color: #000;
+}
+div.item.checkboxHolder.passive label{
+    color: #aaa;
+}
+
 input.movingAverageWindow {
     width: 15px;
 }
@@ -200,6 +227,11 @@ button.logLinChg{
     text-align:center;
     transition: all 0.2s;
 }
+button.logLinChg.slim{
+    padding:5px;
+    margin:3px;
+}
+
 button.logLinChg:hover{
     background-color:#C0CFDA;
 }
@@ -209,6 +241,7 @@ button.logLinChg:hover{
     display: -ms-flexbox;
     display: flex;
 }
+
 /*.col-container {*/
 /*    display: flex;*/
 /*    width: 100%;*/

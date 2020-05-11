@@ -52,8 +52,28 @@
                         {{#specificDeactivators}}
                             <div class="everyGroupToDisplayHolder smaller" >
                                 <div class="expander">
-                                    <span class = "pull-left describeWhatWeAreExpanding">{{title}}</span>
-                                    <span class = "pull-right expanderText" onclick="mpgSoftware.growthFactorLauncher.toggleDisplayOfSelectableElements(this)">Expand</span>
+                                    <div class="row">
+                                        <div class="col-xs-4">
+                                            <span class = "pull-left describeWhatWeAreExpanding">{{title}}</span>
+                                        </div>
+                                        <div class="col-xs-4">
+                                        <span>
+                                            <button class = "btn btn-primary btn-xs modifyAllCheckboxes" onclick="mpgSoftware.growthFactorLauncher.modifyAllCheckboxes(this)">ALL</button>
+                                            <button class = "btn btn-primary btn-xs modifyAllCheckboxes" onclick="mpgSoftware.growthFactorLauncher.modifyAllCheckboxes(this)">NONE</button>
+                                        </span>
+
+                                        </div>
+                                        <div class="col-xs-3">
+
+                                        </div>
+                                        <div class="col-xs-4">
+                                            <span class = "pull-right expanderText" onclick="mpgSoftware.growthFactorLauncher.toggleDisplayOfSelectableElements(this)">Expand</span>
+                                        </div>
+                                    </div>
+
+
+
+
                                 </div>
                                 <div class="everyGroupToDisplay"></div>
                             </div>
@@ -104,12 +124,12 @@
         </div>
         <div class="col-lg-2 col-sm-4 col">
             <div class="displayAdjustmentSection">
-                <div class="sectionDescription" style="margin-bottom:25px">
+                <div class="sectionDescription displayButtonAdjuster {{displayAdjustmentSlim}}">
                     Adjust display
                 </div>
                 {{#displayAdjustment}}
                 <div class="text-center" >
-                    <button type="button" class="btn btn-outline-primary logLinChg align-middle" onclick="mpgSoftware.growthFactorLauncher.{{methodCallBack}} (this)"
+                    <button type="button" class="btn btn-outline-primary logLinChg {{displayAdjustmentSlim}} align-middle" onclick="mpgSoftware.growthFactorLauncher.{{methodCallBack}} (this)"
                             style="">{{title}}</button>
                 </div>
                 {{/displayAdjustment}}

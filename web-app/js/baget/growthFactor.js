@@ -17,6 +17,9 @@ baget.growthFactor = (function () {
     let movingAverageWindow = 5;
     let daysOfNonExponentialGrowthRequired = 4;
     let collapseToCommonStart = true;
+    let xAxisLabel = "Days cents fifth death";
+    let yAxisLabel = "Total deaths";
+    let deathsIndependentOfPopulation = true;
 
 
     function halo(text) {
@@ -62,11 +65,19 @@ baget.growthFactor = (function () {
         function moved(d, i) {
             d3.select(this).select ("path.dataLine").attr('stroke-width', '3');
             d3.select(this).select ("text.countryLabel").style('font-size', '8pt');
+            // d3.select(this).select ("text.countryLabel").insert("rect","text")
+            //     .attr("width", function(d){return d.bbox.width})
+            //     .attr("height", function(d){return d.bbox.height})
+            //     .style("fill", "yellow");
         }
 
         function entered(d, i) {
             d3.select(this).select ("path.dataLine").attr('stroke-width', '3');
             d3.select(this).select ("text.countryLabel").style('font-size', '8pt');
+            // d3.select(this).select ("text.countryLabel").insert("rect","text")
+            //     .attr("width", function(d){return d.bbox.width})
+            //     .attr("height", function(d){return d.bbox.height})
+            //     .style("fill", "yellow");
         }
 
         function left(d, i) {
@@ -80,7 +91,7 @@ baget.growthFactor = (function () {
 
 
 
-    const hover = function (svg, topLevelSvg,xValue) {
+    const hover = function (svg, topLevelSvg,xValue,yValue) {
 
         const shiftPopUpMessage = 20;
 
@@ -106,7 +117,7 @@ baget.growthFactor = (function () {
                     return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage-5;
                 })
                 .attr("y", function(d,i){
-                    return y(chooseValueFunction (d).y)-shiftPopUpMessage-5;
+                    return y(yValue (chooseValueFunction (d)))-shiftPopUpMessage-5;
                 })
                 .attr("width", 190)
                 .attr("height", 43+(("Inflection point detected"===title)? 13:0) )
@@ -117,7 +128,7 @@ baget.growthFactor = (function () {
                     return x(xValue(chooseValueFunction (d)))+shiftPopUpMessage-5;
                 })
                 .attr("y", function(d,i){
-                    return y(chooseValueFunction (d).y)-shiftPopUpMessage-5;
+                    return y(yValue (chooseValueFunction (d)))-shiftPopUpMessage-5;
                 })
             labelHolder.exit()
                 .remove ();
@@ -134,7 +145,7 @@ baget.growthFactor = (function () {
                     return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage;
                 })
                 .attr("y", function(d,i){
-                    return y(chooseValueFunction (d).y)-shiftPopUpMessage;
+                    return y(yValue (chooseValueFunction (d)))-shiftPopUpMessage;
                 })
                 .text(function(d,i){
                     return title;
@@ -213,11 +224,12 @@ baget.growthFactor = (function () {
         }
     };
 
-    instance.resize = function () {
+    instance.resize = function (replot) {
         width = widthAdjuster()- margin.left - margin.right;
         height = heightAdjuster() - margin.top - margin.bottom;
-        mpgSoftware.growthFactorLauncher.buildThePlotWithRememberedData (idOfThePlaceToStoreData);
-
+        if (replot){
+            mpgSoftware.growthFactorLauncher.buildThePlotWithRememberedData (idOfThePlaceToStoreData, 3);
+        }
     };
 
 
@@ -286,6 +298,7 @@ const calculateGrowthFactorByCountry = function (data){
                     growthRateArray.push (
                         {   x:valuesWeCareAbout[index].x,
                             y:valuesWeCareAbout[index].y,
+                            total_deaths_per_million: valuesWeCareAbout[index].total_deaths_per_million,
                             growthFactor:differenceArray[index].difference/differenceArray[index-1].difference,
                             code: valuesWeCareAbout[index].code,
                             countryName: valuesWeCareAbout[index].countryName});
@@ -306,6 +319,7 @@ const calculateGrowthFactorByCountry = function (data){
                             index: index,
                             x: growthRateArray[index].x,
                             y: growthRateArray[index].y,
+                            total_deaths_per_million: growthRateArray[index].total_deaths_per_million,
                             code: valuesWeCareAbout[index].code,
                             countryName: valuesWeCareAbout[index].countryName,
                             date:_.find(valuesWeCareAbout,d=>d.x===growthRateArray[index].x).date
@@ -373,8 +387,13 @@ const calculateGrowthFactorByCountry = function (data){
             return new Date(d.date);
         }
     };
-
-
+    const yValue = function (d){
+        if (deathsIndependentOfPopulation){
+            return +d.y;
+        }else {
+            return +d.total_deaths_per_million;d.y;
+        }
+    };
 
     instance.buildGrowthFactorPlot = function (unfilteredData,
                                             preAnalysisFilter,
@@ -382,8 +401,8 @@ const calculateGrowthFactorByCountry = function (data){
         const transitionTime = 1500;
         if (!linearNotLog) { // log functions prefer values > 0
             _.forEach(unfilteredData, function (rec) {
-                if(rec.y<=0){
-                    rec["y"] = 1;
+                if(yValue (rec)<=0){
+                    rec["y"] = 0.01;
                 }
             })
         }
@@ -397,7 +416,7 @@ const calculateGrowthFactorByCountry = function (data){
 
 
 
-        let [yLower,yUpper] = d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.y);
+        let [yLower,yUpper] = d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => yValue (d));
         if (linearNotLog){
             y = d3.scaleLinear()
                 .domain([yLower,yUpper]).nice()
@@ -443,7 +462,7 @@ const calculateGrowthFactorByCountry = function (data){
 
         yAxis = g => g
             .attr("transform", `translate(${margin.left},0)`)
-            .call(d3.axisLeft(y).ticks(null, ".2f"))
+            .call(d3.axisLeft(y).ticks(null, ".0f"))
             .call(g => g.select(".domain").remove())
             .call(g => g.selectAll(".tick line").clone()
                 .attr("x2", width)
@@ -465,7 +484,7 @@ const calculateGrowthFactorByCountry = function (data){
                 .attr("y2", -height+margin.top)
                 .attr("stroke-opacity", 0.1));
         yAxisRevise = g => g
-            .call(d3.axisLeft(y).ticks(null, ".2f"))
+            .call(d3.axisLeft(y).ticks(null, ".0f"))
             .call(g => g.selectAll(".tick line")
                 .attr("x2", width)
                 .attr("stroke-opacity", 0.1));
@@ -543,7 +562,7 @@ const calculateGrowthFactorByCountry = function (data){
             .attr("d", function(d,k){
                 return d3.line()
                     .x(function(d) { return x(xValue (d)); })
-                    .y(function(d) { return y(+d.y); })
+                    .y(function(d) { return y(yValue(d)); })
                     (d.values.rawValues)
             });
         // add the text
@@ -562,12 +581,12 @@ const calculateGrowthFactorByCountry = function (data){
             })
             .transition().duration (transitionTime)
             .attr("x", function(d,i){
-                // return x(_.last(d.values.rawValues,'x').x);
                 return x(xValue (_.last(d.values.rawValues,'x')));
             })
             .attr("y", function(d,i){
-                return y(_.last(d.values.rawValues,'y').y);
+                return y(yValue(_.last(d.values.rawValues,'y')));
             });
+
 // update the line
         groupHolder.select ("path.dataLine")
             .transition().duration (transitionTime)
@@ -579,7 +598,7 @@ const calculateGrowthFactorByCountry = function (data){
                     })
                     .y(function(d, index) {
                         const lastValue = rememberLastValue [d.key];
-                        return (lastValue && (index >= lastValue.len))?y(rememberLastValue [d.key].y):y(+d.y);
+                        return (lastValue && (index >= lastValue.len))?y(yValue (rememberLastValue [d.key])):y(yValue (d));
                     })
                     (d.values.rawValues)
             })
@@ -587,7 +606,7 @@ const calculateGrowthFactorByCountry = function (data){
             .attr("d", function(d,k){
                 return d3.line()
                     .x(function(d) { return x(xValue (d)); })
-                    .y(function(d) { return y(+d.y); })
+                    .y(function(d) { return y(yValue (d)); })
                     (d.values.rawValues)
             });
 
@@ -598,7 +617,7 @@ const calculateGrowthFactorByCountry = function (data){
                 return x(xValue (_.last(d.values.rawValues,'x')));
             })
             .attr("y", function(d,i){
-                return y(_.last(d.values.rawValues,'y').y);
+                return y(yValue (_.last(d.values.rawValues,'y')));
             });
 
         groupHolder.exit()
@@ -620,10 +639,10 @@ const calculateGrowthFactorByCountry = function (data){
             .transition().duration (transitionTime)
             // .attr("cx", d => x(d.values.inflection.x))
             .attr("cx", d => x(xValue (d.values.inflection)))
-            .attr("cy", d => y(d.values.inflection.y));
+            .attr("cy", d => y(yValue(d.values.inflection)));
         inflectionPoint.transition().duration (transitionTime)
             .attr("cx", d => x(xValue (d.values.inflection)))
-            .attr("cy", d => y(d.values.inflection.y));
+            .attr("cy", d => y(yValue (d.values.inflection)));
         inflectionPoint.exit()
             .remove()
         ;
@@ -649,16 +668,30 @@ const calculateGrowthFactorByCountry = function (data){
         //     .remove();
 
         // label the axes
-        svg.append("text")
-            .attr("class", "axisLabel")
+        const xAxisLabelElement = svg.selectAll("text.axisLabel.xAxis")
+            .data([xAxisLabel]);
+        xAxisLabelElement.enter()
+            .append("text")
+            .attr("class", "axisLabel xAxis")
             .attr("text-anchor", "middle")
             .attr("x", function(d,i){
                 return (width-margin.right-margin.left)/2;
             })
             .attr("y", height-2 )
-            .text('Days since 5th death');
-        svg.append("text")
-            .attr("class", "axisLabel")
+            .text(d=>d);
+        xAxisLabelElement.transition().duration (transitionTime/2)
+            .attr("opacity", 0.1)
+            .transition().duration (transitionTime/2)
+            .attr("opacity", 1)
+            .text(d=>d);
+        xAxisLabelElement.exit()
+            .remove()
+        ;
+        const yAxisLabelElement = svg.selectAll("text.axisLabel.yAxis")
+            .data([yAxisLabel]);
+        yAxisLabelElement.enter()
+        .append("text")
+            .attr("class", "axisLabel yAxis")
             .attr("text-anchor", "middle")
             .attr("x", 10 )
             .attr("y", ((height-margin.top-margin.bottom)/2)+50 )
@@ -666,10 +699,17 @@ const calculateGrowthFactorByCountry = function (data){
                 return "rotate(-90,10,"+(((height-margin.top-margin.bottom)/2)+50) +")"
             })
             .text('Total deaths');
+        yAxisLabelElement.transition().duration (transitionTime/2)
+            .attr("opacity", 0.1)
+            .transition().duration (transitionTime/2)
+            .attr("opacity", 1)
+            .text(d=>d);
+        yAxisLabelElement.exit()
+            .remove()
+        ;
 
 
-
-        svg.selectAll("circle.inflectionPoint").call(hover, svg, xValue);
+        svg.selectAll("circle.inflectionPoint").call(hover, svg, xValue,yValue);
         // svg.selectAll("circle.noinflection").call(hover, svg);
         svg.selectAll("g.gh").call (highlight, svg);
 
@@ -684,6 +724,11 @@ const calculateGrowthFactorByCountry = function (data){
     instance.linearNotLog= function (x) {
         if (!arguments.length) return linearNotLog;
         linearNotLog = x;
+        // if (linearNotLog){
+        //     yAxisLabel = "Total deaths";
+        // }else{
+        //     yAxisLabel =  "Total deaths (log scale)";
+        // }
         return instance;
     };
 
@@ -721,8 +766,24 @@ const calculateGrowthFactorByCountry = function (data){
     instance.collapseToCommonStart= function (x) {
         if (!arguments.length) return collapseToCommonStart;
         collapseToCommonStart = x;
+        if (collapseToCommonStart){
+            xAxisLabel = "Days since fifth death";
+        } else {
+            xAxisLabel = "Recorded date";
+        }
         return instance;
     };
+    instance.deathsIndependentOfPopulation= function (x) {
+        if (!arguments.length) return deathsIndependentOfPopulation;
+        deathsIndependentOfPopulation = x;
+        if (deathsIndependentOfPopulation){
+            yAxisLabel = "Total deaths";
+        }else{
+            yAxisLabel =  "Deaths per million";
+        }
+        return instance;
+    };
+
 
 
 

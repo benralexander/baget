@@ -89,7 +89,9 @@
 
 
                 return {countryName: d["location"],
-                    //code: d["iso_code"],
+                    total_cases: d["total_cases"],
+                    total_deaths_per_million: d["total_deaths_per_million"],
+                    total_tests_per_thousand: d["total_tests_per_thousand"],
                     code: d["location"],
                     date: ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear(),
                     // y:+d["Total confirmed deaths (deaths)"],
