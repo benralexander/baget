@@ -25,6 +25,15 @@ div.sectionDescription.displayButtonAdjuster{
 div.sectionDescription.displayButtonAdjuster.slim{
     margin-bottom: 5px;
 }
+div.subSectionDescription{
+    text-align: left;
+    font-family: 'Lato';
+    font-weight: bold;
+    font-size:  12pt;
+    color: black;
+    margin-bottom: 8px;
+}
+
 div.dataChoosingSection {
     font-family: sans-serif;
     font-weight: bold;
@@ -153,6 +162,9 @@ input.displayControl {
     align: left;
     margin: 0;
 }
+label.displayControl {
+    font-weight: normal;
+}
 div.checkboxHolder input {
     text-align: left;
 }
@@ -180,8 +192,8 @@ div.dataChoosingSection{
 }
 input.amount {
     border: 0;
-    color: #0000ee;
-    font-weight: bold;
+    /*color: #0000ee;*/
+    font-weight: normal;
     width: 100%;
     background: #eee;
 }
@@ -220,7 +232,7 @@ button.logLinChg{
     text-decoration:none;
     font-family:sans-serif;
     font-size:16px;
-    font-weight:bold;
+    font-weight:normal;
     color:#000;
     background-color:#E5E9EB;
     border:1px outset blue;

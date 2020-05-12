@@ -20,70 +20,89 @@
 <div class="tab-pane fade coreObject {{initialClasses}}" id="{{id}}" >
     <div class="row">
         <div class="col-lg-8 col-lg-offset-2 col-sm-12">
-            <div class="dataChoosingSection">
-                <div class="sectionDescription">
-                    Choose data for analysis
-                </div>
-                <div class="row">
-                    <div class="col-sm-4 clickOnSectionsWeWant">
-                        <div class='dateChooserContainer'>
-                            {{#dataChoosers}}
-                                <div>
-                                    <input type="checkbox" class="custom-control-input displayControl"
-                                           {{checked}} onclick="mpgSoftware.growthFactorLauncher.{{methodCallBack}} (this,'{{identifier}}')">
-                                    <label class="custom-control-label displayControl">{{title}}</label>
+            <div class="row">
+                <div class="col-sm-8">
+                    <div class="dataChoosingSection">
+                        <div class="sectionDescription" style="margin-bottom: 5px">
+                            Choose data for analysis
+                        </div>
+                        <div class="row">
+%{--                            <div class="">--}%
+                                <div class="col-sm-6 clickOnSectionsWeWant">
+
+                                    <div class='dateChooserContainer'>
+                                        <div class="subSectionDescription">
+                                            {{dataChoosersTitle}}
+                                        </div>
+                                        {{#dataChoosers}}
+                                        <div>
+                                            <input type="checkbox" class="custom-control-input displayControl"
+                                                   {{checked}} onclick="mpgSoftware.growthFactorLauncher.{{methodCallBack}} (this,'{{identifier}}')">
+                                            <label class="custom-control-label displayControl">{{title}}</label>
+                                        </div>
+                                        {{/dataChoosers}}
+                                    </div>
                                 </div>
-                            {{/dataChoosers}}
+                                <div class="col-sm-6 clickOnSectionsWeWant">
+                                    {{#dataFilters}}
+                                    <div class='text-center dateSliderContainer'>
+
+                                        <label >Date range:</label>
+                                        <input type="text" class="amount" style="margin-top: 10px" width="150"/>
+                                        <div class="dateSlider" style="margin-top: 10px"></div>
+
+
+                                    </div>
+                                    {{/dataFilters}}
+                                </div>
+
+%{--                            </div>--}%
+
                         </div>
                     </div>
-                    <div class="col-sm-4 clickOnSectionsWeWant">
-                        {{#dataFilters}}
-                            <div class='text-center dateSliderContainer'>
-
-                                <label >Date range:</label>
-                                <input type="text" class="amount" style="margin-top: 10px" width="150"/>
-                                <div class="dateSlider" style="margin-top: 10px"></div>
-
-
-                            </div>
-                        {{/dataFilters}}
+                </div>
+                <div class="col-sm-4">
+                 <div class="dataChoosingSection">
+                     <div class="sectionDescription" style="margin-bottom: 10px">
+                       Refine data selection
                     </div>
-                    <div class="col-sm-4 displayTheSectionsWeWant holdTheExpandableBlock" >
+                    <div class="displayTheSectionsWeWant holdTheExpandableBlock" >
                         {{#specificDeactivators}}
-                            <div class="everyGroupToDisplayHolder smaller" >
-                                <div class="expander">
-                                    <div class="row">
-                                        <div class="col-xs-4">
-                                            <span class = "pull-left describeWhatWeAreExpanding">{{title}}</span>
-                                        </div>
-                                        <div class="col-xs-4">
+                        <div class="everyGroupToDisplayHolder smaller" >
+                            <div class="expander">
+                                <div class="row">
+                                    <div class="col-xs-4">
+                                        <span class = "pull-left describeWhatWeAreExpanding">{{title}}</span>
+                                    </div>
+                                    <div class="col-xs-5">
                                         <span>
                                             <button class = "btn btn-primary btn-xs modifyAllCheckboxes" onclick="mpgSoftware.growthFactorLauncher.modifyAllCheckboxes(this)">ALL</button>
                                             <button class = "btn btn-primary btn-xs modifyAllCheckboxes" onclick="mpgSoftware.growthFactorLauncher.modifyAllCheckboxes(this)">NONE</button>
                                         </span>
 
-                                        </div>
-                                        <div class="col-xs-3">
-
-                                        </div>
-                                        <div class="col-xs-4">
-                                            <span class = "pull-right expanderText" onclick="mpgSoftware.growthFactorLauncher.toggleDisplayOfSelectableElements(this)">Expand</span>
-                                        </div>
                                     </div>
+%{--                                    <div class="col-xs-3">--}%
 
-
-
-
+%{--                                    </div>--}%
+                                    <div class="col-xs-3">
+                                        <span class = "pull-right expanderText" onclick="mpgSoftware.growthFactorLauncher.toggleDisplayOfSelectableElements(this)">Expand</span>
+                                    </div>
                                 </div>
-                                <div class="everyGroupToDisplay"></div>
+
+
+
+
                             </div>
+                            <div class="everyGroupToDisplay"></div>
+                        </div>
                         {{/specificDeactivators}}
 
                     </div>
-
+                </div>
                 </div>
             </div>
         </div>
+
         <div class="col-lg-2"></div>
     </div>
     <div class="row col-container">
@@ -91,16 +110,19 @@
         <div class="col-lg-6 col-lg-offset-2 col-sm-8 col">
             <div class="dataChoosingSection">
                 <div class="sectionDescription">
-                    Adjust analyses
+                    Adjust analysis
                 </div>
                 <div class="row">
                     <div class="col-sm-7 clickOnSectionsWeWant">
                         <div class='dateChooserContainer' >
+                            <div class="subSectionDescription">
+                                {{analysisSelectionTitle}}
+                            </div>
                             {{#analysisSelection}}
                                 <div>
                                     <input type="checkbox" class="custom-control-input" {{checked}}
                                            onclick="mpgSoftware.growthFactorLauncher.{{methodCallBack}} (this,'{{identifier}}')">
-                                    <label class="custom-control-label">{{title}}</label>
+                                    <label class="custom-control-label displayControl">{{title}}</label>
                                 </div>
                             {{/analysisSelection}}
                         </div>
@@ -108,10 +130,13 @@
                     </div>
                     <div class="col-sm-5 clickOnSectionsWeWant">
                         <div class='dateChooserContainer' >
+                             <div class="subSectionDescription">
+                                {{calculationAdjustmentTitle}}
+                            </div>
                             {{#calculationAdjustment}}
                                 <div>
                                     <input type="text" class="spinner {{className}}"/>
-                                    <label class="custom-control-label">{{title}}</label>
+                                    <label class="custom-control-label displayControl">{{title}}</label>
                                 </div>
                             {{/calculationAdjustment}}
                         </div>
@@ -146,7 +171,7 @@
     </div>
 
 </div>
-
-</div>
 {{/.}}
 </script>
+{{/.}}
+</div>

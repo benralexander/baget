@@ -12,15 +12,16 @@ mpgSoftware.growthFactorLauncher = (function () {
         country: [{
             id:"country",
             initialClasses:"active in",
+            dataChoosersTitle: "Include data for:",
             dataChoosers: [
                 {
-                    title:"Include data for individual countries",
+                    title:"individual countries",
                     methodCallBack:"changeWhatIsDisplayed",
                     identifier:"includeTopLevelGroups",
                     checked: "checked"
                 },
                 {
-                    title:"Include data for the world",
+                    title:"the world",
                     methodCallBack:"changeWhatIsDisplayed",
                     identifier:"includeSummaryGroups",
                     checked: ""
@@ -32,37 +33,39 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title: "Countries"
                 }
             ],
+            analysisSelectionTitle:"Include countries that:",
             analysisSelection: [
                 {
-                    title:"Include countries that have NOT reached an inflection point",
+                    title:"have NOT reached an inflection point",
                     methodCallBack:"changeFormOfAnalysis",
                     identifier:"showGroupsWithoutInflectionPoints",
                     checked: ""
 
                 },
                 {
-                    title:"Include countries that have reached an inflection point",
+                    title:"have reached an inflection point",
                     methodCallBack:"changeFormOfAnalysis",
                     identifier:"showGroupsWithInflectionPoints",
                     checked: "checked"
 
                 },
                 {
-                    title:"Include countries with insufficient data for analysis",
+                    title:"have insufficient data for analysis",
                     methodCallBack:"changeFormOfAnalysis",
                     identifier:"showGroupsWithInsufficientData",
                     checked: "checked"
 
                 }
             ],
+            calculationAdjustmentTitle: "For inflection, # of days:",
             calculationAdjustment: [
                 {
                     className:"movingAverageWindow",
-                    title:"Days in moving average window"
+                    title:"in moving average"
                 },
                 {
                     className:"daysOfNonExponentialGrowthRequired",
-                    title:"Number of days of declining growth"
+                    title:"of declining growth"
                 }
             ],
             displayAdjustment: [
@@ -88,9 +91,10 @@ mpgSoftware.growthFactorLauncher = (function () {
         states: [{
             id:"states",
             initialClasses:"",
+            dataChoosersTitle: "Include data for:",
             dataChoosers: [
                 {
-                    title:"Include data for individual states",
+                    title:"individual states",
                     methodCallBack:"changeWhatIsDisplayed",
                     identifier:"includeTopLevelGroups",
                     checked: "checked"
@@ -102,37 +106,39 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title: "States"
                 }
             ],
+            analysisSelectionTitle:"Include states that:",
             analysisSelection: [
                 {
-                    title:"Include states that have NOT reached an inflection point",
+                    title:"have NOT reached an inflection point",
                     methodCallBack:"changeFormOfAnalysis",
                     identifier:"showGroupsWithoutInflectionPoints",
                     checked: ""
 
                 },
                 {
-                    title:"Include states that have reached an inflection point",
+                    title:"have reached an inflection point",
                     methodCallBack:"changeFormOfAnalysis",
                     identifier:"showGroupsWithInflectionPoints",
                     checked: "checked"
 
                 },
                 {
-                    title:"Include states with insufficient data for analysis",
+                    title:"with insufficient data for analysis",
                     methodCallBack:"changeFormOfAnalysis",
                     identifier:"showGroupsWithInsufficientData",
                     checked: "checked"
 
                 }
             ],
+            calculationAdjustmentTitle: "For inflection, # of days:",
             calculationAdjustment: [
                 {
                     className:"movingAverageWindow",
-                    title:"Days in moving average window"
+                    title:"in moving average"
                 },
                 {
                     className:"daysOfNonExponentialGrowthRequired",
-                    title:"Number of days of declining growth"
+                    title:"of declining growth"
                 }
             ],
             displayAdjustment: [
@@ -152,9 +158,10 @@ mpgSoftware.growthFactorLauncher = (function () {
         county: [{
             id:"county",
             initialClasses:"",
+            dataChoosersTitle: "Include data for:",
             dataChoosers: [
                 {
-                    title:"Include data for individual counties",
+                    title:"individual counties",
                     methodCallBack:"changeWhatIsDisplayed",
                     identifier:"includeTopLevelGroups",
                     checked: "checked"
@@ -166,37 +173,39 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title: "US counties"
                 }
             ],
+            analysisSelectionTitle:"Include counties that:",
             analysisSelection: [
                 {
-                    title:"Include counties that have NOT reached an inflection point",
+                    title:"have NOT reached an inflection point",
                     methodCallBack:"changeFormOfAnalysis",
                     identifier:"showGroupsWithoutInflectionPoints",
                     checked: ""
 
                 },
                 {
-                    title:"Include counties that have reached an inflection point",
+                    title:"have reached an inflection point",
                     methodCallBack:"changeFormOfAnalysis",
                     identifier:"showGroupsWithInflectionPoints",
                     checked: "checked"
 
                 },
                 {
-                    title:"Include counties with insufficient data for analysis",
+                    title:"with insufficient data for analysis",
                     methodCallBack:"changeFormOfAnalysis",
                     identifier:"showGroupsWithInsufficientData",
                     checked: "checked"
 
                 }
             ],
+            calculationAdjustmentTitle: "For inflection, # of days:",
             calculationAdjustment: [
                 {
                     className:"movingAverageWindow",
-                    title:"Days in moving average window"
+                    title:"in moving average"
                 },
                 {
                     className:"daysOfNonExponentialGrowthRequired",
-                    title:"Number of days of declining growth"
+                    title:"of declining growth"
                 }
             ],
             displayAdjustment: [

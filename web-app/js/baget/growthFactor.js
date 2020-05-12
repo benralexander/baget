@@ -391,7 +391,7 @@ const calculateGrowthFactorByCountry = function (data){
         if (deathsIndependentOfPopulation){
             return +d.y;
         }else {
-            return +d.total_deaths_per_million;d.y;
+            return +d.total_deaths_per_million;
         }
     };
 
@@ -401,8 +401,12 @@ const calculateGrowthFactorByCountry = function (data){
         const transitionTime = 1500;
         if (!linearNotLog) { // log functions prefer values > 0
             _.forEach(unfilteredData, function (rec) {
-                if(yValue (rec)<=0){
-                    rec["y"] = 0.01;
+                if(yValue (rec)<0.1){
+                    if (deathsIndependentOfPopulation){
+                        rec["y"] = 1;
+                    } else {
+                        rec["total_deaths_per_million"]=0.1;
+                    }
                 }
             })
         }
