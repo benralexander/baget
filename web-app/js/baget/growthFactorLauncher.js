@@ -193,7 +193,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"with insufficient data for analysis",
                     methodCallBack:"changeFormOfAnalysis",
                     identifier:"showGroupsWithInsufficientData",
-                    checked: "checked"
+                    checked: ""
 
                 }
             ],
@@ -469,6 +469,45 @@ mpgSoftware.growthFactorLauncher = (function () {
     return developingAverage /vectorLength;
     };
 
+    const dateConverterUtil = (function (){
+
+
+        const months = [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec'
+        ];
+
+        const yyyymmddNoDash = function(dateString) {
+            const currentDay = +dateString.substring (6, 8);
+            const currentMonth = +dateString.substring (4, 6);
+            const currentYear = +dateString.substring (0, 4);
+            const currentDate = new Date (currentYear,currentMonth,currentDay);
+            return ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear();
+
+        };
+        const yyyymmddDash = function(dateString) {
+            const currentDay = +dateString.substring (8, 10);
+            const currentMonth = +dateString.substring (5, 7);
+            const currentYear = +dateString.substring (0, 4);
+            const currentDate = new Date (currentYear,currentMonth,currentDay);
+            return ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear();
+        };
+        return {
+            yyyymmddNoDash:yyyymmddNoDash,
+            yyyymmddDash:yyyymmddDash
+        }
+    }());
+
 
     const filterModule = (function () {
         // private routine that builds up the filters as a callable function
@@ -642,7 +681,7 @@ mpgSoftware.growthFactorLauncher = (function () {
     const buildThePlot= function (idOfThePlaceToStoreData, dataFilteringChoice) {
 
         const allData = retrieveData (idOfThePlaceToStoreData,"rawData");
-        const idOfThePlaceWhereThePlotGoes = retrieveData(idOfThePlaceToStoreData,'idOfThePlaceWhereThePlotGoes');
+        const idOfThePlaceWhereThePlotGoes  = _.find (tabHeaderOrganizer.topSection[0].headers,o =>o[0].id===idOfThePlaceToStoreData )[0].plotGoesHere[0].id;
         let postAnalysisFilter = filterModule.filterBasedOnAnalysis (idOfThePlaceToStoreData);
         let preAnalysisFilter;
         switch (dataFilteringChoice){
@@ -664,13 +703,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 alert('data filtering ='+dataFilteringChoice);
                 break;
         }
-        // if (filterBasedOnAnalysis){//pre-filter, and then update the list of groups
-        //     preAnalysisFilter = fillTheMainEntitySelectionBox(idOfThePlaceToStoreData);
-        // }else if (chooseOnlyFromCheckboxes) {
-        //     preAnalysisFilter = filterModule.filterOnlyOnListOfGroups(idOfThePlaceToStoreData);
-        // }else {
-        //     preAnalysisFilter = adjustTheMainSelectionBox(idOfThePlaceToStoreData);
-        // }
+
 
 
         var growthFactorPlot = baget.growthFactor
@@ -697,12 +730,10 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
 
-    const prepareToDisplay = function(dataUrl, dataAssignmentFunction,  idOfThePlaceToStoreData,idOfThePlaceWhereThePlotGoes, window){
+    const prepareToDisplay = function(dataUrl, dataAssignmentFunction,  idOfThePlaceToStoreData){
         setData (idOfThePlaceToStoreData, "dataRetrieved",false);
-
         setData (idOfThePlaceToStoreData, "dataUrl",dataUrl);
         setData (idOfThePlaceToStoreData, "dataAssignmentFunction",dataAssignmentFunction);
-        setData (idOfThePlaceToStoreData, "idOfThePlaceWhereThePlotGoes",idOfThePlaceWhereThePlotGoes);
         if (displayOrganizer[idOfThePlaceToStoreData][0].tabActive=== "active"){
             displayPlotRetrievingIfNecessary(idOfThePlaceToStoreData);
         }
@@ -714,7 +745,6 @@ mpgSoftware.growthFactorLauncher = (function () {
         if (!dataRetrieved){
             const dataUrl = retrieveData (idOfThePlaceToStoreData, "dataUrl");
             const dataAssignmentFunction = retrieveData (idOfThePlaceToStoreData, "dataAssignmentFunction");
-            const idOfThePlaceWhereThePlotGoes = retrieveData (idOfThePlaceToStoreData, "idOfThePlaceWhereThePlotGoes");
             try{
                 const countryData = d3.csv(dataUrl,dataAssignmentFunction
 
@@ -726,13 +756,11 @@ mpgSoftware.growthFactorLauncher = (function () {
                         const rememberData = _.filter (allData,datum => ((!(datum.countryName.search('excl.')>=0)))&&
                             (!isNaN(datum.y)));
                         setData (idOfThePlaceToStoreData, "rawData",rememberData);
-                        setData (idOfThePlaceToStoreData, "idOfThePlaceWhereThePlotGoes",idOfThePlaceWhereThePlotGoes);
                         setData (idOfThePlaceToStoreData, "startDate",new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
                         setData (idOfThePlaceToStoreData, "endDate",new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
                         const allData2 = retrieveData (idOfThePlaceToStoreData,"rawData");
                         baget.growthFactor.resize(false);
                         buildThePlot(idOfThePlaceToStoreData, filterBasedOnDataSelectionAndDate);
-                        //d3.select(window).on('resize', baget.growthFactor.resize);
                         initializeDateSlider (idOfThePlaceToStoreData);
                         baget.growthFactor.resize();
                         setData (idOfThePlaceToStoreData, "dataRetrieved",true);
@@ -773,6 +801,7 @@ mpgSoftware.growthFactorLauncher = (function () {
     return {
         setWidth:setWidtth,
         setHeight:setHeight,
+        dateConverterUtil:dateConverterUtil,
         buildThePlotWithRememberedData:buildThePlotWithRememberedData,
         prepareToDisplay:prepareToDisplay,
         calculateWeightedMovingAverage:calculateWeightedMovingAverage,

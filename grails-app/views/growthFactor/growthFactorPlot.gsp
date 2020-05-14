@@ -42,82 +42,38 @@
 
         mpgSoftware.growthFactorLauncher.initializePageToHoldDisplay ("#headerSection","div.tab-content", window);
         jQuery.noConflict();
-        // $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
-        //
-        //     alert(e.target.href);
-        // })
-
-        // you might also consider https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv
-        const months = [
-            'Jan',
-            'Feb',
-            'Mar',
-            'Apr',
-            'May',
-            'Jun',
-            'Jul',
-            'Aug',
-            'Sep',
-            'Oct',
-            'Nov',
-            'Dec'
-        ];
-
+// state population from https://worldpopulationreview.com/states/
         mpgSoftware.growthFactorLauncher.prepareToDisplay("https://covidtracking.com/api/v1/states/daily.csv",
             function(d) {
-                const dateString  = d["date"];
-                const currentDay = +dateString.substring (6, 8);
-                const currentMonth = +dateString.substring (4, 6);
-                const currentYear = +dateString.substring (0, 4);
-                const currentDate = new Date (currentYear,currentMonth,currentDay);
-
                 return {countryName: d["state"],
                     code: d["state"],
-                    date: ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear(),
+                    date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddNoDash (d["date"]),
                     y:+d["death"]};
             },
-                "states",
-                "growthFactorPlotStates");
+                "states");
 
         mpgSoftware.growthFactorLauncher.prepareToDisplay("https://covid.ourworldindata.org/data/owid-covid-data.csv",
             function(d) {
-                const dateString  = d["date"];
-                const currentDay = +dateString.substring (8, 10);
-                const currentMonth = +dateString.substring (5, 7);
-                const currentYear = +dateString.substring (0, 4);
-                const currentDate = new Date (currentYear,currentMonth,currentDay);
-
-
                 return {countryName: d["location"],
                     total_cases: d["total_cases"],
                     total_deaths_per_million: d["total_deaths_per_million"],
                     total_tests_per_thousand: d["total_tests_per_thousand"],
                     code: d["location"],
-                    date: ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear(),
-                    // y:+d["Total confirmed deaths (deaths)"],
+                    date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash (d["date"]),
                     y:+d["total_deaths"]};
 
             },
-            "country",
-            "growthFactorPlotCountries");
+            "country");
 
         mpgSoftware.growthFactorLauncher.prepareToDisplay("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv",
             function(d) {
-                const dateString  = d["date"];
-                const currentDay = +dateString.substring (8, 10);
-                const currentMonth = +dateString.substring (5, 7);
-                const currentYear = +dateString.substring (0, 4);
-                const currentDate = new Date (currentYear,currentMonth,currentDay);
-
-
                 return {countryName: d["county"],
                     code: d["county"],
-                    date: ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear(),
+                    date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash (d["date"]),
                     y:+d["deaths"]};
 
             },
-            "county",
-            "growthFactorPlotCounties");
+            "county");
 
 
 
