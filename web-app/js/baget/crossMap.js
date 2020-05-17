@@ -549,12 +549,12 @@ var baget = baget || {};  // encapsulating variable
             orgData = buildInternalRepresentation(data,-1);
 
             // create the X scale.  We can always start off with something linear/numerical
-            xScale = d3.scale.linear()
+            xScale = d3.scaleLinear()
                 .domain([orgData.positionExtent.min,orgData.positionExtent.max])
                 .range([ margin.left, width-spaceForPhenotypeLabels ]);
 
 
-            yScale = d3.scale.ordinal()
+            yScale = d3.scaleOrdinal()
                 .domain([0,orgData.traitNameArray])
                 .range([ 0,(height-margin.top-margin.bottom)]);
 
@@ -698,7 +698,7 @@ var baget = baget || {};  // encapsulating variable
                 if (sortChoice !== -1){
                     if (typeof orgData.variantArrayOfArrayVariantPointers[sortChoice] !== 'undefined')  {
                         var variantArray =  orgData.variantArrayOfArrayVariantPointers[sortChoice].sort(function(a,b){return (b.p-a.p)}).map(function(d){return d.dbsnp});
-                        xScale = d3.scale.ordinal()
+                        xScale = d3.scaleOrdinal()
                             .domain(variantArray)
                             .rangePoints([ margin.left, width-spaceForPhenotypeLabels ]);
                       //  d3.select('#xaxis').selectAll('.tick').remove();

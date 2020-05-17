@@ -31,7 +31,7 @@ var baget = baget || {};  // encapsulating variable
             yAxisAccessor = function (y){return y},
             chromosomeAccessor = function (c){return c},
             nameAccessor = function (c){return c},
-            color = d3.scale.category10(),
+            color = d3.scaleOrdinal(d3.schemeCategory10),
             overrideXMinimum,overrideXMaximum,overrideYMinimum,overrideYMaximum,
             selection,
             dataExtent,
@@ -470,10 +470,10 @@ var baget = baget || {};  // encapsulating variable
 
 
             // create the scales
-            x = d3.scale.linear()
+            x = d3.scaleLinear()
                 .domain([dataExtent.minimumXExtent-((dataExtent.maximumXExtent-dataExtent.minimumXExtent)/50), chromosomes.activeGenomeLength()])
                 .range([ margin.left, width ]);
-            y = d3.scale.linear()
+            y = d3.scaleLinear()
                 .domain([dataExtent.minimumYExtent,dataExtent.maximumYExtent])
                 .range([ height, 0 ]);
 

@@ -69,12 +69,12 @@ var baget = baget || {};  // encapsulating variable
                 .attr("height", height)
 
             var xDomain = [minValue,maxValue];
-            var x = d3.scale.linear()
+            var x = d3.scaleLinear()
                 .domain(xDomain)
                 .range([0, width]);
 
             var yDomain = d3.range(numrows);
-            var y = d3.scale.ordinal()
+            var y = d3.scaleOrdinal()
                 .domain(yDomain)
                 .rangeBands([0, height]);
 

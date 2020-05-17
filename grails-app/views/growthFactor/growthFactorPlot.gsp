@@ -2,14 +2,14 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <html>
 <head>
-    <meta name="layout" content="core"/>
-    <r:require modules="core,growthFactor"/>
-    <r:layoutResources/>
+    <meta name="layout" content="covidOverAll"/>
+    <r:require modules="updatedCore,growthFactor"/>
+%{--    <r:layoutResources/>--}%
 
 </head>
 <body>
 
-<h2>Comparing growth factors for Covid-19 across countries</h2>
+
 
 <div class="container" style="width: 95%">
 
@@ -17,7 +17,7 @@
 
 
     <div class="starter-template">
-        <h2>Comparing growth factors for Covid-19 </h2>
+        <h2>Growth factor analysis of Covid-19</h2>
     </div>
 
     <div class="container" id="headerSection" style="width: 100%">
@@ -50,6 +50,9 @@
                     date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddNoDash (d["date"]),
                     y:+d["death"]};
             },
+            function(rawData){
+                return rawData;
+            },
                 "states");
 
         mpgSoftware.growthFactorLauncher.prepareToDisplay("https://covid.ourworldindata.org/data/owid-covid-data.csv",
@@ -63,6 +66,10 @@
                     y:+d["total_deaths"]};
 
             },
+            function(rawData){
+                return  _.filter (rawData,datum => ((!(datum.countryName.search('International')>=0)))&&
+                    (!isNaN(datum.y)));;
+            },
             "country");
 
         mpgSoftware.growthFactorLauncher.prepareToDisplay("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv",
@@ -72,6 +79,9 @@
                     date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash (d["date"]),
                     y:+d["deaths"]};
 
+            },
+            function(rawData){
+                return rawData;
             },
             "county");
 

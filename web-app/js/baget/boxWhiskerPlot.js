@@ -268,18 +268,18 @@ var baget = baget || {};
                         : d3.range(n);
 
                     // Compute the new x-scale.
-                    var xScale = d3.scale.linear()
+                    var xScale = d3.scaleLinear()
                         .domain([0, 1])
                         .range([boxWidth + margin.right + margin.left, 0]);
 
 
                     // Compute the new y-scale.
-                    var yScale = d3.scale.linear()
+                    var yScale = d3.scaleLinear()
                         .domain([min - ((max - min) * 0.05), max + ((max - min) * 0.05)])
                         .range([height , 0]);
 
                     // Retrieve the old x-scale, if this is an update.
-                    var yScaleOld = this.__chart__ || d3.scale.linear()
+                    var yScaleOld = this.__chart__ || d3.scaleLinear()
                         .domain([min - ((max - min) * 0.05), max + ((max - min) * 0.05)])
                         .range([height/* + margin.bottom + margin.top*/, 0]);
 
@@ -535,7 +535,7 @@ var baget = baget || {};
                     }
 
 
-                    var histogramScale = d3.scale.linear()
+                    var histogramScale = d3.scaleLinear()
                         .domain([0,histogram.getLongestBar ()])
                         .range([0,(boxWidth/2)*0.9]);     // cover up to 90% of the box whisker box
 

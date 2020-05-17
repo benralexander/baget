@@ -82,7 +82,7 @@ var baget = baget || {};  // encapsulating variable
                .style("fill", "url(#gradient)")
                .attr("transform", "translate(0," + margin.top + ")");
 
-           var y = d3.scale.linear()
+           var y = d3.scaleLinear()
                .range([height, 0])
                .domain([minValue, maxValue]);
 
@@ -176,15 +176,15 @@ var baget = baget || {};  // encapsulating variable
                 .attr("width", width)
                 .attr("height", height);
 
-            var x = d3.scale.ordinal()
+            var x = d3.scaleOrdinal()
                 .domain(d3.range(numcols))
                 .rangeBands([0, width]);
 
-            var y = d3.scale.ordinal()
+            var y = d3.scaleOrdinal()
                 .domain(d3.range(numrows))
                 .rangeBands([0, height]);
 
-            var colorMap = d3.scale.linear()
+            var colorMap = d3.scaleLinear()
                 .domain([minValue,maxValue])
                 .range([startColor, endColor]);
 

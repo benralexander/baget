@@ -38,6 +38,21 @@ modules = {
         resource url: 'js/baget/sharedMethods.js'
         resource url: 'js/baget/slider.js'
     }
+    updatedCore{
+        dependsOn "jquery,bootstrap"
+
+        resource url: 'css/baget/baget.css'
+
+
+        resource url: 'https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js'
+
+        resource url: 'js/baget/ie10-viewport-bug-workaround.js'
+        resource url: 'js/baget/ie-emulation-modes-warning.js'
+
+        resource url: 'js/baget/sharedMethods.js'
+        resource url: 'js/baget/slider.js'
+    }
+
     qqplot {
         resource url: 'css/baget/qqplot.css'
         resource url: 'js/baget/qqplot.js'
@@ -54,7 +69,7 @@ modules = {
         resource url: 'js/baget/manhattan.js'
     }
     crossMap {
-        dependsOn "d3tooltip"
+       // dependsOn "d3tooltip"
 
         resource url: 'css/baget/crossMap.css'
         resource url: 'js/baget/crossMap.js'
@@ -82,7 +97,7 @@ modules = {
         resource url: 'css/baget/boxWhiskerPlot.css'
         resource url: 'css/baget/clickablePopUp.css'
         resource url: 'css/baget/slider.css'
-        resource url: 'css/baget/d3tooltip.css'
+      //  resource url: 'css/baget/d3tooltip.css'
         resource url: 'css/baget/scatter.css'
 
         resource url: 'js/baget/boxWhiskerPlot.js'

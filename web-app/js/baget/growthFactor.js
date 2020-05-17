@@ -233,138 +233,6 @@ baget.growthFactor = (function () {
     };
 
 
-const calculateGrowthFactorByCountry = function (data){
-
-    let dataByCountry =d3.nest() // nest function to group by country
-        .key(function(d) { return d.countryName;} )
-        .entries(data);
-
-    // if X values don't exist then calculate them from the dates
-    if (_.filter (dataByCountry,v=>_.filter (v.values,d=>(typeof d.x==='undefined')).length>0).length>0){
-        let modifiedDataByCountry = [];
-        _.forEach(dataByCountry,function (v, k){
-            const daysSinceFifthDeath = _.filter (v.values,d=>d.y>5);
-            if (daysSinceFifthDeath.length>0){
-                const sortedDaysSinceFifthDeath = _.orderBy (daysSinceFifthDeath,d=>new Date(d.date).getTime());
-                const firstDayAfterFifthDeath = _.first (sortedDaysSinceFifthDeath);
-                const dateAfterFifthDeath = new Date(firstDayAfterFifthDeath.date).getTime()/1000;
-                const dataWithCalculatedXAddedIn = _.map(sortedDaysSinceFifthDeath,function (d){
-                    let tempRec = d;
-                    tempRec['x']=((new Date(d.date).getTime()/1000)-dateAfterFifthDeath)/86400;
-                    return tempRec;
-                });
-                modifiedDataByCountry.push({key:_.first(dataWithCalculatedXAddedIn).code,
-                    values:_.uniqBy(dataWithCalculatedXAddedIn,'x')});
-            }
-        });
-        dataByCountry = modifiedDataByCountry;
-    }
-
-    const filterTheDataWeCareAbout = function   (values){return _.filter (values,d=>(d.y>0) &&(d.x>0) )};
-
-    const halfMWindow = Math.floor(movingAverageWindow/2);
-    var remainder = movingAverageWindow % 2;
-    const growthFactorByCountry = _.map(   dataByCountry,
-        function (v){
-
-            let differenceArray = [];
-            let valuesWeCareAbout =filterTheDataWeCareAbout (v.values);
-
-
-            _.forEach(valuesWeCareAbout,  function(value, index){
-                if (valuesWeCareAbout.length < halfMWindow)return true;
-
-                    if ((index > 2) && (index < valuesWeCareAbout.length-2)){
-                        const v1 = _.map (_.slice(valuesWeCareAbout, index-halfMWindow,index+halfMWindow-1), o=>o.y);
-                        const v2 = _.map (_.slice(valuesWeCareAbout, index-halfMWindow+1,index+halfMWindow), o=>o.y);
-
-                    const n1 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v1);
-                    const n2 = mpgSoftware.growthFactorLauncher.calculateWeightedMovingAverage(v2);
-
-                    differenceArray.push (
-                        {x:valuesWeCareAbout[index].x,
-                            y:valuesWeCareAbout[index].y,
-                            // difference: valuesWeCareAbout[index].y-valuesWeCareAbout[index-1].y,
-                            difference: n2-n1,
-                            code: valuesWeCareAbout[index].code,
-                            countryName: valuesWeCareAbout[index].countryName}
-                    );
-                }
-
-            });
-            let growthRateArray = [];
-            _.forEach(differenceArray,function(value, index){
-                if ((index > 0) && (differenceArray[index-1].difference !==0)){
-                    growthRateArray.push (
-                        {   x:valuesWeCareAbout[index].x,
-                            y:valuesWeCareAbout[index].y,
-                            total_deaths_per_million: valuesWeCareAbout[index].total_deaths_per_million,
-                            growthFactor:differenceArray[index].difference/differenceArray[index-1].difference,
-                            code: valuesWeCareAbout[index].code,
-                            countryName: valuesWeCareAbout[index].countryName});
-                }
-            });
-            let analComplete = {inflection: null, noinflection: null  };
-
-            _.forEach(growthRateArray, function (rate, index){
-                if(index > (daysOfNonExponentialGrowthRequired-1)) {
-                    let nonExponentialGrowthFactorMaintained = true;
-                    _.forEach(_.range(0,daysOfNonExponentialGrowthRequired), function (windowIndex){
-                        if(growthRateArray[index-windowIndex].growthFactor >  1){
-                            nonExponentialGrowthFactorMaintained = false
-                        }
-                    });
-                    if (nonExponentialGrowthFactorMaintained) {
-                        analComplete['inflection'] = {
-                            index: index,
-                            x: growthRateArray[index].x,
-                            y: growthRateArray[index].y,
-                            total_deaths_per_million: growthRateArray[index].total_deaths_per_million,
-                            code: valuesWeCareAbout[index].code,
-                            countryName: valuesWeCareAbout[index].countryName,
-                            date:_.find(valuesWeCareAbout,d=>d.x===growthRateArray[index].x).date
-                        };
-                        return false;
-                    } else {
-                        analComplete['noinflection'] = {
-                            index: index,
-                            x: growthRateArray[index].x,
-                            y: growthRateArray[index].y,
-                            code: valuesWeCareAbout[index].code,
-                            countryName: valuesWeCareAbout[index].countryName,
-                            date:_.find(valuesWeCareAbout,d=>d.x===growthRateArray[index].x).date
-                        };
-                        return true;
-                       }
-                } else {
-                    return true;
-                }
-            });
-            analComplete ["rawValues"] = valuesWeCareAbout;
-            ;
-            return {key:v.key,
-                values:analComplete}
-        });
-
-    _.forEach(dataByCountry, function (v,k) {
-
-            const countryGrowthFactorRecord = _.find (growthFactorByCountry, d => d.key==v.values[0].countryName);
-            if (countryGrowthFactorRecord.values.inflection){
-                countryGrowthFactorRecord.values['type']='inflection';
-            }else if ((!countryGrowthFactorRecord.values.inflection) && (countryGrowthFactorRecord.values.noinflection)){
-                countryGrowthFactorRecord.values['type']='noinflection';
-            }else {
-                if (countryGrowthFactorRecord.values.rawValues.length === 0){
-                    countryGrowthFactorRecord.values['type']='noDataYet';
-                }else {
-                    countryGrowthFactorRecord.values['type']='inflectionUndetermined';
-                }
-
-            }
-
-    });
-    return growthFactorByCountry;
-}
 
     const initializeCountryColoring = function (unfilteredData) {
          color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -415,7 +283,9 @@ const calculateGrowthFactorByCountry = function (data){
         const data = preAnalysisFilter (unfilteredData);
 
 
-        const growthFactorByCountry = postAnalysisFilter(calculateGrowthFactorByCountry (data));
+        const growthFactorByCountry = postAnalysisFilter(
+            mpgSoftware.growthFactorLauncher.analysisModule.calculateGrowthFactorByCountry (data,
+                movingAverageWindow,daysOfNonExponentialGrowthRequired));
 
 
 

@@ -64,8 +64,8 @@ var baget = baget || {};  // encapsulating variable
             x,
             y,
             color,
-            dataElementColor = d3.scale.category10(),
-            legendColor = d3.scale.category10(),
+            dataElementColor = d3.scaleOrdinal(d3.schemeCategory10),
+            legendColor = d3.scaleOrdinal(d3.schemeCategory10),
             xAxis,
             yAxis,
             svg,
@@ -176,10 +176,10 @@ var baget = baget || {};  // encapsulating variable
             data = svg.selectAll('g.allGroups').data();   // get all data sets
             var insideScatterGroup = svg.select('g.scatter');   // get all data sets
 
-            x = d3.scale.linear()
+            x = d3.scaleLinear()
                 .range([0, width]);
 
-            y = d3.scale.linear()
+            y = d3.scaleLinear()
                 .range([height, 0]);
 
             color = function (d,dataSetIndex){

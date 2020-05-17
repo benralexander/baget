@@ -4,8 +4,6 @@
 <head>
 
     <title>Baget</title>
-    <r:require modules="tooltip"/>
-    <r:require modules="core"/>
     <g:layoutTitle/>
     <r:layoutResources/>
 

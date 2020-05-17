@@ -21,7 +21,7 @@ var baget = baget || {};
             slider = {};
 
         var ctor = function (domainStart, domainEnd, rangeStart, rangeEnd) {
-            scale = d3.scale.linear()
+            scale = d3.scaleLinear()
                 .domain([domainStart, domainEnd])
                 .range([rangeStart, rangeEnd])
                 .clamp(true);

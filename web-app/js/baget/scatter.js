@@ -31,8 +31,8 @@ var cbbo = cbbo || {};
                         .selectionIdentifier('#doseResponseCurve')
                         .autoScale(false)
                         .areaUnderTheCurve([5, 13])
-                        .x(d3.scale.log().domain([0.0001, 40]))
-                        .y(d3.scale.linear().domain([0, 1.5]));
+                        .x(d3.scaleLog().domain([0.0001, 40]))
+                        .y(d3.scaleLinear().domain([0, 1.5]));
                     d3.select('.messagepop').style('width', '800px');
                     d3.select('#doseResponseCurve').style('display', 'block');
                     var curves = [data];
@@ -86,13 +86,13 @@ var cbbo = cbbo || {};
         // Now walk through the DOM and create the enrichment plot
         instance.render = function (g) {
 
-            x = d3.scale.linear()
+            x = d3.scaleLinear()
                 .range([0, width]);
 
-            y = d3.scale.linear()
+            y = d3.scaleLinear()
                 .range([height, 0]);
 
-            color = d3.scale.category10();
+            color = d3.scaleOrdinal(d3.schemeCategory10);
 
             xAxis = d3.svg.axis()
                 .scale(x)

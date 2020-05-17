@@ -316,8 +316,8 @@ mpgSoftware.growthFactorLauncher = (function () {
     /***
      * Set up the  moving window spinners
      */
-    const setUpInteractiveDisplay = function (){
-        const spinnerAverage = $('input.spinner.movingAverageWindow');
+    const setUpMovingWindowSpinner = function (idOfThePlaceToStoreData){
+        const spinnerAverage = $('#' + idOfThePlaceToStoreData+' input.spinner.movingAverageWindow');
         spinnerAverage.spinner({
             step: 2,
             min: 1,
@@ -328,8 +328,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                 buildThePlotWithRememberedData (identifier,filterBasedOnDataSelectionAndDate);
             }
         });
-        spinnerAverage.spinner( "value", 7 );
-        const spinnerThreshold = $('input.spinner.daysOfNonExponentialGrowthRequired');
+        spinnerAverage.spinner( "value", retrieveData(idOfThePlaceToStoreData,"movingAverageWindow"));
+        const spinnerThreshold = $('#' + idOfThePlaceToStoreData+' input.spinner.daysOfNonExponentialGrowthRequired');
         spinnerThreshold.spinner({
             step: 1,
             min: 1,
@@ -347,7 +347,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             // }
 
         });
-        spinnerThreshold.spinner( "value", 7 );
+        spinnerThreshold.spinner( "value",  retrieveData(idOfThePlaceToStoreData,"daysOfNonExponentialGrowthRequired") );
 
     };
     const modifyAllCheckboxes = function (callingObject){
@@ -454,23 +454,164 @@ mpgSoftware.growthFactorLauncher = (function () {
             " - " + (new Date($( currentDateSlider ).slider( "values", 1 )*1000)).toDateString());
     };
 
-    const calculatePositionMultipliers = function (length){
-        return _.fill(Array(length), 1);
-    };
 
 
-    const calculateWeightedMovingAverage = function (dataVector){
-        const vectorLength = dataVector.length;
-        const positionMultipliers = calculatePositionMultipliers (vectorLength);
-        let developingAverage = 0;
-        _.forEach(dataVector, function (element, index){
-            developingAverage += (element*positionMultipliers [index]);
-        });
-    return developingAverage /vectorLength;
-    };
+
+
+
+    const analysisModule = (function () {
+        const calculatePositionMultipliers = function (length){
+            return _.fill(Array(length), 1);
+        };
+        const calculateWeightedMovingAverage = function (dataVector){
+            const vectorLength = dataVector.length;
+            const positionMultipliers = calculatePositionMultipliers (vectorLength);
+            let developingAverage = 0;
+            _.forEach(dataVector, function (element, index){
+                developingAverage += (element*positionMultipliers [index]);
+            });
+            return developingAverage /vectorLength;
+        };
+        const calculateGrowthFactorByCountry = function (data,movingAverageWindow,daysOfNonExponentialGrowthRequired){
+
+            let dataByCountry =d3.nest() // nest function to group by country
+                .key(function(d) { return d.countryName;} )
+                .entries(data);
+
+            // if X values don't exist then calculate them from the dates
+            if (_.filter (dataByCountry,v=>_.filter (v.values,d=>(typeof d.x==='undefined')).length>0).length>0){
+                let modifiedDataByCountry = [];
+                _.forEach(dataByCountry,function (v, k){
+                    const daysSinceFifthDeath = _.filter (v.values,d=>d.y>5);
+                    if (daysSinceFifthDeath.length>0){
+                        const sortedDaysSinceFifthDeath = _.orderBy (daysSinceFifthDeath,d=>new Date(d.date).getTime());
+                        const firstDayAfterFifthDeath = _.first (sortedDaysSinceFifthDeath);
+                        const dateAfterFifthDeath = new Date(firstDayAfterFifthDeath.date).getTime()/1000;
+                        const dataWithCalculatedXAddedIn = _.map(sortedDaysSinceFifthDeath,function (d){
+                            let tempRec = d;
+                            tempRec['x']=((new Date(d.date).getTime()/1000)-dateAfterFifthDeath)/86400;
+                            return tempRec;
+                        });
+                        modifiedDataByCountry.push({key:_.first(dataWithCalculatedXAddedIn).code,
+                            values:_.uniqBy(dataWithCalculatedXAddedIn,'x')});
+                    }
+                });
+                dataByCountry = modifiedDataByCountry;
+            }
+
+            const filterTheDataWeCareAbout = function   (values){return _.filter (values,d=>(d.y>0) &&(d.x>0) )};
+
+            const halfMWindow = Math.floor(movingAverageWindow/2);
+            var remainder = movingAverageWindow % 2;
+            const growthFactorByCountry = _.map(   dataByCountry,
+                function (v){
+
+                    let differenceArray = [];
+                    let valuesWeCareAbout =filterTheDataWeCareAbout (v.values);
+
+
+                    _.forEach(valuesWeCareAbout,  function(value, index){
+                        if (valuesWeCareAbout.length < halfMWindow)return true;
+
+                        if ((index > 2) && (index < valuesWeCareAbout.length-2)){
+                            const v1 = _.map (_.slice(valuesWeCareAbout, index-halfMWindow,index+halfMWindow-1), o=>o.y);
+                            const v2 = _.map (_.slice(valuesWeCareAbout, index-halfMWindow+1,index+halfMWindow), o=>o.y);
+
+                            const n1 = calculateWeightedMovingAverage(v1);
+                            const n2 = calculateWeightedMovingAverage(v2);
+
+                            differenceArray.push (
+                                {x:valuesWeCareAbout[index].x,
+                                    y:valuesWeCareAbout[index].y,
+                                    // difference: valuesWeCareAbout[index].y-valuesWeCareAbout[index-1].y,
+                                    difference: n2-n1,
+                                    code: valuesWeCareAbout[index].code,
+                                    countryName: valuesWeCareAbout[index].countryName}
+                            );
+                        }
+
+                    });
+                    let growthRateArray = [];
+                    _.forEach(differenceArray,function(value, index){
+                        if ((index > 0) && (differenceArray[index-1].difference !==0)){
+                            growthRateArray.push (
+                                {   x:valuesWeCareAbout[index].x,
+                                    y:valuesWeCareAbout[index].y,
+                                    total_deaths_per_million: valuesWeCareAbout[index].total_deaths_per_million,
+                                    growthFactor:differenceArray[index].difference/differenceArray[index-1].difference,
+                                    code: valuesWeCareAbout[index].code,
+                                    countryName: valuesWeCareAbout[index].countryName});
+                        }
+                    });
+                    let analComplete = {inflection: null, noinflection: null  };
+
+                    _.forEach(growthRateArray, function (rate, index){
+                        if(index > (daysOfNonExponentialGrowthRequired-1)) {
+                            let nonExponentialGrowthFactorMaintained = true;
+                            _.forEach(_.range(0,daysOfNonExponentialGrowthRequired), function (windowIndex){
+                                if(growthRateArray[index-windowIndex].growthFactor >  1){
+                                    nonExponentialGrowthFactorMaintained = false
+                                }
+                            });
+                            if (nonExponentialGrowthFactorMaintained) {
+                                analComplete['inflection'] = {
+                                    index: index,
+                                    x: growthRateArray[index].x,
+                                    y: growthRateArray[index].y,
+                                    total_deaths_per_million: growthRateArray[index].total_deaths_per_million,
+                                    code: valuesWeCareAbout[index].code,
+                                    countryName: valuesWeCareAbout[index].countryName,
+                                    date:_.find(valuesWeCareAbout,d=>d.x===growthRateArray[index].x).date
+                                };
+                                return false;
+                            } else {
+                                analComplete['noinflection'] = {
+                                    index: index,
+                                    x: growthRateArray[index].x,
+                                    y: growthRateArray[index].y,
+                                    code: valuesWeCareAbout[index].code,
+                                    countryName: valuesWeCareAbout[index].countryName,
+                                    date:_.find(valuesWeCareAbout,d=>d.x===growthRateArray[index].x).date
+                                };
+                                return true;
+                            }
+                        } else {
+                            return true;
+                        }
+                    });
+                    analComplete ["rawValues"] = valuesWeCareAbout;
+                    ;
+                    return {key:v.key,
+                        values:analComplete}
+                });
+
+            _.forEach(dataByCountry, function (v,k) {
+
+                const countryGrowthFactorRecord = _.find (growthFactorByCountry, d => d.key==v.values[0].countryName);
+                if (countryGrowthFactorRecord.values.inflection){
+                    countryGrowthFactorRecord.values['type']='inflection';
+                }else if ((!countryGrowthFactorRecord.values.inflection) && (countryGrowthFactorRecord.values.noinflection)){
+                    countryGrowthFactorRecord.values['type']='noinflection';
+                }else {
+                    if (countryGrowthFactorRecord.values.rawValues.length === 0){
+                        countryGrowthFactorRecord.values['type']='noDataYet';
+                    }else {
+                        countryGrowthFactorRecord.values['type']='inflectionUndetermined';
+                    }
+
+                }
+
+            });
+            return growthFactorByCountry;
+        };
+
+    return {
+            calculateGrowthFactorByCountry:calculateGrowthFactorByCountry
+        }
+    } ());
+
 
     const dateConverterUtil = (function (){
-
 
         const months = [
             'Jan',
@@ -730,10 +871,14 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
 
-    const prepareToDisplay = function(dataUrl, dataAssignmentFunction,  idOfThePlaceToStoreData){
-        setData (idOfThePlaceToStoreData, "dataRetrieved",false);
+    const prepareToDisplay = function(dataUrl, //where do we go for the data
+                                      dataAssignmentFunction, // assigned data fields to names we like
+                                      rawDataFilter, //filter the raw data before we do anything else
+                                      idOfThePlaceToStoreData //the name that all of these things will be associated with
+    ){
         setData (idOfThePlaceToStoreData, "dataUrl",dataUrl);
         setData (idOfThePlaceToStoreData, "dataAssignmentFunction",dataAssignmentFunction);
+        setData (idOfThePlaceToStoreData, "rawDataFilter",rawDataFilter);
         if (displayOrganizer[idOfThePlaceToStoreData][0].tabActive=== "active"){
             displayPlotRetrievingIfNecessary(idOfThePlaceToStoreData);
         }
@@ -746,23 +891,25 @@ mpgSoftware.growthFactorLauncher = (function () {
             const dataUrl = retrieveData (idOfThePlaceToStoreData, "dataUrl");
             const dataAssignmentFunction = retrieveData (idOfThePlaceToStoreData, "dataAssignmentFunction");
             try{
-                const countryData = d3.csv(dataUrl,dataAssignmentFunction
+                const countryData = d3.csv(dataUrl,dataAssignmentFunction);
 
-                );
                 countryData.then(
 
                     function (allData) {
-                        setUpInteractiveDisplay ();
-                        const rememberData = _.filter (allData,datum => ((!(datum.countryName.search('excl.')>=0)))&&
-                            (!isNaN(datum.y)));
+                        // we have just now received some data. Filter anything we can off the top, so that we don't need to bother with it anymore
+                        const savedRawDataFilter = retrieveData (idOfThePlaceToStoreData, "rawDataFilter");
+                        const rememberData = savedRawDataFilter (allData);
+
+                        // Now remember the data that we have, and calculate a universal start date and end date
                         setData (idOfThePlaceToStoreData, "rawData",rememberData);
                         setData (idOfThePlaceToStoreData, "startDate",new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
                         setData (idOfThePlaceToStoreData, "endDate",new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
-                        const allData2 = retrieveData (idOfThePlaceToStoreData,"rawData");
-                        baget.growthFactor.resize(false);
+                        initializeDateSlider (idOfThePlaceToStoreData);  //we can only do this after we have calculated the date range
+
+                        // all preparations are complete. Now we can build the plot
                         buildThePlot(idOfThePlaceToStoreData, filterBasedOnDataSelectionAndDate);
-                        initializeDateSlider (idOfThePlaceToStoreData);
-                        baget.growthFactor.resize();
+
+                        // remember that we've retrieve data, so we don't need to do it again unless specifically requested
                         setData (idOfThePlaceToStoreData, "dataRetrieved",true);
 
                     }
@@ -777,7 +924,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         }
 
 
-    }
+    };
 
 
 
@@ -787,6 +934,9 @@ mpgSoftware.growthFactorLauncher = (function () {
         $(headerSection).prepend(Mustache.render( $('#headerSectionAboveControls')[0].innerHTML,tabHeaderOrganizer));
         _.forEach(tabHeaderOrganizer.topSection[0].headers,function(element){
             $(sectionSelector).append(Mustache.render( $('#tabContainingControlsAndPlot')[0].innerHTML,element));
+            setData (element [0].id, "dataRetrieved",false);// note that we have no data, since we just built the display
+            baget.growthFactor.resize(false);
+            setUpMovingWindowSpinner (element [0].id);
         });
         d3.select(window).on('resize', baget.growthFactor.resize);
         jQuery.noConflict();
@@ -802,9 +952,9 @@ mpgSoftware.growthFactorLauncher = (function () {
         setWidth:setWidtth,
         setHeight:setHeight,
         dateConverterUtil:dateConverterUtil,
+        analysisModule:analysisModule,
         buildThePlotWithRememberedData:buildThePlotWithRememberedData,
         prepareToDisplay:prepareToDisplay,
-        calculateWeightedMovingAverage:calculateWeightedMovingAverage,
         changeWhatIsDisplayed:changeWhatIsDisplayed,
         changeGroupCheckbox:changeGroupCheckbox,
         changeFormOfAnalysis:changeFormOfAnalysis,

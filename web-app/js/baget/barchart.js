@@ -79,13 +79,13 @@ var baget = baget || {};  // encapsulating variable
 
                     if (logXScale) {
                         internalMin = 0.5;
-                        x = d3.scale.log()
+                        x = d3.scaleLog()
                             .base(10)
                             .domain([internalMin, maximumPossibleValue ])
                             .range([margin.left + roomForLabels, width + roomForLabels]);
                     } else {
                         internalMin = 0;
-                        x = d3.scale.linear()
+                        x = d3.scaleLinear()
                             .domain([0, maximumPossibleValue ])
                             .range([margin.left + roomForLabels, width + roomForLabels]);
                     }
