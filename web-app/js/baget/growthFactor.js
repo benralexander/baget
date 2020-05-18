@@ -20,6 +20,7 @@ baget.growthFactor = (function () {
     let xAxisLabel = "Days cents fifth death";
     let yAxisLabel = "Total deaths";
     let deathsIndependentOfPopulation = true;
+    let auxData = [];
 
 
     function halo(text) {
@@ -65,19 +66,12 @@ baget.growthFactor = (function () {
         function moved(d, i) {
             d3.select(this).select ("path.dataLine").attr('stroke-width', '3');
             d3.select(this).select ("text.countryLabel").style('font-size', '8pt');
-            // d3.select(this).select ("text.countryLabel").insert("rect","text")
-            //     .attr("width", function(d){return d.bbox.width})
-            //     .attr("height", function(d){return d.bbox.height})
-            //     .style("fill", "yellow");
+
         }
 
         function entered(d, i) {
             d3.select(this).select ("path.dataLine").attr('stroke-width', '3');
             d3.select(this).select ("text.countryLabel").style('font-size', '8pt');
-            // d3.select(this).select ("text.countryLabel").insert("rect","text")
-            //     .attr("width", function(d){return d.bbox.width})
-            //     .attr("height", function(d){return d.bbox.height})
-            //     .style("fill", "yellow");
         }
 
         function left(d, i) {
@@ -635,6 +629,11 @@ baget.growthFactor = (function () {
     instance.daysOfNonExponentialGrowthRequired= function (x) {
         if (!arguments.length) return daysOfNonExponentialGrowthRequired;
         daysOfNonExponentialGrowthRequired = x;
+        return instance;
+    };
+    instance.auxData= function (x) {
+        if (!arguments.length) return auxData;
+        auxData = x;
         return instance;
     };
     instance.collapseToCommonStart= function (x) {

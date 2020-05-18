@@ -141,6 +141,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"of declining growth"
                 }
             ],
+            displayAdjustmentSlim:"slim",
             displayAdjustment: [
                 {
                     methodCallBack:"logVersusLinear",
@@ -149,6 +150,10 @@ mpgSoftware.growthFactorLauncher = (function () {
                 {
                     methodCallBack:"collapseToCommonStart",
                     title:" Date dependent"
+                },
+                {
+                    methodCallBack:"deathsIndependentOfPopulation",
+                    title:"Deaths per million"
                 }
             ],
             plotGoesHere: [{"id":"growthFactorPlotStates"}],
@@ -259,10 +264,35 @@ mpgSoftware.growthFactorLauncher = (function () {
     };
 
 
+    class DataFromAServer {
+
+        constructor (name,dataUrl,dataAssignmentFunction,rawDataFilter){
+            this.name = name;//how should we refer to this data set
+            this.dataUrl = dataUrl;//where do we go for the data
+            this.dataAssignmentFunction = dataAssignmentFunction;// assigned data fields to names we like
+            this.rawDataFilter = rawDataFilter;//filter the raw data before we do anything else
+            this.savedData ={};
+        }
+        set rawData (incomingRawData){
+            this.savedData = this.rawDataFilter (incomingRawData);
+        }
+        get rawData (){
+            return this.savedData;
+        }
+
+    }
+
+
     class DataGrouping {
         constructor (identifier){
             rememberTheseData (identifier, this);
         }
+        // set rawData (incomingRawData){
+        //     this.savedData = this.rawDataFilter (incomingRawData);
+        // }
+        // get rawData (){
+        //     return this.savedData;
+        //}
          showGroupsWithInflectionPoints =  true;
          showGroupsWithoutInflectionPoints =  false;
          showGroupsWithInsufficientData = true;
@@ -781,7 +811,8 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
     const fillTheMainEntitySelectionBox = function(idOfThePlaceToStoreData){
-        const allData = retrieveData (idOfThePlaceToStoreData,"rawData");
+
+        const allData = _.first(retrieveData (idOfThePlaceToStoreData,"dataFromServerArray")).rawData;
         let preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (idOfThePlaceToStoreData);
         $('#' +idOfThePlaceToStoreData +' div.everyGroupToDisplay').empty ();
         const startTheGroup = $('#' +idOfThePlaceToStoreData +' div.everyGroupToDisplay');
@@ -798,7 +829,7 @@ mpgSoftware.growthFactorLauncher = (function () {
     };
 
     const adjustTheMainSelectionBox = function (idOfThePlaceToStoreData){
-        const allData = retrieveData (idOfThePlaceToStoreData,"rawData");
+        const allData = _.first(retrieveData (idOfThePlaceToStoreData,"dataFromServerArray")).rawData;
         const preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (idOfThePlaceToStoreData);
         const everyoneWhoMadeItThroughTheTimeFilter = _.map(_.uniqBy(_.orderBy(preAnalysisFilter(allData),'countryName'),'countryName'),function (d) {
             return  d.countryName;
@@ -820,8 +851,9 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
     const buildThePlot= function (idOfThePlaceToStoreData, dataFilteringChoice) {
-
-        const allData = retrieveData (idOfThePlaceToStoreData,"rawData");
+        const allTheDataWeHaveAccumulated = retrieveData (idOfThePlaceToStoreData,"dataFromServerArray");
+        const allData = _.first(allTheDataWeHaveAccumulated).rawData;
+        const auxData =  _. map (allTheDataWeHaveAccumulated.slice (1,allTheDataWeHaveAccumulated), d => d.rawData);
         const idOfThePlaceWhereThePlotGoes  = _.find (tabHeaderOrganizer.topSection[0].headers,o =>o[0].id===idOfThePlaceToStoreData )[0].plotGoesHere[0].id;
         let postAnalysisFilter = filterModule.filterBasedOnAnalysis (idOfThePlaceToStoreData);
         let preAnalysisFilter;
@@ -857,6 +889,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             .daysOfNonExponentialGrowthRequired (retrieveData(idOfThePlaceToStoreData,'daysOfNonExponentialGrowthRequired'))
             .collapseToCommonStart (retrieveData(idOfThePlaceToStoreData,'collapseToCommonStart'))
             .deathsIndependentOfPopulation(retrieveData(idOfThePlaceToStoreData,'deathsIndependentOfPopulation'))
+            .auxData(auxData)
             .buildGrowthFactorPlot(allData,
                 preAnalysisFilter,
                 postAnalysisFilter
@@ -871,14 +904,9 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
 
-    const prepareToDisplay = function(dataUrl, //where do we go for the data
-                                      dataAssignmentFunction, // assigned data fields to names we like
-                                      rawDataFilter, //filter the raw data before we do anything else
-                                      idOfThePlaceToStoreData //the name that all of these things will be associated with
-    ){
-        setData (idOfThePlaceToStoreData, "dataUrl",dataUrl);
-        setData (idOfThePlaceToStoreData, "dataAssignmentFunction",dataAssignmentFunction);
-        setData (idOfThePlaceToStoreData, "rawDataFilter",rawDataFilter);
+    const prepareToDisplay = function( idOfThePlaceToStoreData, //the name that all of these things will be associated with
+                                       arrayOfDataFromServerObjects ) {
+        setData (idOfThePlaceToStoreData, "dataFromServerArray",arrayOfDataFromServerObjects);
         if (displayOrganizer[idOfThePlaceToStoreData][0].tabActive=== "active"){
             displayPlotRetrievingIfNecessary(idOfThePlaceToStoreData);
         }
@@ -888,20 +916,28 @@ mpgSoftware.growthFactorLauncher = (function () {
     const displayPlotRetrievingIfNecessary = function(idOfThePlaceToStoreData){
         const dataRetrieved = retrieveData  (idOfThePlaceToStoreData, "dataRetrieved");
         if (!dataRetrieved){
-            const dataUrl = retrieveData (idOfThePlaceToStoreData, "dataUrl");
-            const dataAssignmentFunction = retrieveData (idOfThePlaceToStoreData, "dataAssignmentFunction");
+            const dataFromServerArray = retrieveData (idOfThePlaceToStoreData, "dataFromServerArray");
+
             try{
-                const countryData = d3.csv(dataUrl,dataAssignmentFunction);
+                Promise.all (_.map (dataFromServerArray,dataFromServer => d3.csv(dataFromServer.dataUrl,dataFromServer.dataAssignmentFunction)))
+                .then(
+                    function (dataFromAllRemoteCalls){
 
-                countryData.then(
+                        const dataFromServerArray = retrieveData (idOfThePlaceToStoreData, "dataFromServerArray");
+                        if (dataFromServerArray.length !==dataFromServerArray.length){//sanity check
+                            alert ("shouldn't these values always be the same?")
+                        }else {
+                            _.forEach(dataFromAllRemoteCalls, function (dataToSave, index){
+                                dataFromServerArray[index].rawData = dataToSave
+                            });
+                        }
 
-                    function (allData) {
-                        // we have just now received some data. Filter anything we can off the top, so that we don't need to bother with it anymore
-                        const savedRawDataFilter = retrieveData (idOfThePlaceToStoreData, "rawDataFilter");
-                        const rememberData = savedRawDataFilter (allData);
-
-                        // Now remember the data that we have, and calculate a universal start date and end date
-                        setData (idOfThePlaceToStoreData, "rawData",rememberData);
+                        //
+                        // deal with primary data
+                        //
+                        const allData = _.first (dataFromServerArray).rawData ;
+                         // Now remember the data that we have, and calculate a universal start date and end date
+                        // setData (idOfThePlaceToStoreData, "rawData",allData);
                         setData (idOfThePlaceToStoreData, "startDate",new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
                         setData (idOfThePlaceToStoreData, "endDate",new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
                         initializeDateSlider (idOfThePlaceToStoreData);  //we can only do this after we have calculated the date range
@@ -912,9 +948,10 @@ mpgSoftware.growthFactorLauncher = (function () {
                         // remember that we've retrieve data, so we don't need to do it again unless specifically requested
                         setData (idOfThePlaceToStoreData, "dataRetrieved",true);
 
-                    }
 
-                );
+
+                    }
+                 );
 
 
 
@@ -952,6 +989,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         setWidth:setWidtth,
         setHeight:setHeight,
         dateConverterUtil:dateConverterUtil,
+        DataFromAServer:DataFromAServer,
         analysisModule:analysisModule,
         buildThePlotWithRememberedData:buildThePlotWithRememberedData,
         prepareToDisplay:prepareToDisplay,
