@@ -853,7 +853,7 @@ mpgSoftware.growthFactorLauncher = (function () {
     const buildThePlot= function (idOfThePlaceToStoreData, dataFilteringChoice) {
         const allTheDataWeHaveAccumulated = retrieveData (idOfThePlaceToStoreData,"dataFromServerArray");
         const allData = _.first(allTheDataWeHaveAccumulated).rawData;
-        const auxData =  _. map (allTheDataWeHaveAccumulated.slice (1,allTheDataWeHaveAccumulated), d => d.rawData);
+        const auxData =  _. map (allTheDataWeHaveAccumulated.slice (1,allTheDataWeHaveAccumulated.length), d => d.rawData);
         const idOfThePlaceWhereThePlotGoes  = _.find (tabHeaderOrganizer.topSection[0].headers,o =>o[0].id===idOfThePlaceToStoreData )[0].plotGoesHere[0].id;
         let postAnalysisFilter = filterModule.filterBasedOnAnalysis (idOfThePlaceToStoreData);
         let preAnalysisFilter;

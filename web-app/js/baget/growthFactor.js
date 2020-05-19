@@ -251,9 +251,18 @@ baget.growthFactor = (function () {
     };
     const yValue = function (d){
         if (deathsIndependentOfPopulation){
-            return +d.y;
+            let retVal=+d.y;
+            return retVal;
         }else {
-            return +d.total_deaths_per_million;
+            if (auxData.length>0) {
+                const auxiliaryRecord = _.find (auxData[0],{Abbreviation:d.countryName});
+                if ((auxiliaryRecord)&&(+auxiliaryRecord.Pop>0)) {
+                    retVal =  ((+d.y)*1000000)/(+auxiliaryRecord.Pop);
+                }
+            } else {
+                retVal = +d.total_deaths_per_million;
+            }
+            return retVal;
         }
     };
 
