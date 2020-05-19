@@ -68,6 +68,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"of declining growth"
                 }
             ],
+            displayAdjustmentSlim:"slim",
             displayAdjustment: [
                 {
                     methodCallBack:"logVersusLinear",
@@ -82,7 +83,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"Deaths per million"
                 }
             ],
-            displayAdjustmentSlim:"slim",
+            labelAccessors: [   x =>'X axis label',
+                                y =>'Y axis label'  ],
             plotGoesHere: [{"id":"growthFactorPlotCountries"}],
             tabDescription: "COVID-19 by country",
             tabActive: "active"
@@ -156,6 +158,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"Deaths per million"
                 }
             ],
+            labelAccessors: [   x =>'X axis label',
+                y =>'Y axis label'  ],
             plotGoesHere: [{"id":"growthFactorPlotStates"}],
             tabDescription: "COVID-19 by state",
             tabActive: ""
@@ -223,6 +227,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"Date dependent"
                 }
             ],
+            labelAccessors: [   x =>'X axis label',
+                y =>'Y axis label'  ],
             plotGoesHere: [{"id":"growthFactorPlotCounties"}],
             tabDescription: "COVID-19 by county",
             tabActive: ""
@@ -248,6 +254,9 @@ mpgSoftware.growthFactorLauncher = (function () {
     const filterDateAndListOfGroups = 2;
     const filterOnlyOnListOfGroups = 3;
     const filterBasedOnAnalysis = 4;
+
+    let [xAxisLabelAccessor,yAxisLabelAccessor] = [x =>'X axis label',
+            y =>'Y axis label'];
 
 
     const rememberTheseData = function (identifier,dataToRemember){
@@ -287,12 +296,6 @@ mpgSoftware.growthFactorLauncher = (function () {
         constructor (identifier){
             rememberTheseData (identifier, this);
         }
-        // set rawData (incomingRawData){
-        //     this.savedData = this.rawDataFilter (incomingRawData);
-        // }
-        // get rawData (){
-        //     return this.savedData;
-        //}
          showGroupsWithInflectionPoints =  true;
          showGroupsWithoutInflectionPoints =  false;
          showGroupsWithInsufficientData = true;
@@ -322,12 +325,13 @@ mpgSoftware.growthFactorLauncher = (function () {
              return initializationRequired;
          }
     };
+
     const retrieveData = function (identifier,fieldName){
         const dataGroupingHolder = recallData (identifier);
         if( typeof  dataGroupingHolder !== 'object'){
             console.log('data group holder was missing');
-        }else if( typeof   dataGroupingHolder[fieldName] === 'undefined'){
-            console.log('unexpected field name = '+fieldName);
+        // }else if( typeof   dataGroupingHolder[fieldName] === 'undefined'){
+        //     console.log('unexpected field name = '+fieldName);
         }else {
             return dataGroupingHolder[fieldName];
         }
@@ -339,9 +343,33 @@ mpgSoftware.growthFactorLauncher = (function () {
             dataGroupingHolder = recallData (identifier);
         }
         dataGroupingHolder[fieldName] = value;
-
-
     };
+
+    const synchronizeDataGroupingWithUi = function (identifier){
+        setData (identifier, "labelAccessors",displayOrganizer [identifier][0].labelAccessors);
+    }
+    const adjustAccessors = function (identifier){
+        const currentAccessors = retrieveData (identifier, "labelAccessors");
+        let buildingXAxisLabel = "";
+        let buildingYAxisLabel = "";
+
+        if (retrieveData (identifier, "deathsIndependentOfPopulation")){
+            buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?"Total deaths":"total deaths";
+        }else {
+            buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?"Deaths per million":"deaths per million";
+        }
+        if (retrieveData (identifier, "collapseToCommonStart")){
+            buildingXAxisLabel = "Days since fifth death";
+        }else {
+            buildingXAxisLabel = "Date";
+        }
+        if (!retrieveData (identifier, "useLinearNotLog")){
+            buildingYAxisLabel += " (log scale)";
+        }
+        currentAccessors [0] =  (x =>buildingXAxisLabel);
+        currentAccessors [1] =  (y =>buildingYAxisLabel);
+        setData(identifier,"labelAccessors", currentAccessors);
+    }
 
     /***
      * Set up the  moving window spinners
@@ -876,7 +904,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 alert('data filtering ='+dataFilteringChoice);
                 break;
         }
-
+        adjustAccessors (idOfThePlaceToStoreData);
 
 
         var growthFactorPlot = baget.growthFactor
@@ -889,6 +917,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             .daysOfNonExponentialGrowthRequired (retrieveData(idOfThePlaceToStoreData,'daysOfNonExponentialGrowthRequired'))
             .collapseToCommonStart (retrieveData(idOfThePlaceToStoreData,'collapseToCommonStart'))
             .deathsIndependentOfPopulation(retrieveData(idOfThePlaceToStoreData,'deathsIndependentOfPopulation'))
+            .labelAccessors(...retrieveData(idOfThePlaceToStoreData,'labelAccessors'))
             .auxData(auxData)
             .buildGrowthFactorPlot(allData,
                 preAnalysisFilter,
@@ -941,6 +970,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                         setData (idOfThePlaceToStoreData, "startDate",new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
                         setData (idOfThePlaceToStoreData, "endDate",new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
                         initializeDateSlider (idOfThePlaceToStoreData);  //we can only do this after we have calculated the date range
+
+                        synchronizeDataGroupingWithUi (idOfThePlaceToStoreData);
 
                         // all preparations are complete. Now we can build the plot
                         buildThePlot(idOfThePlaceToStoreData, filterBasedOnDataSelectionAndDate);

@@ -17,10 +17,11 @@ baget.growthFactor = (function () {
     let movingAverageWindow = 5;
     let daysOfNonExponentialGrowthRequired = 4;
     let collapseToCommonStart = true;
-    let xAxisLabel = "Days cents fifth death";
-    let yAxisLabel = "Total deaths";
+    // let xAxisLabel = "Days cents fifth death";
+    // let yAxisLabel = "Total deaths";
     let deathsIndependentOfPopulation = true;
     let auxData = [];
+    let [xAxisLabelAccessor,yAxisLabelAccessor] = [x =>'no X axis label',y =>'no Y axis label'];
 
 
     function halo(text) {
@@ -546,7 +547,7 @@ baget.growthFactor = (function () {
 
         // label the axes
         const xAxisLabelElement = svg.selectAll("text.axisLabel.xAxis")
-            .data([xAxisLabel]);
+            .data([instance.xAxisLabelAccessor ()]);
         xAxisLabelElement.enter()
             .append("text")
             .attr("class", "axisLabel xAxis")
@@ -565,7 +566,7 @@ baget.growthFactor = (function () {
             .remove()
         ;
         const yAxisLabelElement = svg.selectAll("text.axisLabel.yAxis")
-            .data([yAxisLabel]);
+            .data([instance.yAxisLabelAccessor ()]);
         yAxisLabelElement.enter()
         .append("text")
             .attr("class", "axisLabel yAxis")
@@ -575,7 +576,7 @@ baget.growthFactor = (function () {
             .attr("transform", function(d) {
                 return "rotate(-90,10,"+(((height-margin.top-margin.bottom)/2)+50) +")"
             })
-            .text('Total deaths');
+            .text(d=>d);
         yAxisLabelElement.transition().duration (transitionTime/2)
             .attr("opacity", 0.1)
             .transition().duration (transitionTime/2)
@@ -601,11 +602,6 @@ baget.growthFactor = (function () {
     instance.linearNotLog= function (x) {
         if (!arguments.length) return linearNotLog;
         linearNotLog = x;
-        // if (linearNotLog){
-        //     yAxisLabel = "Total deaths";
-        // }else{
-        //     yAxisLabel =  "Total deaths (log scale)";
-        // }
         return instance;
     };
 
@@ -648,21 +644,16 @@ baget.growthFactor = (function () {
     instance.collapseToCommonStart= function (x) {
         if (!arguments.length) return collapseToCommonStart;
         collapseToCommonStart = x;
-        if (collapseToCommonStart){
-            xAxisLabel = "Days since fifth death";
-        } else {
-            xAxisLabel = "Recorded date";
-        }
         return instance;
     };
     instance.deathsIndependentOfPopulation= function (x) {
         if (!arguments.length) return deathsIndependentOfPopulation;
         deathsIndependentOfPopulation = x;
-        if (deathsIndependentOfPopulation){
-            yAxisLabel = "Total deaths";
-        }else{
-            yAxisLabel =  "Deaths per million";
-        }
+        return instance;
+    };
+    instance.labelAccessors= function (x, y) {
+        if (!arguments.length) return [instance.xAxisLabelAccessor,instance.yAxisLabelAccessor];
+        [instance.xAxisLabelAccessor,instance.yAxisLabelAccessor] = [x, y];
         return instance;
     };
 
