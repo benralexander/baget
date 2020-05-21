@@ -22,6 +22,8 @@ baget.growthFactor = (function () {
     let deathsIndependentOfPopulation = true;
     let auxData = [];
     let [xAxisLabelAccessor,yAxisLabelAccessor] = [x =>'no X axis label',y =>'no Y axis label'];
+    let [xTextAccessor,yTextAccessor] = [x =>'no X text accessor',y =>'no Y text accessor'];
+    let textAccessor = function (x){return x};
 
 
     function halo(text) {
@@ -152,9 +154,9 @@ baget.growthFactor = (function () {
                 .attr("x", d=>x(xValue (chooseValueFunction (d)))+shiftPopUpMessage)
                 .text( function(d){
                     if (typeof xValue(chooseValueFunction (d))==="number"){
-                       return "in "+chooseValueFunction (d).countryName+' by day '+Math.round (xValue(chooseValueFunction (d)));
+                       return "in "+chooseValueFunction (d).code+' by day '+Math.round (xValue(chooseValueFunction (d)));
                     } else {
-                        return "in "+chooseValueFunction (d).countryName+' on '+d3.timeFormat("%B %d, %Y")(xValue(chooseValueFunction (d)));
+                        return "in "+chooseValueFunction (d).code+' on '+d3.timeFormat("%B %d, %Y")(xValue(chooseValueFunction (d)));
                     }
 
                 })
@@ -166,17 +168,17 @@ baget.growthFactor = (function () {
                     return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage;
                 })
                 .text( function(d,i){return "("+chooseValueFunction (d).date+")"});
-            if ("Inflection point detected"===title){
-                developingPopUpInformation
-                    .append('tspan')
-                    .attr("class", "countryInflectionLabel")
-                    .text( function(d,i){return "eventual deaths predicted: "+(chooseValueFunction (d).y*2)})
-                    .attr("alignment-baseline", "hanging")
-                    .attr('dy', '1.2em')
-                    .attr("x", function(d,i){
-                        return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage;
-                    });
-            }
+            // if ("Inflection point detected"===title){
+            //     developingPopUpInformation
+            //         .append('tspan')
+            //         .attr("class", "countryInflectionLabel")
+            //         .text( function(d,i){return "eventual deaths predicted: "+(chooseValueFunction (d).y*2)})
+            //         .attr("alignment-baseline", "hanging")
+            //         .attr('dy', '1.2em')
+            //         .attr("x", function(d,i){
+            //             return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage;
+            //         });
+            // }
             popUpLabelHolder.exit()
                 .remove ();
 
@@ -232,7 +234,7 @@ baget.growthFactor = (function () {
     const initializeCountryColoring = function (unfilteredData) {
          color = d3.scaleOrdinal(d3.schemeCategory10);
          countryColorObject = {};
-        _.forEach(_.uniq(unfilteredData,'countryName'), d=>countryColor(d.countryName));
+        _.forEach(_.uniq(unfilteredData,'code'), d=>countryColor(d.code));
     } ;
 
     const countryColor = function (countryColorString){
@@ -256,7 +258,7 @@ baget.growthFactor = (function () {
             return retVal;
         }else {
             if (auxData.length>0) {
-                const auxiliaryRecord = _.find (auxData[0],{Abbreviation:d.countryName});
+                const auxiliaryRecord = _.find (auxData[0],{Abbreviation:d.code});
                 if ((auxiliaryRecord)&&(+auxiliaryRecord.Pop>0)) {
                     retVal =  ((+d.y)*1000000)/(+auxiliaryRecord.Pop);
                 }
@@ -419,7 +421,7 @@ baget.growthFactor = (function () {
             rememberLastValue [element.key] = {x:lastValue.x, y:lastValue.y, len:element.values.rawValues.length };
         });
         groupHolder =groupHolder
-            .data(growthFactorByCountry,d=>d.key);
+            .data(growthFactorByCountry,d=>textAccessor (d,auxData));
         const groupHolderEnter = groupHolder.enter()
             .append("g")
             .attr("class",'gh');
@@ -449,7 +451,7 @@ baget.growthFactor = (function () {
             .attr("class", d => "countryLabel ")
             .attr("text-anchor", "last")
             .text(function(d,i){
-                return d.key;
+                return textAccessor (d,auxData);
             })
             .attr("x", function(d,i){
                 return x(xLower);
@@ -654,6 +656,11 @@ baget.growthFactor = (function () {
     instance.labelAccessors= function (x, y) {
         if (!arguments.length) return [instance.xAxisLabelAccessor,instance.yAxisLabelAccessor];
         [instance.xAxisLabelAccessor,instance.yAxisLabelAccessor] = [x, y];
+        return instance;
+    };
+    instance.textAccessor= function (x) {
+        if (!arguments.length) return textAccessor;
+        textAccessor = x;
         return instance;
     };
 

@@ -47,7 +47,7 @@
             [new mpgSoftware.growthFactorLauncher.DataFromAServer ('primary',
                 "https://covidtracking.com/api/v1/states/daily.csv",
                 function(d) {
-                    return {countryName: d["state"],
+                    return {
                         code: d["state"],
                         date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddNoDash (d["date"]),
                         y:+d["death"]};
@@ -71,7 +71,7 @@
             [new mpgSoftware.growthFactorLauncher.DataFromAServer ('primary',
                 "https://covid.ourworldindata.org/data/owid-covid-data.csv",
                 function(d) {
-                    return {countryName: d["location"],
+                    return {
                         total_cases: d["total_cases"],
                         total_deaths_per_million: d["total_deaths_per_million"],
                         total_tests_per_thousand: d["total_tests_per_thousand"],
@@ -81,7 +81,7 @@
 
                 },
                 function(rawData){
-                    return  _.filter (rawData,datum => ((!(datum.countryName.search('International')>=0)))&&
+                    return  _.filter (rawData,datum => ((!(datum.code.search('International')>=0)))&&
                         (!isNaN(datum.y)));;
                 })
             ]
@@ -93,13 +93,14 @@
             [new mpgSoftware.growthFactorLauncher.DataFromAServer ('primary',
                 "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv",
                 function(d) {
-                    return {countryName: d["county"],
+                    return {
                         code: d["county"],
                         date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash (d["date"]),
                         y:+d["deaths"]};
                 },
                 function(rawData){
-                    return rawData;
+                    return  _.filter (rawData,datum => ((!(datum.code.search('Unknown')>=0)))&&
+                        (!isNaN(datum.y)));;
                 })
             ]
         );

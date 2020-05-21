@@ -85,6 +85,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             ],
             labelAccessors: [   x =>'X axis label',
                                 y =>'Y axis label'  ],
+            textAccessor: d =>(d.code)?d.code:d.key,
             plotGoesHere: [{"id":"growthFactorPlotCountries"}],
             tabDescription: "COVID-19 by country",
             tabActive: "active"
@@ -160,6 +161,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             ],
             labelAccessors: [   x =>'X axis label',
                 y =>'Y axis label'  ],
+            textAccessor: x =>x.key,
             plotGoesHere: [{"id":"growthFactorPlotStates"}],
             tabDescription: "COVID-19 by state",
             tabActive: ""
@@ -229,6 +231,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             ],
             labelAccessors: [   x =>'X axis label',
                 y =>'Y axis label'  ],
+            textAccessor: d =>(d.code)?d.code:d.key,
             plotGoesHere: [{"id":"growthFactorPlotCounties"}],
             tabDescription: "COVID-19 by county",
             tabActive: ""
@@ -347,6 +350,7 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     const synchronizeDataGroupingWithUi = function (identifier){
         setData (identifier, "labelAccessors",displayOrganizer [identifier][0].labelAccessors);
+        setData (identifier, "textAccessor",displayOrganizer [identifier][0].textAccessor);
     }
     const adjustAccessors = function (identifier){
         const currentAccessors = retrieveData (identifier, "labelAccessors");
@@ -369,13 +373,27 @@ mpgSoftware.growthFactorLauncher = (function () {
         currentAccessors [0] =  (x =>buildingXAxisLabel);
         currentAccessors [1] =  (y =>buildingYAxisLabel);
         setData(identifier,"labelAccessors", currentAccessors);
+
+        if(identifier ==='states') {
+
+            setData(identifier, "textAccessor", function (d,auxData) {
+                // auxData = retrieveData(identifier, "auxData");
+                const conversion = _.find (auxData [0], {'Abbreviation':(d.code)?d.code:d.key});
+                if( typeof conversion === 'undefined'){
+                    return d.key
+                }else {
+                    return conversion.State;
+                }
+
+            });
+        }
     }
 
     /***
      * Set up the  moving window spinners
      */
-    const setUpMovingWindowSpinner = function (idOfThePlaceToStoreData){
-        const spinnerAverage = $('#' + idOfThePlaceToStoreData+' input.spinner.movingAverageWindow');
+    const setUpMovingWindowSpinner = function (identifier){
+        const spinnerAverage = $('#' + identifier+' input.spinner.movingAverageWindow');
         spinnerAverage.spinner({
             step: 2,
             min: 1,
@@ -386,8 +404,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                 buildThePlotWithRememberedData (identifier,filterBasedOnDataSelectionAndDate);
             }
         });
-        spinnerAverage.spinner( "value", retrieveData(idOfThePlaceToStoreData,"movingAverageWindow"));
-        const spinnerThreshold = $('#' + idOfThePlaceToStoreData+' input.spinner.daysOfNonExponentialGrowthRequired');
+        spinnerAverage.spinner( "value", retrieveData(identifier,"movingAverageWindow"));
+        const spinnerThreshold = $('#' + identifier+' input.spinner.daysOfNonExponentialGrowthRequired');
         spinnerThreshold.spinner({
             step: 1,
             min: 1,
@@ -405,7 +423,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             // }
 
         });
-        spinnerThreshold.spinner( "value",  retrieveData(idOfThePlaceToStoreData,"daysOfNonExponentialGrowthRequired") );
+        spinnerThreshold.spinner( "value",  retrieveData(identifier,"daysOfNonExponentialGrowthRequired") );
 
     };
     const modifyAllCheckboxes = function (callingObject){
@@ -533,7 +551,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         const calculateGrowthFactorByCountry = function (data,movingAverageWindow,daysOfNonExponentialGrowthRequired){
 
             let dataByCountry =d3.nest() // nest function to group by country
-                .key(function(d) { return d.countryName;} )
+                .key(function(d) { return d.code;} )
                 .entries(data);
 
             // if X values don't exist then calculate them from the dates
@@ -583,8 +601,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                                     y:valuesWeCareAbout[index].y,
                                     // difference: valuesWeCareAbout[index].y-valuesWeCareAbout[index-1].y,
                                     difference: n2-n1,
-                                    code: valuesWeCareAbout[index].code,
-                                    countryName: valuesWeCareAbout[index].countryName}
+                                    code: valuesWeCareAbout[index].code
+                                }
                             );
                         }
 
@@ -597,8 +615,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                                     y:valuesWeCareAbout[index].y,
                                     total_deaths_per_million: valuesWeCareAbout[index].total_deaths_per_million,
                                     growthFactor:differenceArray[index].difference/differenceArray[index-1].difference,
-                                    code: valuesWeCareAbout[index].code,
-                                    countryName: valuesWeCareAbout[index].countryName});
+                                    code: valuesWeCareAbout[index].code});
                         }
                     });
                     let analComplete = {inflection: null, noinflection: null  };
@@ -618,7 +635,6 @@ mpgSoftware.growthFactorLauncher = (function () {
                                     y: growthRateArray[index].y,
                                     total_deaths_per_million: growthRateArray[index].total_deaths_per_million,
                                     code: valuesWeCareAbout[index].code,
-                                    countryName: valuesWeCareAbout[index].countryName,
                                     date:_.find(valuesWeCareAbout,d=>d.x===growthRateArray[index].x).date
                                 };
                                 return false;
@@ -628,7 +644,6 @@ mpgSoftware.growthFactorLauncher = (function () {
                                     x: growthRateArray[index].x,
                                     y: growthRateArray[index].y,
                                     code: valuesWeCareAbout[index].code,
-                                    countryName: valuesWeCareAbout[index].countryName,
                                     date:_.find(valuesWeCareAbout,d=>d.x===growthRateArray[index].x).date
                                 };
                                 return true;
@@ -645,7 +660,7 @@ mpgSoftware.growthFactorLauncher = (function () {
 
             _.forEach(dataByCountry, function (v,k) {
 
-                const countryGrowthFactorRecord = _.find (growthFactorByCountry, d => d.key==v.values[0].countryName);
+                const countryGrowthFactorRecord = _.find (growthFactorByCountry, d => d.key==v.values[0].code);
                 if (countryGrowthFactorRecord.values.inflection){
                     countryGrowthFactorRecord.values['type']='inflection';
                 }else if ((!countryGrowthFactorRecord.values.inflection) && (countryGrowthFactorRecord.values.noinflection)){
@@ -761,11 +776,11 @@ mpgSoftware.growthFactorLauncher = (function () {
 
             if (retrieveData (identifier, "includeTopLevelGroups")){
                 //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
-                orFilterArray.push (datum => !(datum.countryName.search('World')>=0));
+                orFilterArray.push (datum => !(datum.code.search('World')>=0));
             }
             if (retrieveData (identifier, "includeSummaryGroups")){
                 //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
-                orFilterArray.push (datum => (datum.countryName.search('World')>=0));
+                orFilterArray.push (datum => (datum.code.search('World')>=0));
             }
 
             // In this case, if neither or filter is selected then we want the graft be blank. Therefore let's insert a fake and filter which will always fail
@@ -786,7 +801,7 @@ mpgSoftware.growthFactorLauncher = (function () {
 
             let andFilterArray = [];
             const selectedGroups = _.map ($("#" + identifier +" div.everyGroupToDisplay input.displayControl:checked").next("label"),d=>$(d).text());
-            andFilterArray.push (datum => _.includes (selectedGroups,datum.countryName ));
+            andFilterArray.push (datum => _.includes (selectedGroups,datum.code ));
 
             const startDate = retrieveData (identifier, "startDate");
             const endDate = retrieveData (identifier, "endDate");
@@ -800,8 +815,10 @@ mpgSoftware.growthFactorLauncher = (function () {
         const filterOnlyOnListOfGroups = function (identifier){
 
             let andFilterArray = [];
+            const textAccessor = retrieveData (identifier, "textAccessor");
+            const auxData = retrieveData(identifier,"auxData");
             const selectedGroups = _.map ($("#" + identifier +" div.everyGroupToDisplay input.displayControl:checked").next("label"),d=>$(d).text());
-            andFilterArray.push (datum => _.includes (selectedGroups,datum.countryName ));
+            andFilterArray.push (datum => _.includes (selectedGroups,textAccessor (datum,auxData) ));
 
             return andOrFilterModule ([],andFilterArray);
 
@@ -838,17 +855,19 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
 
-    const fillTheMainEntitySelectionBox = function(idOfThePlaceToStoreData){
+    const fillTheMainEntitySelectionBox = function(identifier){
 
-        const allData = _.first(retrieveData (idOfThePlaceToStoreData,"dataFromServerArray")).rawData;
-        let preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (idOfThePlaceToStoreData);
-        $('#' +idOfThePlaceToStoreData +' div.everyGroupToDisplay').empty ();
-        const startTheGroup = $('#' +idOfThePlaceToStoreData +' div.everyGroupToDisplay');
+        const allData = _.first(retrieveData (identifier,"dataFromServerArray")).rawData;
+        let preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier);
+        $('#' +identifier +' div.everyGroupToDisplay').empty ();
+        const startTheGroup = $('#' +identifier +' div.everyGroupToDisplay');
+        const textAccessor = retrieveData (identifier, "textAccessor");
+        const auxData = retrieveData(identifier,"auxData");
         let listOfGroups = '<div>';
-        _.forEach(_.uniqBy(_.orderBy(preAnalysisFilter(allData),'countryName'),'countryName'),function (v,k){
+        _.forEach(_.uniqBy(_.orderBy(preAnalysisFilter(allData),'code'),'code'),function (v,k){
             listOfGroups+='<div class="item checkboxHolder active">'+
-                '<input type="checkbox" class="custom-control-input  displayControl"  checked onclick="mpgSoftware.growthFactorLauncher.changeGroupCheckbox (this,\'' +idOfThePlaceToStoreData +'\')">' +
-                '<label class="custom-control-label  displayControl" >'+((v)?v.countryName:"")+'</label>'+
+                '<input type="checkbox" class="custom-control-input  displayControl"  checked onclick="mpgSoftware.growthFactorLauncher.changeGroupCheckbox (this,\'' +identifier +'\')">' +
+                '<label class="custom-control-label  displayControl" >'+textAccessor(v,auxData)+'</label>'+
                 '</div>';
         });
         listOfGroups+='</div>'
@@ -856,13 +875,13 @@ mpgSoftware.growthFactorLauncher = (function () {
         return preAnalysisFilter;
     };
 
-    const adjustTheMainSelectionBox = function (idOfThePlaceToStoreData){
-        const allData = _.first(retrieveData (idOfThePlaceToStoreData,"dataFromServerArray")).rawData;
-        const preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (idOfThePlaceToStoreData);
-        const everyoneWhoMadeItThroughTheTimeFilter = _.map(_.uniqBy(_.orderBy(preAnalysisFilter(allData),'countryName'),'countryName'),function (d) {
-            return  d.countryName;
+    const adjustTheMainSelectionBox = function (identifier){
+        const allData = _.first(retrieveData (identifier,"dataFromServerArray")).rawData;
+        const preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier);
+        const everyoneWhoMadeItThroughTheTimeFilter = _.map(_.uniqBy(_.orderBy(preAnalysisFilter(allData),'code'),'code'),function (d) {
+            return  d.code;
         });
-        const everybodyInTheExistingList = _.map($('#'+idOfThePlaceToStoreData+' div.everyGroupToDisplay div.item label.displayControl'),function (d) {
+        const everybodyInTheExistingList = _.map($('#'+identifier+' div.everyGroupToDisplay div.item label.displayControl'),function (d) {
             return  {name:$(d).text(),node:$(d).parent()};
         });
         _.forEach(everybodyInTheExistingList,function(d){
@@ -878,46 +897,49 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
 
-    const buildThePlot= function (idOfThePlaceToStoreData, dataFilteringChoice) {
-        const allTheDataWeHaveAccumulated = retrieveData (idOfThePlaceToStoreData,"dataFromServerArray");
+    const buildThePlot= function (identifier, dataFilteringChoice) {
+        const allTheDataWeHaveAccumulated = retrieveData (identifier,"dataFromServerArray");
         const allData = _.first(allTheDataWeHaveAccumulated).rawData;
         const auxData =  _. map (allTheDataWeHaveAccumulated.slice (1,allTheDataWeHaveAccumulated.length), d => d.rawData);
-        const idOfThePlaceWhereThePlotGoes  = _.find (tabHeaderOrganizer.topSection[0].headers,o =>o[0].id===idOfThePlaceToStoreData )[0].plotGoesHere[0].id;
-        let postAnalysisFilter = filterModule.filterBasedOnAnalysis (idOfThePlaceToStoreData);
+        setData(identifier,"auxData", auxData);
+        const idOfThePlaceWhereThePlotGoes  = _.find (tabHeaderOrganizer.topSection[0].headers,o =>o[0].id===identifier )[0].plotGoesHere[0].id;
+        let postAnalysisFilter = filterModule.filterBasedOnAnalysis (identifier);
         let preAnalysisFilter;
+        adjustAccessors (identifier);
         switch (dataFilteringChoice){
             case filterBasedOnDataSelectionAndDate:
-                preAnalysisFilter = fillTheMainEntitySelectionBox(idOfThePlaceToStoreData);
+                preAnalysisFilter = fillTheMainEntitySelectionBox(identifier);
                 break;
             case filterDateAndListOfGroups:
-                preAnalysisFilter = filterModule.filterDateAndListOfGroups(idOfThePlaceToStoreData);
-                adjustTheMainSelectionBox(idOfThePlaceToStoreData);
+                preAnalysisFilter = filterModule.filterDateAndListOfGroups(identifier);
+                adjustTheMainSelectionBox(identifier);
                 break;
             case filterOnlyOnListOfGroups:
-                preAnalysisFilter = filterModule.filterOnlyOnListOfGroups(idOfThePlaceToStoreData);
+                preAnalysisFilter = filterModule.filterOnlyOnListOfGroups(identifier);
                 break;
             case filterBasedOnAnalysis:
-                preAnalysisFilter = filterModule.filterOnlyOnListOfGroups(idOfThePlaceToStoreData);
-                postAnalysisFilter = filterModule.filterBasedOnAnalysis (idOfThePlaceToStoreData);
+                preAnalysisFilter = filterModule.filterOnlyOnListOfGroups(identifier);
+                postAnalysisFilter = filterModule.filterBasedOnAnalysis (identifier);
                 break;
             default:
                 alert('data filtering ='+dataFilteringChoice);
                 break;
         }
-        adjustAccessors (idOfThePlaceToStoreData);
+
 
 
         var growthFactorPlot = baget.growthFactor
-            .linearNotLog(retrieveData (idOfThePlaceToStoreData, "useLinearNotLog"))
+            .linearNotLog(retrieveData (identifier, "useLinearNotLog"))
             .height (height)
             .width(width)
-            .idOfThePlaceToStoreData (idOfThePlaceToStoreData)
+            .idOfThePlaceToStoreData (identifier)
             .idOfThePlaceWhereThePlotGoes (idOfThePlaceWhereThePlotGoes)
-            .movingAverageWindow(retrieveData(idOfThePlaceToStoreData,'movingAverageWindow'))
-            .daysOfNonExponentialGrowthRequired (retrieveData(idOfThePlaceToStoreData,'daysOfNonExponentialGrowthRequired'))
-            .collapseToCommonStart (retrieveData(idOfThePlaceToStoreData,'collapseToCommonStart'))
-            .deathsIndependentOfPopulation(retrieveData(idOfThePlaceToStoreData,'deathsIndependentOfPopulation'))
-            .labelAccessors(...retrieveData(idOfThePlaceToStoreData,'labelAccessors'))
+            .movingAverageWindow(retrieveData(identifier,'movingAverageWindow'))
+            .daysOfNonExponentialGrowthRequired (retrieveData(identifier,'daysOfNonExponentialGrowthRequired'))
+            .collapseToCommonStart (retrieveData(identifier,'collapseToCommonStart'))
+            .deathsIndependentOfPopulation(retrieveData(identifier,'deathsIndependentOfPopulation'))
+            .labelAccessors(...retrieveData(identifier,'labelAccessors'))
+            .textAccessor (retrieveData(identifier,'textAccessor'))
             .auxData(auxData)
             .buildGrowthFactorPlot(allData,
                 preAnalysisFilter,
@@ -925,34 +947,34 @@ mpgSoftware.growthFactorLauncher = (function () {
             );
     };
 
-    const buildThePlotWithRememberedData = function (idOfThePlaceToStoreData){
+    const buildThePlotWithRememberedData = function (identifier){
 
-        buildThePlot (idOfThePlaceToStoreData, filterBasedOnDataSelectionAndDate);
+        buildThePlot (identifier, filterBasedOnDataSelectionAndDate);
     }
 
 
 
 
-    const prepareToDisplay = function( idOfThePlaceToStoreData, //the name that all of these things will be associated with
+    const prepareToDisplay = function( identifier, //the name that all of these things will be associated with
                                        arrayOfDataFromServerObjects ) {
-        setData (idOfThePlaceToStoreData, "dataFromServerArray",arrayOfDataFromServerObjects);
-        if (displayOrganizer[idOfThePlaceToStoreData][0].tabActive=== "active"){
-            displayPlotRetrievingIfNecessary(idOfThePlaceToStoreData);
+        setData (identifier, "dataFromServerArray",arrayOfDataFromServerObjects);
+        if (displayOrganizer[identifier][0].tabActive=== "active"){
+            displayPlotRetrievingIfNecessary(identifier);
         }
 
     };
 
-    const displayPlotRetrievingIfNecessary = function(idOfThePlaceToStoreData){
-        const dataRetrieved = retrieveData  (idOfThePlaceToStoreData, "dataRetrieved");
+    const displayPlotRetrievingIfNecessary = function(identifier){
+        const dataRetrieved = retrieveData  (identifier, "dataRetrieved");
         if (!dataRetrieved){
-            const dataFromServerArray = retrieveData (idOfThePlaceToStoreData, "dataFromServerArray");
+            const dataFromServerArray = retrieveData (identifier, "dataFromServerArray");
 
             try{
                 Promise.all (_.map (dataFromServerArray,dataFromServer => d3.csv(dataFromServer.dataUrl,dataFromServer.dataAssignmentFunction)))
                 .then(
                     function (dataFromAllRemoteCalls){
 
-                        const dataFromServerArray = retrieveData (idOfThePlaceToStoreData, "dataFromServerArray");
+                        const dataFromServerArray = retrieveData (identifier, "dataFromServerArray");
                         if (dataFromServerArray.length !==dataFromServerArray.length){//sanity check
                             alert ("shouldn't these values always be the same?")
                         }else {
@@ -966,18 +988,18 @@ mpgSoftware.growthFactorLauncher = (function () {
                         //
                         const allData = _.first (dataFromServerArray).rawData ;
                          // Now remember the data that we have, and calculate a universal start date and end date
-                        // setData (idOfThePlaceToStoreData, "rawData",allData);
-                        setData (idOfThePlaceToStoreData, "startDate",new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
-                        setData (idOfThePlaceToStoreData, "endDate",new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
-                        initializeDateSlider (idOfThePlaceToStoreData);  //we can only do this after we have calculated the date range
+                        // setData (identifier, "rawData",allData);
+                        setData (identifier, "startDate",new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
+                        setData (identifier, "endDate",new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
+                        initializeDateSlider (identifier);  //we can only do this after we have calculated the date range
 
-                        synchronizeDataGroupingWithUi (idOfThePlaceToStoreData);
+                        synchronizeDataGroupingWithUi (identifier);
 
                         // all preparations are complete. Now we can build the plot
-                        buildThePlot(idOfThePlaceToStoreData, filterBasedOnDataSelectionAndDate);
+                        buildThePlot(identifier, filterBasedOnDataSelectionAndDate);
 
                         // remember that we've retrieve data, so we don't need to do it again unless specifically requested
-                        setData (idOfThePlaceToStoreData, "dataRetrieved",true);
+                        setData (identifier, "dataRetrieved",true);
 
 
 
