@@ -9,7 +9,7 @@ baget.growthFactor = (function () {
     let width;
     let margin = ({top: 100, right: 50, bottom: 35, left: 60});
     let color ;
-    let countryColorObject;
+    let countryColorObject; // remember what colors we're using for each line
     let linearNotLog= true;
     let idOfThePlaceToStoreData;
     let idOfThePlaceWhereThePlotGoes;
@@ -154,9 +154,9 @@ baget.growthFactor = (function () {
                 .attr("x", d=>x(xValue (chooseValueFunction (d)))+shiftPopUpMessage)
                 .text( function(d){
                     if (typeof xValue(chooseValueFunction (d))==="number"){
-                       return "in "+chooseValueFunction (d).code+' by day '+Math.round (xValue(chooseValueFunction (d)));
+                       return "in "+textAccessor (chooseValueFunction (d),auxData)+' by day '+Math.round (xValue(chooseValueFunction (d)));
                     } else {
-                        return "in "+chooseValueFunction (d).code+' on '+d3.timeFormat("%B %d, %Y")(xValue(chooseValueFunction (d)));
+                        return "in "+textAccessor (chooseValueFunction (d),auxData)+' on '+d3.timeFormat("%B %d, %Y")(xValue(chooseValueFunction (d)));
                     }
 
                 })
@@ -168,6 +168,8 @@ baget.growthFactor = (function () {
                     return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage;
                 })
                 .text( function(d,i){return "("+chooseValueFunction (d).date+")"});
+            // the old prediction, from back when I thought that inflection might occur when the cumulative death curve
+            // was halfway to its eventual asymptote. Clearly that model was far too hopeful.
             // if ("Inflection point detected"===title){
             //     developingPopUpInformation
             //         .append('tspan')
@@ -231,12 +233,17 @@ baget.growthFactor = (function () {
 
 
 
-    const initializeCountryColoring = function (unfilteredData) {
+    const assignColorsToCurves = function (unfilteredData) {
          color = d3.scaleOrdinal(d3.schemeCategory10);
          countryColorObject = {};
         _.forEach(_.uniq(unfilteredData,'code'), d=>countryColor(d.code));
     } ;
 
+    /***
+     * Have we ever seen the string before? If so then use the same color. Otherwise give the string one of 10 colors.
+     * @param countryColorString
+     * @returns {*}
+     */
     const countryColor = function (countryColorString){
         if ( typeof countryColorObject [countryColorString] !== 'undefined'){
             return countryColorObject [countryColorString];
@@ -284,7 +291,7 @@ baget.growthFactor = (function () {
                 }
             })
         }
-        initializeCountryColoring(unfilteredData);
+        assignColorsToCurves(unfilteredData);
 
         const data = preAnalysisFilter (unfilteredData);
 

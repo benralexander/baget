@@ -549,10 +549,10 @@ mpgSoftware.growthFactorLauncher = (function () {
             return developingAverage /vectorLength;
         };
         const calculateGrowthFactorByCountry = function (data,movingAverageWindow,daysOfNonExponentialGrowthRequired){
-
-            let dataByCountry =d3.nest() // nest function to group by country
-                .key(function(d) { return d.code;} )
-                .entries(data);
+            let dataByCountry = _.map(_.groupBy(data,'code'), (v,k)=>({key:k,values:v}))
+            // let dataByCountry =d3.nest() // nest function to group by country
+            //     .key(function(d) { return d.code;} )
+            //     .entries(data);
 
             // if X values don't exist then calculate them from the dates
             if (_.filter (dataByCountry,v=>_.filter (v.values,d=>(typeof d.x==='undefined')).length>0).length>0){
