@@ -257,6 +257,8 @@ mpgSoftware.growthFactorLauncher = (function () {
     const filterDateAndListOfGroups = 2;
     const filterOnlyOnListOfGroups = 3;
     const filterBasedOnAnalysis = 4;
+    const filterUnwantedDatesFromGroupedData = 5;
+
 
     let [xAxisLabelAccessor,yAxisLabelAccessor] = [x =>'X axis label',
             y =>'Y axis label'];
@@ -555,8 +557,8 @@ mpgSoftware.growthFactorLauncher = (function () {
             });
             return developingAverage /vectorLength;
         };
-        const calculateGrowthFactorByCountry = function (data,movingAverageWindow,daysOfNonExponentialGrowthRequired){
-            let dataByCountry = _.map(_.groupBy(data,'code'), (v,k)=>({key:k,values:v}))
+        const calculateGrowthFactorByCountry = function (dataByCountry,movingAverageWindow,daysOfNonExponentialGrowthRequired){
+            // let dataByCountry = _.map(_.groupBy(data,'code'), (v,k)=>({key:k,values:v}))
             // let dataByCountry =d3.nest() // nest function to group by country
             //     .key(function(d) { return d.code;} )
             //     .entries(data);
@@ -849,7 +851,10 @@ mpgSoftware.growthFactorLauncher = (function () {
             const textAccessor = retrieveData (identifier, "textAccessor");
             const auxData = retrieveData(identifier,"auxData");
             const selectedGroups = _.map ($("#" + identifier +" div.everyGroupToDisplay input.displayControl:checked").next("label"),d=>$(d).text());
-            andFilterArray.push (datum => _.includes (selectedGroups,textAccessor (datum,auxData) ));
+            andFilterArray.push (datum => _.includes (selectedGroups,textAccessor (datum.key,auxData) ));
+            andFilterArray.push (function (datum ){
+                return_.includes (selectedGroups,textAccessor (datum.key,auxData)
+            )});
 
             return andOrFilterModule ([],andFilterArray);
 
@@ -873,15 +878,51 @@ mpgSoftware.growthFactorLauncher = (function () {
             return andOrFilterModule (orFilterArray,andFilterArray);
         };
 
+        const filterUnwantedDatesFromGroupedData = function (identifier){
+            const startDate = retrieveData (identifier, "startDate");
+            const globalStartDate = retrieveData (identifier, "globalStartDate");
+            const endDate = retrieveData (identifier, "endDate");
+            const globalEndDate = retrieveData (identifier, "globalEndDate");
+            if ((startDate ===globalStartDate) &&
+                (endDate ===globalEndDate)){
+                return function (groupedData) {return groupedData};
+            }else {
+                return function (groupedData){
+                    const revisedGroupData = [];
+                    _.forEach(groupedData, function (eachGroup){
+                        const dataPointsToSave = [];
+                        _.forEach(eachGroup. values, function (eachDataPoint){
+                            if(((new Date(eachDataPoint.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
+                                ((new Date(eachDataPoint.date).getTime() / 1000)<=(endDate.getTime() / 1000))){
+                                dataPointsToSave.push (eachDataPoint);
+                            }
+                        });
+                        if (dataPointsToSave.length > 0){
+                            revisedGroupData.push ({key:eachGroup, values:dataPointsToSave})
+                        }
+                    });
+                    return revisedGroupData;
+                }
+
+            }
+        }
+
+
 
         return {
             noFilterAtAll:noFilterAtAll,
             filterBasedOnDataSelectionAndDate:filterBasedOnDataSelectionAndDate,
             filterDateAndListOfGroups:filterDateAndListOfGroups,
             filterOnlyOnListOfGroups:filterOnlyOnListOfGroups,
-            filterBasedOnAnalysis:filterBasedOnAnalysis
+            filterBasedOnAnalysis:filterBasedOnAnalysis,
+            filterUnwantedDatesFromGroupedData:filterUnwantedDatesFromGroupedData
         }
     } ());
+
+
+
+
+
 
 
 
@@ -910,8 +951,10 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     const adjustTheMainSelectionBox = function (identifier){
         const allData = _.first(retrieveData (identifier,"dataFromServerArray")).rawData;
+        const groupedData = _.first(retrieveData (identifier,"dataFromServerArray")).groupedData;
+
         const preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier);
-        const everyoneWhoMadeItThroughTheTimeFilter = _.map(_.uniqBy(_.orderBy(preAnalysisFilter(allData),'code'),'code'),function (d) {
+        const everyoneWhoMadeItThroughTheTimeFilter = _.map(_.uniqBy(_.orderBy(preAnalysisFilter(groupedData),'code'),'code'),function (d) {
             return  d.code;
         });
         const everybodyInTheExistingList = _.map($('#'+identifier+' div.everyGroupToDisplay div.item label.displayControl'),function (d) {
@@ -934,6 +977,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         const allTheDataWeHaveAccumulated = retrieveData (identifier,"dataFromServerArray");
         const allData = _.first(allTheDataWeHaveAccumulated).rawData;
         const groupedData =  _.first(allTheDataWeHaveAccumulated).groupedData;
+
         const auxData =  _. map (allTheDataWeHaveAccumulated.slice (1,allTheDataWeHaveAccumulated.length), d => d.rawData);
         setData(identifier,"auxData", auxData);
         const idOfThePlaceWhereThePlotGoes  = _.find (tabHeaderOrganizer.topSection[0].headers,o =>o[0].id===identifier )[0].plotGoesHere[0].id;
@@ -946,10 +990,12 @@ mpgSoftware.growthFactorLauncher = (function () {
                 break;
             case filterDateAndListOfGroups:
                 preAnalysisFilter = filterModule.filterDateAndListOfGroups(identifier);
+                //preAnalysisFilter = filterModule.filterDateAndListOfGroups(identifier);
                 adjustTheMainSelectionBox(identifier);
                 break;
             case filterOnlyOnListOfGroups:
                 preAnalysisFilter = filterModule.filterOnlyOnListOfGroups(identifier);
+                //preAnalysisFilter = filterModule.filterUnwantedDatesFromGroupedData(identifier);
                 break;
             case filterBasedOnAnalysis:
                 preAnalysisFilter = filterModule.filterOnlyOnListOfGroups(identifier);
@@ -975,8 +1021,9 @@ mpgSoftware.growthFactorLauncher = (function () {
             .labelAccessors(...retrieveData(identifier,'labelAccessors'))
             .textAccessor (retrieveData(identifier,'textAccessor'))
             .auxData(auxData)
-            .buildGrowthFactorPlot(allData,
-                preAnalysisFilter,
+            // .buildGrowthFactorPlot(allData,
+            .buildGrowthFactorPlot(groupedData,
+                filterModule.filterUnwantedDatesFromGroupedData(identifier),
                 postAnalysisFilter
             );
     };

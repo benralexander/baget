@@ -238,6 +238,11 @@ baget.growthFactor = (function () {
          countryColorObject = {};
         _.forEach(_.uniq(unfilteredData,'code'), d=>countryColor(d.code));
     } ;
+    const assignColorsToCurvesUsingGroupedData = function (groupedData) {
+        color = d3.scaleOrdinal(d3.schemeCategory10);
+        countryColorObject = {};
+        _.forEach(groupedData, d=>countryColor(d.key));
+    } ;
 
     /***
      * Have we ever seen the string before? If so then use the same color. Otherwise give the string one of 10 colors.
@@ -291,7 +296,8 @@ baget.growthFactor = (function () {
                 }
             })
         }
-        assignColorsToCurves(unfilteredData);
+        assignColorsToCurvesUsingGroupedData (unfilteredData);
+        // assignColorsToCurves(unfilteredData);
 
         const data = preAnalysisFilter (unfilteredData);
 
@@ -329,7 +335,7 @@ baget.growthFactor = (function () {
         let dateExtentObject = [];
         if (data.length>0){
             const timeParse = d3.timeParse("%b %e, %Y");
-            const dateExtent = d3.extent(data, function(d){
+            const dateExtent = d3.extent(_.flatten(_.map(data,d=>d.values)), function(d){
                 return timeParse(d.date);
             });
             dateExtentObject = [dateExtent];
