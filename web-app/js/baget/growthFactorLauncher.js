@@ -284,12 +284,19 @@ mpgSoftware.growthFactorLauncher = (function () {
             this.dataAssignmentFunction = dataAssignmentFunction;// assigned data fields to names we like
             this.rawDataFilter = rawDataFilter;//filter the raw data before we do anything else
             this.savedData ={};
+            this.savedGroupedData ={};
         }
         set rawData (incomingRawData){
             this.savedData = this.rawDataFilter (incomingRawData);
         }
         get rawData (){
             return this.savedData;
+        }
+        set groupedData (incomingGroupedRawData){
+            this.savedGroupedData = incomingGroupedRawData;
+        }
+        get groupedData (){
+            return this.savedGroupedData;
         }
 
     }
@@ -514,10 +521,10 @@ mpgSoftware.growthFactorLauncher = (function () {
         const currentDateIndicator = '#' +identifier +' input.amount';
         $( currentDateSlider ).slider({
             range: true,
-            min: new Date(startDate).getTime() / 1000,
-            max: new Date(endDate).getTime() / 1000,
+            min: startDate.getTime() / 1000,
+            max: endDate.getTime() / 1000,
             step: 86400,
-            values: [ new Date(startDate).getTime() / 1000, new Date(endDate).getTime() / 1000 ],
+            values: [ startDate.getTime() / 1000, endDate.getTime() / 1000 ],
             slide: function( event, ui ) {
                 $( currentDateIndicator ).val( (new Date(ui.values[ 0 ] *1000).toDateString() ) + " - " + (new Date(ui.values[ 1 ] *1000)).toDateString() );
                 setData (identifier, "startDate",new Date(ui.values[ 0 ] *1000));
@@ -703,18 +710,18 @@ mpgSoftware.growthFactorLauncher = (function () {
 
         const yyyymmddNoDash = function(dateString) {
             const currentDay = +dateString.substring (6, 8);
-            const currentMonth = +dateString.substring (4, 6);
+            const currentMonth = (+dateString.substring (4, 6))-1;
             const currentYear = +dateString.substring (0, 4);
             const currentDate = new Date (currentYear,currentMonth,currentDay);
-            return ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear();
+            return ""+months[currentDate.getMonth()]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear();
 
         };
         const yyyymmddDash = function(dateString) {
             const currentDay = +dateString.substring (8, 10);
-            const currentMonth = +dateString.substring (5, 7);
+            const currentMonth = (+dateString.substring (5, 7))-1;
             const currentYear = +dateString.substring (0, 4);
             const currentDate = new Date (currentYear,currentMonth,currentDay);
-            return ""+months[currentDate.getMonth()-1]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear();
+            return ""+months[currentDate.getMonth()]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear();
         };
         return {
             yyyymmddNoDash:yyyymmddNoDash,
@@ -776,11 +783,11 @@ mpgSoftware.growthFactorLauncher = (function () {
 
             if (retrieveData (identifier, "includeTopLevelGroups")){
                 //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
-                orFilterArray.push (datum => !(datum.code.search('World')>=0));
+                orFilterArray.push (datum => !(_.includes (datum.key,'World')));
             }
             if (retrieveData (identifier, "includeSummaryGroups")){
                 //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
-                orFilterArray.push (datum => (datum.code.search('World')>=0));
+                orFilterArray.push (datum => !(_.includes ('World')));
             }
 
             // In this case, if neither or filter is selected then we want the graft be blank. Therefore let's insert a fake and filter which will always fail
@@ -790,9 +797,33 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
             const startDate = retrieveData (identifier, "startDate");
+            const globalStartDate = retrieveData (identifier, "globalStartDate");
             const endDate = retrieveData (identifier, "endDate");
-            andFilterArray.push (datum => (((new Date(datum.date).getTime() / 1000)>=(new Date(startDate).getTime() / 1000))  &&
-                ((new Date(datum.date).getTime() / 1000)<=(new Date(endDate).getTime() / 1000))));
+            const globalEndDate = retrieveData (identifier, "globalEndDate");
+            if ((startDate ===globalStartDate) &&
+                (endDate ===globalEndDate)){
+                andFilterArray.push (datum =>true);
+            }else {
+
+                // andFilterArray.push (datum => (((new Date(datum.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
+                // ((new Date(datum.date).getTime() / 1000)<=(endDate.getTime() / 1000))));
+                andFilterArray.push (function(datum){
+                    if ( typeof datum.values === 'undefined'){
+                        return (((new Date(datum.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
+                            ((new Date(datum.date).getTime() / 1000)<=(endDate.getTime() / 1000)))
+                    }else {
+                        const oneSuitableDate =   _.find(datum.values,
+                            data=>(((new Date(data.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
+                                ((new Date(data.date).getTime() / 1000)<=(endDate.getTime() / 1000))))
+                        return ( typeof oneSuitableDate !== 'undefined')
+                    }
+
+                });
+
+            }
+
+            // _.flatten(_.map(groupedData,d=>d.values))
+
 
             return andOrFilterModule (orFilterArray,andFilterArray);
 
@@ -858,13 +889,15 @@ mpgSoftware.growthFactorLauncher = (function () {
     const fillTheMainEntitySelectionBox = function(identifier){
 
         const allData = _.first(retrieveData (identifier,"dataFromServerArray")).rawData;
+        const groupedData = _.first(retrieveData (identifier,"dataFromServerArray")).groupedData;
+
         let preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier);
         $('#' +identifier +' div.everyGroupToDisplay').empty ();
         const startTheGroup = $('#' +identifier +' div.everyGroupToDisplay');
         const textAccessor = retrieveData (identifier, "textAccessor");
         const auxData = retrieveData(identifier,"auxData");
         let listOfGroups = '<div>';
-        _.forEach(_.uniqBy(_.orderBy(preAnalysisFilter(allData),'code'),'code'),function (v,k){
+        _.forEach(_.uniqBy(_.orderBy(preAnalysisFilter(groupedData),'key'),'key'),function (v,k){
             listOfGroups+='<div class="item checkboxHolder active">'+
                 '<input type="checkbox" class="custom-control-input  displayControl"  checked onclick="mpgSoftware.growthFactorLauncher.changeGroupCheckbox (this,\'' +identifier +'\')">' +
                 '<label class="custom-control-label  displayControl" >'+textAccessor(v,auxData)+'</label>'+
@@ -900,6 +933,7 @@ mpgSoftware.growthFactorLauncher = (function () {
     const buildThePlot= function (identifier, dataFilteringChoice) {
         const allTheDataWeHaveAccumulated = retrieveData (identifier,"dataFromServerArray");
         const allData = _.first(allTheDataWeHaveAccumulated).rawData;
+        const groupedData =  _.first(allTheDataWeHaveAccumulated).groupedData;
         const auxData =  _. map (allTheDataWeHaveAccumulated.slice (1,allTheDataWeHaveAccumulated.length), d => d.rawData);
         setData(identifier,"auxData", auxData);
         const idOfThePlaceWhereThePlotGoes  = _.find (tabHeaderOrganizer.topSection[0].headers,o =>o[0].id===identifier )[0].plotGoesHere[0].id;
@@ -970,7 +1004,8 @@ mpgSoftware.growthFactorLauncher = (function () {
             const dataFromServerArray = retrieveData (identifier, "dataFromServerArray");
 
             try{
-                Promise.all (_.map (dataFromServerArray,dataFromServer => d3.csv(dataFromServer.dataUrl,dataFromServer.dataAssignmentFunction)))
+                Promise.all (_.map (dataFromServerArray,
+                        dataFromServer => d3.csv(dataFromServer.dataUrl,dataFromServer.dataAssignmentFunction)))
                 .then(
                     function (dataFromAllRemoteCalls){
 
@@ -979,7 +1014,13 @@ mpgSoftware.growthFactorLauncher = (function () {
                             alert ("shouldn't these values always be the same?")
                         }else {
                             _.forEach(dataFromAllRemoteCalls, function (dataToSave, index){
-                                dataFromServerArray[index].rawData = dataToSave
+                                dataFromServerArray[index].rawData = dataToSave;
+                                if (index === 0){
+                                    dataFromServerArray[index].groupedData =  d3.nest() // nest function to group by country
+                                        .key(function(d) { return d.code;} )
+                                        .entries(dataToSave);
+                                }
+
                             });
                         }
 
@@ -987,10 +1028,17 @@ mpgSoftware.growthFactorLauncher = (function () {
                         // deal with primary data
                         //
                         const allData = _.first (dataFromServerArray).rawData ;
-                         // Now remember the data that we have, and calculate a universal start date and end date
-                        // setData (identifier, "rawData",allData);
-                        setData (identifier, "startDate",new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
-                        setData (identifier, "endDate",new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
+                        const groupedData = _.first (dataFromServerArray).groupedData ;
+
+                        // Now remember the data that we have, and calculate a universal start date and end date
+                        // setData (identifier, "startDate",new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
+                        // setData (identifier, "endDate",new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
+                        const [startDate,endDate]=d3.extent(_.flatten(_.map(groupedData,d=>d.values)), d => new Date(d.date));
+                        setData (identifier, "startDate",startDate);
+                        setData (identifier, "globalStartDate",startDate);
+                        setData (identifier, "endDate",endDate);
+                        setData (identifier, "globalEndDate",endDate);
+
                         initializeDateSlider (identifier);  //we can only do this after we have calculated the date range
 
                         synchronizeDataGroupingWithUi (identifier);
