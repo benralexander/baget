@@ -19,8 +19,9 @@ baget.growthFactor = (function () {
     let collapseToCommonStart = true;
     // let xAxisLabel = "Days cents fifth death";
     // let yAxisLabel = "Total deaths";
-    let deathsIndependentOfPopulation = true;
+    let countingTotalDeaths;
     let auxData = [];
+    let [xValueAccessor,yValueAccessor] = [x =>x.x,y =>y.y];
     let [xAxisLabelAccessor,yAxisLabelAccessor] = [x =>'no X axis label',y =>'no Y axis label'];
     let [xTextAccessor,yTextAccessor] = [x =>'no X text accessor',y =>'no Y text accessor'];
     let textAccessor = function (x){return x};
@@ -88,7 +89,7 @@ baget.growthFactor = (function () {
 
 
 
-    const hover = function (svg, topLevelSvg,xValue,yValue) {
+    const hover = function (svg, topLevelSvg,xValueAccess,yValue) {
 
         const shiftPopUpMessage = 20;
 
@@ -111,10 +112,10 @@ baget.growthFactor = (function () {
                 .attr("class", "countryInflectionLabelHolder")
                 .append("rect")
                 .attr("x", function(d,i){
-                    return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage-5;
+                    return x(xValueAccessor (chooseValueFunction (d),auxData))+shiftPopUpMessage-5;
                 })
                 .attr("y", function(d,i){
-                    return y(yValue (chooseValueFunction (d)))-shiftPopUpMessage-5;
+                    return y(yValueAccessor (chooseValueFunction (d),auxData))-shiftPopUpMessage-5;
                 })
                 .attr("width", 190)
                 .attr("height", 43+(("Inflection point detected"===title)? 13:0) )
@@ -122,10 +123,10 @@ baget.growthFactor = (function () {
             ;
             labelHolder
                 .attr("x", function(d,i){
-                    return x(xValue(chooseValueFunction (d)))+shiftPopUpMessage-5;
+                    return x(xValueAccessor(chooseValueFunction (d),auxData))+shiftPopUpMessage-5;
                 })
                 .attr("y", function(d,i){
-                    return y(yValue (chooseValueFunction (d)))-shiftPopUpMessage-5;
+                    return y(yValueAccessor (chooseValueFunction (d),auxData))-shiftPopUpMessage-5;
                 })
             labelHolder.exit()
                 .remove ();
@@ -139,10 +140,10 @@ baget.growthFactor = (function () {
                 .attr("text-anchor", "last")
                 .attr("alignment-baseline", "hanging")
                 .attr("x", function(d,i){
-                    return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage;
+                    return x(xValueAccessor (chooseValueFunction (d),auxData))+shiftPopUpMessage;
                 })
                 .attr("y", function(d,i){
-                    return y(yValue (chooseValueFunction (d)))-shiftPopUpMessage;
+                    return y(yValueAccessor (chooseValueFunction (d),auxData))-shiftPopUpMessage;
                 })
                 .text(function(d,i){
                     return title;
@@ -151,12 +152,12 @@ baget.growthFactor = (function () {
                 .attr("class", "countryInflectionLabel")
                 .attr("alignment-baseline", "hanging")
                 .attr('dy', '1.2em')
-                .attr("x", d=>x(xValue (chooseValueFunction (d)))+shiftPopUpMessage)
+                .attr("x", d=>x(xValueAccessor (chooseValueFunction (d),auxData))+shiftPopUpMessage)
                 .text( function(d){
-                    if (typeof xValue(chooseValueFunction (d))==="number"){
-                       return "in "+textAccessor (chooseValueFunction (d),auxData)+' by day '+Math.round (xValue(chooseValueFunction (d)));
+                    if (typeof xValueAccessor(chooseValueFunction (d),auxData)==="number"){
+                       return "in "+textAccessor (chooseValueFunction (d),auxData)+' by day '+Math.round (xValueAccessor(chooseValueFunction (d),auxData));
                     } else {
-                        return "in "+textAccessor (chooseValueFunction (d),auxData)+' on '+d3.timeFormat("%B %d, %Y")(xValue(chooseValueFunction (d)));
+                        return "in "+textAccessor (chooseValueFunction (d),auxData)+' on '+d3.timeFormat("%B %d, %Y")(xValueAccessor(chooseValueFunction (d),auxData));
                     }
 
                 })
@@ -165,7 +166,7 @@ baget.growthFactor = (function () {
                 .attr("alignment-baseline", "hanging")
                 .attr('dy', '1.2em')
                 .attr("x", function(d,i){
-                    return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage;
+                    return x(xValueAccessor (chooseValueFunction (d),auxData))+shiftPopUpMessage;
                 })
                 .text( function(d,i){return "("+chooseValueFunction (d).date+")"});
             // the old prediction, from back when I thought that inflection might occur when the cumulative death curve
@@ -178,7 +179,7 @@ baget.growthFactor = (function () {
             //         .attr("alignment-baseline", "hanging")
             //         .attr('dy', '1.2em')
             //         .attr("x", function(d,i){
-            //             return x(xValue (chooseValueFunction (d)))+shiftPopUpMessage;
+            //             return x(xValueAccessor (chooseValueFunction (d)),auxData)+shiftPopUpMessage;
             //         });
             // }
             popUpLabelHolder.exit()
@@ -236,7 +237,7 @@ baget.growthFactor = (function () {
     const assignColorsToCurves = function (unfilteredData) {
          color = d3.scaleOrdinal(d3.schemeCategory10);
          countryColorObject = {};
-        _.forEach(_.uniq(unfilteredData,'code'), d=>countryColor(d.code));
+        _.forEach(_.uniq(unfilteredData,'key'), d=>countryColor(d.key));
     } ;
     const assignColorsToCurvesUsingGroupedData = function (groupedData) {
         color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -257,59 +258,60 @@ baget.growthFactor = (function () {
         }
     };
 
-    const xValue = function (d){
-        if (collapseToCommonStart){
-            return +d.x;
-        }else {
-            return new Date(d.date);
-        }
-    };
-    const yValue = function (d){
-        if (deathsIndependentOfPopulation){
-            let retVal=+d.y;
-            return retVal;
-        }else {
-            if (auxData.length>0) {
-                const auxiliaryRecord = _.find (auxData[0],{Abbreviation:d.code});
-                if ((auxiliaryRecord)&&(+auxiliaryRecord.Pop>0)) {
-                    retVal =  ((+d.y)*1000000)/(+auxiliaryRecord.Pop);
-                }
-            } else {
-                retVal = +d.total_deaths_per_million;
-            }
-            return retVal;
-        }
-    };
+    // const xValue = function (d){
+    //     if (collapseToCommonStart){
+    //         return +d.x;
+    //     }else {
+    //         return new Date(d.date);
+    //     }
+    // };
+    // const yValue = function (d){
+    //     if (deathsIndependentOfPopulation){
+    //         let retVal=+d.y;
+    //         return retVal;
+    //     }else {
+    //         if (auxData.length>0) {
+    //             const auxiliaryRecord = _.find (auxData[0],{Abbreviation:d.key});
+    //             if ((auxiliaryRecord)&&(+auxiliaryRecord.Pop>0)) {
+    //                 retVal =  ((+d.y)*1000000)/(+auxiliaryRecord.Pop);
+    //             }
+    //         } else {
+    //             retVal = +d.total_deaths_per_million;
+    //         }
+    //         return retVal;
+    //     }
+    // };
 
-    instance.buildGrowthFactorPlot = function (unfilteredData,
+    instance.buildGrowthFactorPlot = function (growthFactorByCountry,
                                             preAnalysisFilter,
                                             postAnalysisFilter ) {
         const transitionTime = 1500;
-        if (!linearNotLog) { // log functions prefer values > 0
-            _.forEach(unfilteredData, function (rec) {
-                if(yValue (rec)<0.1){
-                    if (deathsIndependentOfPopulation){
-                        rec["y"] = 1;
-                    } else {
-                        rec["total_deaths_per_million"]=0.1;
-                    }
-                }
-            })
-        }
-        assignColorsToCurvesUsingGroupedData (unfilteredData);
+        // if (!linearNotLog) { // log functions prefer values > 0
+        //     _.forEach(unfilteredData, function (rec) {
+        //         if(yValue (rec)<0.1){
+        //             if (deathsIndependentOfPopulation){
+        //                 rec["y"] = 1;
+        //             } else {
+        //                 rec["total_deaths_per_million"]=0.1;
+        //             }
+        //         }
+        //     })
+        // }
+        assignColorsToCurvesUsingGroupedData (growthFactorByCountry);
         // assignColorsToCurves(unfilteredData);
 
-        const data = preAnalysisFilter (unfilteredData);
+        // const data = preAnalysisFilter (unfilteredData);
+        // const data = unfilteredData;
 
 
-        const growthFactorByCountry = postAnalysisFilter(
-            mpgSoftware.growthFactorLauncher.analysisModule.calculateGrowthFactorByCountry (data,
-                movingAverageWindow,daysOfNonExponentialGrowthRequired));
+        // const growthFactorByCountry = postAnalysisFilter(
+        //     mpgSoftware.growthFactorLauncher.analysisModule.calculateGrowthFactorByCountry (data,
+        //         movingAverageWindow,daysOfNonExponentialGrowthRequired));
 
 
 
-
-        let [yLower,yUpper] = d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => yValue (d));
+        const flattenEverything = _.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues));
+        let [yLower,yUpper] = d3.extent(flattenEverything, d => yValueAccessor (d,auxData));
         if (linearNotLog){
             y = d3.scaleLinear()
                 .domain([yLower,yUpper]).nice()
@@ -321,24 +323,31 @@ baget.growthFactor = (function () {
         }
         let [xLower,xUpper] = [0, 0];
         if(collapseToCommonStart){
-            [xLower,xUpper] = d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => +d.x);
+            [xLower,xUpper] = d3.extent(flattenEverything, d => +d.x);
             x = d3.scaleLinear([xLower,xUpper])
                 .domain([xLower,xUpper]).nice()
                 .range([margin.left, width - margin.right]);
 
         }else {
-            [xLower,xUpper] = d3.extent(_.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues)), d => new Date(d.date));
+            [xLower,xUpper] = d3.extent(flattenEverything, d => new Date(d.date));
             x = d3.scaleTime()
                 .domain([xLower,xUpper])
                 .range([margin.left, width - margin.right]);
         }
         let dateExtentObject = [];
-        if (data.length>0){
-            const timeParse = d3.timeParse("%b %e, %Y");
-            const dateExtent = d3.extent(_.flatten(_.map(data,d=>d.values)), function(d){
-                return timeParse(d.date);
-            });
-            dateExtentObject = [dateExtent];
+        // if (data.length>0){
+        //     const timeParse = d3.timeParse("%b %e, %Y");
+        //     const dateExtent = d3.extent(_.flatten(_.map(data,d=>d.values)), function(d){
+        //         return timeParse(d.date);
+        //     });
+        //     dateExtentObject = [dateExtent];
+        // }
+        if (growthFactorByCountry.length>0){
+            //const timeParse = d3.timeParse("%b %e, %Y");
+            // const dateExtent = d3.extent(flattenEverything, function(d){
+            //     return timeParse(d.date);
+            // });
+            dateExtentObject = [d3.extent(flattenEverything, d => new Date(d.date))];
         }
 
 
@@ -431,31 +440,35 @@ baget.growthFactor = (function () {
         _.forEach (groupHolder.data (),  function (element) {
             const lastValue = _.last (element.values.rawValues);
             if ( typeof lastValue === 'undefined') return true;
-            rememberLastValue [element.key] = {x:lastValue.x, y:lastValue.y, len:element.values.rawValues.length };
+            rememberLastValue [element.key] = {x:xValueAccessor(lastValue,auxData),
+                y:yValueAccessor (lastValue,auxData),
+                date:lastValue.date,
+                total_deaths_per_million:lastValue.total_deaths_per_million,
+                len:element.values.rawValues.length };
         });
         groupHolder =groupHolder
-            .data(growthFactorByCountry,d=>textAccessor (d,auxData));
+            .data(growthFactorByCountry,d=>d.key);
         const groupHolderEnter = groupHolder.enter()
             .append("g")
             .attr("class",'gh');
         // add the path
         groupHolderEnter
             .append("path")
-            .attr("class", d => (((d.values.rawValues[0].code.length> 0)? "countryLine":"categoryLine") + " dataLine "+d.type))
+            .attr("class",  d=>" dataLine "+d.type)
             .attr("fill", "none")
             .attr("stroke", function(d){ return countryColor(d.key) })
             .attr("stroke-width", 1)
             .attr("d", function(d,k){
                 return d3.line()
-                    .x(function(d) { return (rememberLastValue [d.key])?(rememberLastValue [d.key].x):x(xLower); })
-                    .y(function(d) { return (rememberLastValue [d.key])?(rememberLastValue [d.key].y):y(yLower); })
+                    .x(function(d) { return x((rememberLastValue [d.key])?(xValueAccessor(rememberLastValue [d.key],auxData)):(xLower)); })
+                    .y(function(d) { return y((rememberLastValue [d.key])?(yValueAccessor (rememberLastValue [d.key],auxData)):(yLower)); })
                     (d.values.rawValues)
             })
             .transition().duration (transitionTime)
             .attr("d", function(d,k){
                 return d3.line()
-                    .x(function(d) { return x(xValue (d)); })
-                    .y(function(d) { return y(yValue(d)); })
+                    .x(function(d) { return x(xValueAccessor (d,auxData)); })
+                    .y(function(d) { return y(yValueAccessor(d,auxData)); })
                     (d.values.rawValues)
             });
         // add the text
@@ -474,10 +487,10 @@ baget.growthFactor = (function () {
             })
             .transition().duration (transitionTime)
             .attr("x", function(d,i){
-                return x(xValue (_.last(d.values.rawValues,'x')));
+                return x(xValueAccessor (_.last(d.values.rawValues,'x'),auxData));
             })
             .attr("y", function(d,i){
-                return y(yValue(_.last(d.values.rawValues,'y')));
+                return y(yValueAccessor(_.last(d.values.rawValues,'y'),auxData));
             });
 
 // update the line
@@ -487,19 +500,19 @@ baget.growthFactor = (function () {
                 return d3.line()
                     .x(function(d, index) {
                         const lastValue = rememberLastValue [d.key];
-                        return (lastValue && (index >= lastValue.len))?x(xValue (rememberLastValue [d.key])): x(xValue (d));
+                        return (lastValue && (index >= lastValue.len))?x(xValueAccessor (rememberLastValue [d.key],auxData)): x(xValueAccessor (d,auxData));
                     })
                     .y(function(d, index) {
                         const lastValue = rememberLastValue [d.key];
-                        return (lastValue && (index >= lastValue.len))?y(yValue (rememberLastValue [d.key])):y(yValue (d));
+                        return (lastValue && (index >= lastValue.len))?y(yValueAccessor (rememberLastValue [d.key],auxData)):y(yValueAccessor (d,auxData));
                     })
                     (d.values.rawValues)
             })
             .transition().duration (transitionTime)
             .attr("d", function(d,k){
                 return d3.line()
-                    .x(function(d) { return x(xValue (d)); })
-                    .y(function(d) { return y(yValue (d)); })
+                    .x(function(d) { return x(xValueAccessor (d,auxData)); })
+                    .y(function(d) { return y(yValueAccessor (d,auxData)); })
                     (d.values.rawValues)
             });
 
@@ -507,10 +520,10 @@ baget.growthFactor = (function () {
         groupHolder.select ("text.countryLabel")
             .transition().duration (transitionTime)
             .attr("x", function(d,i){
-                return x(xValue (_.last(d.values.rawValues,'x')));
+                return x(xValueAccessor (_.last(d.values.rawValues,'x'),auxData));
             })
             .attr("y", function(d,i){
-                return y(yValue (_.last(d.values.rawValues,'y')));
+                return y(yValueAccessor (_.last(d.values.rawValues,'y'),auxData));
             });
 
         groupHolder.exit()
@@ -522,7 +535,7 @@ baget.growthFactor = (function () {
             .data(_.filter (growthFactorByCountry,function(o){return o.values.inflection}),d=>d.key);
         inflectionPoint.enter()
             .append("circle")
-            .attr("class",  d => d.values.inflection.code+" inflectionPoint "+d.type)
+            .attr("class",  d => d.values.inflection.key+" inflectionPoint "+d.type)
             .attr("r", 4)
             .attr("fill", function(d){ return countryColor(d.key) })
             .attr("stroke", 'black')
@@ -531,11 +544,11 @@ baget.growthFactor = (function () {
             .attr("cy", d => y(yLower))
             .transition().duration (transitionTime)
             // .attr("cx", d => x(d.values.inflection.x))
-            .attr("cx", d => x(xValue (d.values.inflection)))
-            .attr("cy", d => y(yValue(d.values.inflection)));
+            .attr("cx", d => x(xValueAccessor (d.values.inflection,auxData)))
+            .attr("cy", d => y(yValueAccessor(d.values.inflection,auxData)));
         inflectionPoint.transition().duration (transitionTime)
-            .attr("cx", d => x(xValue (d.values.inflection)))
-            .attr("cy", d => y(yValue (d.values.inflection)));
+            .attr("cx", d => x(xValueAccessor (d.values.inflection,auxData)))
+            .attr("cy", d => y(yValueAccessor (d.values.inflection,auxData)));
         inflectionPoint.exit()
             .remove()
         ;
@@ -546,7 +559,7 @@ baget.growthFactor = (function () {
         //         ,d=>d.key);
         // noinflectionPoint.enter()
         //     .append("circle")
-        //     .attr("class",  d => d.values.noinflection.code+" noinflection "+d.type)
+        //     .attr("class",  d => d.values.noinflection.key+" noinflection "+d.type)
         //     .attr("r", 3)
         //     .attr("fill", function(d){ return countryColor(d.key) })
         //     .attr("cx", d => x(0))
@@ -562,7 +575,7 @@ baget.growthFactor = (function () {
 
         // label the axes
         const xAxisLabelElement = svg.selectAll("text.axisLabel.xAxis")
-            .data([instance.xAxisLabelAccessor ()]);
+            .data([xAxisLabelAccessor ()]);
         xAxisLabelElement.enter()
             .append("text")
             .attr("class", "axisLabel xAxis")
@@ -581,7 +594,7 @@ baget.growthFactor = (function () {
             .remove()
         ;
         const yAxisLabelElement = svg.selectAll("text.axisLabel.yAxis")
-            .data([instance.yAxisLabelAccessor ()]);
+            .data([yAxisLabelAccessor ()]);
         yAxisLabelElement.enter()
         .append("text")
             .attr("class", "axisLabel yAxis")
@@ -602,7 +615,7 @@ baget.growthFactor = (function () {
         ;
 
 
-        svg.selectAll("circle.inflectionPoint").call(hover, svg, xValue,yValue);
+        svg.selectAll("circle.inflectionPoint").call(hover, svg, xValueAccessor,yValueAccessor);
         // svg.selectAll("circle.noinflection").call(hover, svg);
         svg.selectAll("g.gh").call (highlight, svg);
 
@@ -661,16 +674,22 @@ baget.growthFactor = (function () {
         collapseToCommonStart = x;
         return instance;
     };
-    instance.deathsIndependentOfPopulation= function (x) {
-        if (!arguments.length) return deathsIndependentOfPopulation;
-        deathsIndependentOfPopulation = x;
+    instance.countingTotalDeaths= function (x) {
+        if (!arguments.length) return countingTotalDeaths;
+        countingTotalDeaths = x;
         return instance;
     };
     instance.labelAccessors= function (x, y) {
-        if (!arguments.length) return [instance.xAxisLabelAccessor,instance.yAxisLabelAccessor];
-        [instance.xAxisLabelAccessor,instance.yAxisLabelAccessor] = [x, y];
+        if (!arguments.length) return [xAxisLabelAccessor,yAxisLabelAccessor];
+        [xAxisLabelAccessor,yAxisLabelAccessor] = [x, y];
         return instance;
     };
+    instance.valueAccessors= function (x, y) {
+        if (!arguments.length) return [xValueAccessor,yValueAccessor];
+        [xValueAccessor,yValueAccessor] = [x, y];
+        return instance;
+    };
+
     instance.textAccessor= function (x) {
         if (!arguments.length) return textAccessor;
         textAccessor = x;

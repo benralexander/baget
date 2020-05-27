@@ -48,7 +48,7 @@
                 "https://covidtracking.com/api/v1/states/daily.csv",
                 function(d) {
                     return {
-                        code: d["state"],
+                        key: d["state"],
                         date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddNoDash (d["date"]),
                         y:+d["death"]};
                 },
@@ -75,13 +75,13 @@
                         total_cases: d["total_cases"],
                         total_deaths_per_million: d["total_deaths_per_million"],
                         total_tests_per_thousand: d["total_tests_per_thousand"],
-                        code: d["location"],
+                        key: d["location"],
                         date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash (d["date"]),
                         y:+d["total_deaths"]};
 
                 },
                 function(rawData){
-                    return  _.filter (rawData,datum => ((!(datum.code.search('International')>=0)))&&
+                    return  _.filter (rawData,datum => ((!(datum.key.search('International')>=0)))&&
                         (!isNaN(datum.y)));;
                 })
             ]
@@ -94,12 +94,12 @@
                 "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv",
                 function(d) {
                     return {
-                        code: d["county"],
+                        key: d["county"],
                         date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash (d["date"]),
                         y:+d["deaths"]};
                 },
                 function(rawData){
-                    return  _.filter (rawData,datum => ((!(datum.code.search('Unknown')>=0)))&&
+                    return  _.filter (rawData,datum => ((!(datum.key.search('Unknown')>=0)))&&
                         (!isNaN(datum.y)));;
                 })
             ]

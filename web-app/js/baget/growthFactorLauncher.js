@@ -79,13 +79,15 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:" Date dependent"
                 },
                 {
-                    methodCallBack:"deathsIndependentOfPopulation",
+                    methodCallBack:"countingTotalDeaths",
                     title:"Deaths per million"
                 }
             ],
             labelAccessors: [   x =>'X axis label',
                                 y =>'Y axis label'  ],
-            textAccessor: d =>(d.code)?d.code:d.key,
+            valueAccessors:[   x =>x.x,
+                y =>y.y  ],
+            textAccessor: d =>d.key,
             plotGoesHere: [{"id":"growthFactorPlotCountries"}],
             tabDescription: "COVID-19 by country",
             tabActive: "active"
@@ -155,12 +157,14 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:" Date dependent"
                 },
                 {
-                    methodCallBack:"deathsIndependentOfPopulation",
+                    methodCallBack:"countingTotalDeaths",
                     title:"Deaths per million"
                 }
             ],
             labelAccessors: [   x =>'X axis label',
                 y =>'Y axis label'  ],
+            valueAccessors:[   x =>x.x,
+                y =>y.y  ],
             textAccessor: x =>x.key,
             plotGoesHere: [{"id":"growthFactorPlotStates"}],
             tabDescription: "COVID-19 by state",
@@ -231,7 +235,9 @@ mpgSoftware.growthFactorLauncher = (function () {
             ],
             labelAccessors: [   x =>'X axis label',
                 y =>'Y axis label'  ],
-            textAccessor: d =>(d.code)?d.code:d.key,
+            valueAccessors:[   x =>x.x,
+                y =>y.y  ],
+            textAccessor: d =>d.key,
             plotGoesHere: [{"id":"growthFactorPlotCounties"}],
             tabDescription: "COVID-19 by county",
             tabActive: ""
@@ -253,11 +259,14 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     };
 
-    const filterBasedOnDataSelectionAndDate = 1;
-    const filterDateAndListOfGroups = 2;
-    const filterOnlyOnListOfGroups = 3;
-    const filterBasedOnAnalysis = 4;
-    const filterUnwantedDatesFromGroupedData = 5;
+
+    const FILTER_NONE = 0;
+    const FILTER_BASED_ON_DATA_SELECTION_AND_DATE= 1;
+    const FILTER_ADJUST_LIST_OF_GROUPS_BASED_ON_DATE = 2;
+    const FILTER_BASED_ONLY_ON_LIST_OF_GROUPS = 3;
+    const FILTER_BASED_ON_ANALYSIS = 4;
+    const FILTER_UNWANTED_DATES_FROM_GROUPED_DATA = 5;
+    const ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA = 6;
 
 
     let [xAxisLabelAccessor,yAxisLabelAccessor] = [x =>'X axis label',
@@ -322,7 +331,7 @@ mpgSoftware.growthFactorLauncher = (function () {
          movingAverageWindow = 7;
          daysOfNonExponentialGrowthRequired = 7;
          collapseToCommonStart = true;
-        deathsIndependentOfPopulation = true;
+        countingTotalDeaths = true;
          changesRequiringDataInitialization = function (dataChanged){
              let initializationRequired = false;
              switch(buildThePlot){
@@ -359,14 +368,17 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     const synchronizeDataGroupingWithUi = function (identifier){
         setData (identifier, "labelAccessors",displayOrganizer [identifier][0].labelAccessors);
+        setData (identifier, "valueAccessors",displayOrganizer [identifier][0].valueAccessors);
         setData (identifier, "textAccessor",displayOrganizer [identifier][0].textAccessor);
     }
     const adjustAccessors = function (identifier){
+        //
+        // set the X and Y label on the axes
+        //
         const currentAccessors = retrieveData (identifier, "labelAccessors");
         let buildingXAxisLabel = "";
         let buildingYAxisLabel = "";
-
-        if (retrieveData (identifier, "deathsIndependentOfPopulation")){
+        if (retrieveData (identifier, "countingTotalDeaths")){
             buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?"Total deaths":"total deaths";
         }else {
             buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?"Deaths per million":"deaths per million";
@@ -383,11 +395,12 @@ mpgSoftware.growthFactorLauncher = (function () {
         currentAccessors [1] =  (y =>buildingYAxisLabel);
         setData(identifier,"labelAccessors", currentAccessors);
 
+        //
+        // set the text label that we give to each line on the plot
+        //
         if(identifier ==='states') {
-
             setData(identifier, "textAccessor", function (d,auxData) {
-                // auxData = retrieveData(identifier, "auxData");
-                const conversion = _.find (auxData [0], {'Abbreviation':(d.code)?d.code:d.key});
+                const conversion = _.find (auxData [0], {'Abbreviation':d.key});
                 if( typeof conversion === 'undefined'){
                     return d.key
                 }else {
@@ -396,6 +409,41 @@ mpgSoftware.growthFactorLauncher = (function () {
 
             });
         }
+
+        //
+        // set the values that we will use to access horizontal axis data. Note that we can use to datatypes, either numeric or date
+        //
+        const currentValueAccessors = retrieveData (identifier, "valueAccessors");
+        let buildingXValueAccessor;
+        let buildingYValueAccessor;
+        if (retrieveData (identifier, "collapseToCommonStart")){
+            buildingXValueAccessor = d => +d.x;
+        }else {
+            buildingXValueAccessor = d => new Date(d.date);
+        }
+        //
+        // set the values that we will use to access vertical axis data.
+        //
+        if (retrieveData (identifier, "countingTotalDeaths")){
+            buildingYValueAccessor = d => +d.y;
+        }else {
+            if((identifier ==='states')  && (retrieveData(identifier,"auxData").length>0)) {
+                buildingYValueAccessor = function (d, auxData) {
+                    const auxiliaryRecord = _.find(auxData[0], {Abbreviation: d.key});
+                    if ((auxiliaryRecord) && (+auxiliaryRecord.Pop > 0)) {
+                        return ((+d.y) * 1000000) / (+auxiliaryRecord.Pop);
+                    }else {
+                        return (+d.y);
+                    }
+                };
+            }else  {
+                buildingYValueAccessor = d =>+d.total_deaths_per_million;
+            }
+        }
+        currentValueAccessors [0] =  buildingXValueAccessor;
+        currentValueAccessors [1] =  buildingYValueAccessor;
+        setData(identifier,"valueAccessors", currentValueAccessors);
+
     }
 
     /***
@@ -410,7 +458,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             spin: function (event, ui){
                 const identifier = $(event.target).closest("div.coreObject").attr('id');
                 setData(identifier,"movingAverageWindow", ui.value);
-                buildThePlotWithRememberedData (identifier,filterBasedOnDataSelectionAndDate);
+                buildThePlotWithRememberedData (identifier,FILTER_BASED_ON_ANALYSIS);
             }
         });
         spinnerAverage.spinner( "value", retrieveData(identifier,"movingAverageWindow"));
@@ -422,7 +470,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             spin: function (event, ui){
                 const identifier = $(event.target).closest("div.coreObject").attr('id');
                 setData(identifier,"daysOfNonExponentialGrowthRequired", ui.value);
-                buildThePlotWithRememberedData (identifier,filterBasedOnDataSelectionAndDate);
+                buildThePlotWithRememberedData (identifier,FILTER_BASED_ON_ANALYSIS);
             }
             // ,
             // change: function (event, ui){
@@ -439,7 +487,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
         const clickAllTheBoxes = $(callingObject).text () === "ALL";
         $('#'+identifier+' div.everyGroupToDisplay div.item input.displayControl').prop("checked", clickAllTheBoxes);
-        buildThePlot (identifier,  filterOnlyOnListOfGroups);
+        buildThePlot (identifier,  FILTER_ADJUST_LIST_OF_GROUPS_BASED_ON_DATE);
     };
 
 
@@ -467,7 +515,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             $(callingObject).text ("Linear scale");
         }
         setData(identifier,"useLinearNotLog", changeToLinear);
-        buildThePlot(identifier,filterOnlyOnListOfGroups);
+        buildThePlot(identifier,ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA);
     };
     const collapseToCommonStart= function (callingObject){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
@@ -478,34 +526,34 @@ mpgSoftware.growthFactorLauncher = (function () {
             $(callingObject).text ("Shared start");
         }
         setData(identifier,"collapseToCommonStart", shallWeCollapseToCommonStart);
-        buildThePlot(identifier,filterOnlyOnListOfGroups);
+        buildThePlot(identifier,ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA);
     };
-    const deathsIndependentOfPopulation= function (callingObject){
+    const countingTotalDeaths= function (callingObject){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
-        const shallWeShowDeathsIndependentOfPopulation= $(callingObject).text () === "Total deaths";
-        if (shallWeShowDeathsIndependentOfPopulation){
+        const shallWeShowcountingTotalDeaths= $(callingObject).text () === "Total deaths";
+        if (shallWeShowcountingTotalDeaths){
             $(callingObject).text ("Deaths per million");
         } else {
             $(callingObject).text ("Total deaths");
         }
-        setData(identifier,"deathsIndependentOfPopulation", shallWeShowDeathsIndependentOfPopulation);
-        buildThePlot(identifier,filterOnlyOnListOfGroups);
+        setData(identifier,"countingTotalDeaths", shallWeShowcountingTotalDeaths);
+        buildThePlot(identifier,ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA);
     };
 
     const changeWhatIsDisplayed = function (callingObject,callingObjectId){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
         const callingObjectIsChecked = $(callingObject).prop("checked") === true;
         setData(identifier,callingObjectId, callingObjectIsChecked);
-        buildThePlot (identifier,filterBasedOnDataSelectionAndDate);
+        buildThePlot (identifier,FILTER_BASED_ON_DATA_SELECTION_AND_DATE);
     };
     const changeFormOfAnalysis = function (callingObject,callingObjectId){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
         const callingObjectIsChecked = $(callingObject).prop("checked") === true;
         setData(identifier,callingObjectId, callingObjectIsChecked);
-        buildThePlot (identifier,filterOnlyOnListOfGroups);
+        buildThePlot (identifier,FILTER_BASED_ON_ANALYSIS);
     };
     const changeGroupCheckbox = function (callingObject, identifier){
-        buildThePlot (identifier, filterOnlyOnListOfGroups);
+        buildThePlot (identifier, FILTER_BASED_ONLY_ON_LIST_OF_GROUPS);
     };
 
     const setHeight = function (currentHeight){
@@ -531,7 +579,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 $( currentDateIndicator ).val( (new Date(ui.values[ 0 ] *1000).toDateString() ) + " - " + (new Date(ui.values[ 1 ] *1000)).toDateString() );
                 setData (identifier, "startDate",new Date(ui.values[ 0 ] *1000));
                 setData (identifier, "endDate",new Date(ui.values[ 1 ] *1000));
-                buildThePlot (identifier, filterBasedOnDataSelectionAndDate);
+                buildThePlot (identifier, FILTER_UNWANTED_DATES_FROM_GROUPED_DATA);
 
             }
         });
@@ -577,7 +625,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                             tempRec['x']=((new Date(d.date).getTime()/1000)-dateAfterFifthDeath)/86400;
                             return tempRec;
                         });
-                        modifiedDataByCountry.push({key:_.first(dataWithCalculatedXAddedIn).code,
+                        modifiedDataByCountry.push({key:_.first(dataWithCalculatedXAddedIn).key,
                             values:_.uniqBy(dataWithCalculatedXAddedIn,'x')});
                     }
                 });
@@ -610,7 +658,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                                     y:valuesWeCareAbout[index].y,
                                     // difference: valuesWeCareAbout[index].y-valuesWeCareAbout[index-1].y,
                                     difference: n2-n1,
-                                    code: valuesWeCareAbout[index].code
+                                    key: valuesWeCareAbout[index].key
                                 }
                             );
                         }
@@ -624,7 +672,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                                     y:valuesWeCareAbout[index].y,
                                     total_deaths_per_million: valuesWeCareAbout[index].total_deaths_per_million,
                                     growthFactor:differenceArray[index].difference/differenceArray[index-1].difference,
-                                    code: valuesWeCareAbout[index].code});
+                                    key: valuesWeCareAbout[index].key});
                         }
                     });
                     let analComplete = {inflection: null, noinflection: null  };
@@ -643,7 +691,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                                     x: growthRateArray[index].x,
                                     y: growthRateArray[index].y,
                                     total_deaths_per_million: growthRateArray[index].total_deaths_per_million,
-                                    code: valuesWeCareAbout[index].code,
+                                    key: valuesWeCareAbout[index].key,
                                     date:_.find(valuesWeCareAbout,d=>d.x===growthRateArray[index].x).date
                                 };
                                 return false;
@@ -652,7 +700,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                                     index: index,
                                     x: growthRateArray[index].x,
                                     y: growthRateArray[index].y,
-                                    code: valuesWeCareAbout[index].code,
+                                    key: valuesWeCareAbout[index].key,
                                     date:_.find(valuesWeCareAbout,d=>d.x===growthRateArray[index].x).date
                                 };
                                 return true;
@@ -669,7 +717,7 @@ mpgSoftware.growthFactorLauncher = (function () {
 
             _.forEach(dataByCountry, function (v,k) {
 
-                const countryGrowthFactorRecord = _.find (growthFactorByCountry, d => d.key==v.values[0].code);
+                const countryGrowthFactorRecord = _.find (growthFactorByCountry, d => d.key==v.values[0].key);
                 if (countryGrowthFactorRecord.values.inflection){
                     countryGrowthFactorRecord.values['type']='inflection';
                 }else if ((!countryGrowthFactorRecord.values.inflection) && (countryGrowthFactorRecord.values.noinflection)){
@@ -810,15 +858,15 @@ mpgSoftware.growthFactorLauncher = (function () {
                 // andFilterArray.push (datum => (((new Date(datum.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
                 // ((new Date(datum.date).getTime() / 1000)<=(endDate.getTime() / 1000))));
                 andFilterArray.push (function(datum){
-                    if ( typeof datum.values === 'undefined'){
-                        return (((new Date(datum.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
-                            ((new Date(datum.date).getTime() / 1000)<=(endDate.getTime() / 1000)))
-                    }else {
+                    // if ( typeof datum.values === 'undefined'){
+                    //     return (((new Date(datum.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
+                    //         ((new Date(datum.date).getTime() / 1000)<=(endDate.getTime() / 1000)))
+                    // }else {
                         const oneSuitableDate =   _.find(datum.values,
                             data=>(((new Date(data.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
                                 ((new Date(data.date).getTime() / 1000)<=(endDate.getTime() / 1000))))
                         return ( typeof oneSuitableDate !== 'undefined')
-                    }
+                    // }
 
                 });
 
@@ -833,13 +881,20 @@ mpgSoftware.growthFactorLauncher = (function () {
         const filterDateAndListOfGroups = function (identifier){
 
             let andFilterArray = [];
+            const textAccessor = retrieveData (identifier, "textAccessor");
+            const auxData = retrieveData(identifier,"auxData");
             const selectedGroups = _.map ($("#" + identifier +" div.everyGroupToDisplay input.displayControl:checked").next("label"),d=>$(d).text());
-            andFilterArray.push (datum => _.includes (selectedGroups,datum.code ));
+            andFilterArray.push (datum => _.includes (selectedGroups,textAccessor (datum,auxData) ));
 
             const startDate = retrieveData (identifier, "startDate");
             const endDate = retrieveData (identifier, "endDate");
-            andFilterArray.push (datum => (((new Date(datum.date).getTime() / 1000)>=(new Date(startDate).getTime() / 1000))  &&
-                ((new Date(datum.date).getTime() / 1000)<=(new Date(endDate).getTime() / 1000))));
+            andFilterArray.push ( function(datum) {
+                const oneSuitableDate = _.find(datum.values,
+                    data => (((new Date(data.date).getTime() / 1000) >= (startDate.getTime() / 1000)) &&
+                        ((new Date(data.date).getTime() / 1000) <= (endDate.getTime() / 1000))))
+                return (typeof oneSuitableDate !== 'undefined')
+            }
+            );
 
             return andOrFilterModule ([],andFilterArray);
 
@@ -851,9 +906,9 @@ mpgSoftware.growthFactorLauncher = (function () {
             const textAccessor = retrieveData (identifier, "textAccessor");
             const auxData = retrieveData(identifier,"auxData");
             const selectedGroups = _.map ($("#" + identifier +" div.everyGroupToDisplay input.displayControl:checked").next("label"),d=>$(d).text());
-            andFilterArray.push (datum => _.includes (selectedGroups,textAccessor (datum.key,auxData) ));
+            andFilterArray.push (datum => _.includes (selectedGroups,textAccessor (datum,auxData) ));
             andFilterArray.push (function (datum ){
-                return_.includes (selectedGroups,textAccessor (datum.key,auxData)
+                return_.includes (selectedGroups,textAccessor (datum,auxData)
             )});
 
             return andOrFilterModule ([],andFilterArray);
@@ -905,7 +960,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                 }
 
             }
-        }
+        };
+
 
 
 
@@ -922,23 +978,53 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
 
+    const confirmThereAreNoZerosBeforeALogPlot = function (identifier){
+        const linearPlot = retrieveData (identifier, "useLinearNotLog");
+        const currentValueAccessors = retrieveData (identifier, "valueAccessors");
+        const yValueAccessor = currentValueAccessors[1];
+        if (linearPlot){
+            return function (groupedData) {return groupedData};
+        }else {
+            return function (groupedData){
+                const revisedGroupData = [];
+                const auxData = retrieveData(identifier,"auxData");
+                _.forEach(groupedData, function (eachGroup){
+                    const dataPointsToSave = [];
+                    _.forEach(eachGroup. values, function (eachDataPoint){
+                        if (yValueAccessor (eachDataPoint,auxData) <= 0) {
+                            if (retrieveData(identifier, "countingTotalDeaths")) {
+                                if (identifier === 'country') {
+                                    eachDataPoint ['total_deaths_per_million'] = 0.1;
+                                } else {
+                                    eachDataPoint ['y'] = 1;
+                                }
+                            }else {
+                                eachDataPoint ['y'] = 1;
+                            }
+                        }
+                    });
+                });
+                return groupedData;
+            }
+        }
+    };
 
 
 
 
 
-    const fillTheMainEntitySelectionBox = function(identifier){
+    const fillTheMainEntitySelectionBox = function(identifier,filteredData){
 
-        const allData = _.first(retrieveData (identifier,"dataFromServerArray")).rawData;
-        const groupedData = _.first(retrieveData (identifier,"dataFromServerArray")).groupedData;
+        // const allData = _.first(retrieveData (identifier,"dataFromServerArray")).rawData;
+        // const groupedData = _.first(retrieveData (identifier,"dataFromServerArray")).groupedData;
 
-        let preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier);
+        //let preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier);
         $('#' +identifier +' div.everyGroupToDisplay').empty ();
         const startTheGroup = $('#' +identifier +' div.everyGroupToDisplay');
         const textAccessor = retrieveData (identifier, "textAccessor");
         const auxData = retrieveData(identifier,"auxData");
         let listOfGroups = '<div>';
-        _.forEach(_.uniqBy(_.orderBy(preAnalysisFilter(groupedData),'key'),'key'),function (v,k){
+        _.forEach(_.uniqBy(_.orderBy(filteredData,'key'),'key'),function (v,k){
             listOfGroups+='<div class="item checkboxHolder active">'+
                 '<input type="checkbox" class="custom-control-input  displayControl"  checked onclick="mpgSoftware.growthFactorLauncher.changeGroupCheckbox (this,\'' +identifier +'\')">' +
                 '<label class="custom-control-label  displayControl" >'+textAccessor(v,auxData)+'</label>'+
@@ -946,17 +1032,18 @@ mpgSoftware.growthFactorLauncher = (function () {
         });
         listOfGroups+='</div>'
         startTheGroup.append(listOfGroups);
-        return preAnalysisFilter;
+        // return preAnalysisFilter;
     };
 
-    const adjustTheMainSelectionBox = function (identifier){
-        const allData = _.first(retrieveData (identifier,"dataFromServerArray")).rawData;
-        const groupedData = _.first(retrieveData (identifier,"dataFromServerArray")).groupedData;
-
-        const preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier);
-        const everyoneWhoMadeItThroughTheTimeFilter = _.map(_.uniqBy(_.orderBy(preAnalysisFilter(groupedData),'code'),'code'),function (d) {
-            return  d.code;
-        });
+    const adjustTheMainSelectionBox = function (identifier,filteredData){
+        // const allData = _.first(retrieveData (identifier,"dataFromServerArray")).rawData;
+        // const groupedData = _.first(retrieveData (identifier,"dataFromServerArray")).groupedData;
+        //
+        // const preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier);
+        // const everyoneWhoMadeItThroughTheTimeFilter = _.map(_.uniqBy(_.orderBy(filteredData,'key'),'key'),function (d) {
+        //     return  d.key;
+        // });
+        const everyoneWhoMadeItThroughTheTimeFilter =_.map(_.orderBy(filteredData,'key'),d=>d.key.key)
         const everybodyInTheExistingList = _.map($('#'+identifier+' div.everyGroupToDisplay div.item label.displayControl'),function (d) {
             return  {name:$(d).text(),node:$(d).parent()};
         });
@@ -984,28 +1071,51 @@ mpgSoftware.growthFactorLauncher = (function () {
         let postAnalysisFilter = filterModule.filterBasedOnAnalysis (identifier);
         let preAnalysisFilter;
         adjustAccessors (identifier);
+       // const revisedGroupData = confirmThereAreNoZerosBeforeALogPlot (identifier)(groupedData );  //we should only do this once for each data set
+        let analysisToPerform = data=>analysisModule.calculateGrowthFactorByCountry (data,
+            retrieveData(identifier,'movingAverageWindow'),
+            retrieveData(identifier,'daysOfNonExponentialGrowthRequired'));
+        let dataAfterPreanalysisFiltering;
         switch (dataFilteringChoice){
-            case filterBasedOnDataSelectionAndDate:
-                preAnalysisFilter = fillTheMainEntitySelectionBox(identifier);
+            case FILTER_NONE:
+                preAnalysisFilter = x=>x;
+                dataAfterPreanalysisFiltering = groupedData;
+                postAnalysisFilter = x=>x;
+                analysisToPerform = x=>x;
+            case FILTER_BASED_ON_DATA_SELECTION_AND_DATE:
+                preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier)
+                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
+                fillTheMainEntitySelectionBox(identifier,dataAfterPreanalysisFiltering);
                 break;
-            case filterDateAndListOfGroups:
+            case FILTER_ADJUST_LIST_OF_GROUPS_BASED_ON_DATE:
                 preAnalysisFilter = filterModule.filterDateAndListOfGroups(identifier);
-                //preAnalysisFilter = filterModule.filterDateAndListOfGroups(identifier);
-                adjustTheMainSelectionBox(identifier);
+                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
+                adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
                 break;
-            case filterOnlyOnListOfGroups:
-                preAnalysisFilter = filterModule.filterOnlyOnListOfGroups(identifier);
-                //preAnalysisFilter = filterModule.filterUnwantedDatesFromGroupedData(identifier);
+            case FILTER_BASED_ONLY_ON_LIST_OF_GROUPS:
+                preAnalysisFilter = filterModule.filterDateAndListOfGroups(identifier);
+                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
                 break;
-            case filterBasedOnAnalysis:
-                preAnalysisFilter = filterModule.filterOnlyOnListOfGroups(identifier);
+            case FILTER_BASED_ON_ANALYSIS:
+                preAnalysisFilter = filterModule.filterDateAndListOfGroups(identifier);
                 postAnalysisFilter = filterModule.filterBasedOnAnalysis (identifier);
+                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
+                break;
+            case FILTER_UNWANTED_DATES_FROM_GROUPED_DATA:
+                preAnalysisFilter = filterModule.filterUnwantedDatesFromGroupedData(identifier);
+                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
+                adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
+                break;
+            case ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA:
                 break;
             default:
                 alert('data filtering ='+dataFilteringChoice);
                 break;
         }
 
+        if (dataFilteringChoice!==ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA) {
+            setData (identifier, "mostRecentDisplayableData", postAnalysisFilter (analysisToPerform (confirmThereAreNoZerosBeforeALogPlot (identifier)(dataAfterPreanalysisFiltering))));
+        }
 
 
         var growthFactorPlot = baget.growthFactor
@@ -1017,20 +1127,21 @@ mpgSoftware.growthFactorLauncher = (function () {
             .movingAverageWindow(retrieveData(identifier,'movingAverageWindow'))
             .daysOfNonExponentialGrowthRequired (retrieveData(identifier,'daysOfNonExponentialGrowthRequired'))
             .collapseToCommonStart (retrieveData(identifier,'collapseToCommonStart'))
-            .deathsIndependentOfPopulation(retrieveData(identifier,'deathsIndependentOfPopulation'))
+            .countingTotalDeaths(retrieveData(identifier,'countingTotalDeaths'))
             .labelAccessors(...retrieveData(identifier,'labelAccessors'))
+            .valueAccessors(...retrieveData(identifier,'valueAccessors'))
             .textAccessor (retrieveData(identifier,'textAccessor'))
             .auxData(auxData)
             // .buildGrowthFactorPlot(allData,
-            .buildGrowthFactorPlot(groupedData,
-                filterModule.filterUnwantedDatesFromGroupedData(identifier),
-                postAnalysisFilter
+            .buildGrowthFactorPlot(retrieveData(identifier,'mostRecentDisplayableData'),
+                x=> alert(' should never be called'),
+                x=> alert(' should never be called')
             );
     };
 
     const buildThePlotWithRememberedData = function (identifier){
 
-        buildThePlot (identifier, filterBasedOnDataSelectionAndDate);
+        buildThePlot (identifier, FILTER_BASED_ON_DATA_SELECTION_AND_DATE);
     }
 
 
@@ -1064,8 +1175,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                                 dataFromServerArray[index].rawData = dataToSave;
                                 if (index === 0){
                                     dataFromServerArray[index].groupedData =  d3.nest() // nest function to group by country
-                                        .key(function(d) { return d.code;} )
-                                        .entries(dataToSave);
+                                        .key(function(d) { return d.key;} )
+                                        .entries(dataFromServerArray[index].rawData);
                                 }
 
                             });
@@ -1091,7 +1202,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                         synchronizeDataGroupingWithUi (identifier);
 
                         // all preparations are complete. Now we can build the plot
-                        buildThePlot(identifier, filterBasedOnDataSelectionAndDate);
+                        buildThePlot(identifier, FILTER_BASED_ON_DATA_SELECTION_AND_DATE);
 
                         // remember that we've retrieve data, so we don't need to do it again unless specifically requested
                         setData (identifier, "dataRetrieved",true);
@@ -1147,7 +1258,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         logVersusLinear:logVersusLinear,
         modifyAllCheckboxes:modifyAllCheckboxes,
         collapseToCommonStart:collapseToCommonStart,
-        deathsIndependentOfPopulation:deathsIndependentOfPopulation,
+        countingTotalDeaths:countingTotalDeaths,
         toggleDisplayOfSelectableElements:toggleDisplayOfSelectableElements,
         initializePageToHoldDisplay:initializePageToHoldDisplay
     }
