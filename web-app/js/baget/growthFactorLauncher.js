@@ -261,6 +261,8 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
     const FILTER_NONE = 0;
+    const FILTER_BASED_ON_DATA_SELECTION= 7;
+    const FILTER_BASED_ON_CHANGES_IN_SELECTED_GROUPS = 8;
     const FILTER_BASED_ON_DATA_SELECTION_AND_DATE= 1;
     const FILTER_ADJUST_LIST_OF_GROUPS_BASED_ON_DATE = 2;
     const FILTER_BASED_ONLY_ON_LIST_OF_GROUPS = 3;
@@ -351,7 +353,14 @@ mpgSoftware.growthFactorLauncher = (function () {
         }
         dataGroupingHolder[fieldName] = value;
     };
-
+    const resetDateExtents = function (identifier,groupedData){
+        // Now remember the data that we have, and calculate a universal start date and end date
+        const [startDate,endDate]=d3.extent(_.flatten(_.map(groupedData,d=>d.values)), d => d.date);
+        setData (identifier, "startDate",startDate);
+        setData (identifier, "globalStartDate",startDate);
+        setData (identifier, "endDate",endDate);
+        setData (identifier, "globalEndDate",endDate);
+    }
     const synchronizeDataGroupingWithUi = function (identifier){
         setData (identifier, "labelAccessors",displayOrganizer [identifier][0].labelAccessors);
         setData (identifier, "valueAccessors",displayOrganizer [identifier][0].valueAccessors);
@@ -444,7 +453,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             spin: function (event, ui){
                 const identifier = $(event.target).closest("div.coreObject").attr('id');
                 setData(identifier,"movingAverageWindow", ui.value);
-                buildThePlotWithRememberedData (identifier,FILTER_BASED_ON_ANALYSIS);
+                buildThePlot(identifier,FILTER_BASED_ON_ANALYSIS);
             }
         });
         spinnerAverage.spinner( "value", retrieveData(identifier,"movingAverageWindow"));
@@ -456,7 +465,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             spin: function (event, ui){
                 const identifier = $(event.target).closest("div.coreObject").attr('id');
                 setData(identifier,"daysOfNonExponentialGrowthRequired", ui.value);
-                buildThePlotWithRememberedData (identifier,FILTER_BASED_ON_ANALYSIS);
+                buildThePlot (identifier,FILTER_BASED_ON_ANALYSIS);
             }
             // ,
             // change: function (event, ui){
@@ -473,7 +482,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
         const clickAllTheBoxes = $(callingObject).text () === "ALL";
         $('#'+identifier+' div.everyGroupToDisplay div.item input.displayControl').prop("checked", clickAllTheBoxes);
-        buildThePlot (identifier,  FILTER_ADJUST_LIST_OF_GROUPS_BASED_ON_DATE);
+        buildThePlot (identifier,  FILTER_BASED_ON_CHANGES_IN_SELECTED_GROUPS);
     };
 
 
@@ -530,7 +539,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
         const callingObjectIsChecked = $(callingObject).prop("checked") === true;
         setData(identifier,callingObjectId, callingObjectIsChecked);
-        buildThePlot (identifier,FILTER_BASED_ON_DATA_SELECTION_AND_DATE);
+        buildThePlot (identifier,FILTER_BASED_ON_DATA_SELECTION);
     };
     const changeFormOfAnalysis = function (callingObject,callingObjectId){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
@@ -539,7 +548,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         buildThePlot (identifier,FILTER_BASED_ON_ANALYSIS);
     };
     const changeGroupCheckbox = function (callingObject, identifier){
-        buildThePlot (identifier, FILTER_BASED_ONLY_ON_LIST_OF_GROUPS);
+        buildThePlot (identifier, FILTER_BASED_ON_CHANGES_IN_SELECTED_GROUPS);
     };
 
     const setHeight = function (currentHeight){
@@ -565,7 +574,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 $( currentDateIndicator ).val( (new Date(ui.values[ 0 ] *1000).toDateString() ) + " - " + (new Date(ui.values[ 1 ] *1000)).toDateString() );
                 setData (identifier, "startDate",new Date(ui.values[ 0 ] *1000));
                 setData (identifier, "endDate",new Date(ui.values[ 1 ] *1000));
-                buildThePlot (identifier, FILTER_UNWANTED_DATES_FROM_GROUPED_DATA);
+                buildThePlot (identifier, FILTER_BASED_ON_DATA_SELECTION_AND_DATE);
 
             }
         });
@@ -812,6 +821,27 @@ mpgSoftware.growthFactorLauncher = (function () {
             let andFilterArray = [];
             return andOrFilterModule (orFilterArray,andFilterArray);
         }
+        const filterBasedOnDataSelection = function (identifier){
+            let orFilterArray = [];
+            let andFilterArray = [];
+
+            if (retrieveData (identifier, "includeTopLevelGroups")){
+                //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
+                orFilterArray.push (datum => !(_.includes (datum.key,'World')));
+            }
+            if (retrieveData (identifier, "includeSummaryGroups")){
+                //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
+                orFilterArray.push (datum => (_.includes (datum.key,'World')));
+            }
+
+            // In this case, if neither or filter is selected then we want the graft be blank. Therefore let's insert a fake and filter which will always fail
+            if (orFilterArray.length === 0){
+                andFilterArray.push (datum =>false);
+            }
+
+            return andOrFilterModule (orFilterArray,andFilterArray);
+
+        };
 
         const filterBasedOnDataSelectionAndDate = function (identifier){
             let orFilterArray = [];
@@ -856,6 +886,20 @@ mpgSoftware.growthFactorLauncher = (function () {
             return andOrFilterModule (orFilterArray,andFilterArray);
 
         };
+        const filterUsingListOfGroups = function (identifier){
+
+            let andFilterArray = [];
+            const textAccessor = retrieveData (identifier, "textAccessor");
+            const auxData = retrieveData(identifier,"auxData");
+            const selectedGroups = _.map ($("#" + identifier +" div.everyGroupToDisplay input.displayControl:checked").next("label"),d=>$(d).text());
+            andFilterArray.push (datum => _.includes (selectedGroups,textAccessor (datum,auxData) ));
+
+            return andOrFilterModule ([],andFilterArray);
+
+
+        };
+
+
         const filterDateAndListOfGroups = function (identifier){
 
             let andFilterArray = [];
@@ -890,8 +934,6 @@ mpgSoftware.growthFactorLauncher = (function () {
             )});
 
             return andOrFilterModule ([],andFilterArray);
-
-
         };
 
         const filterBasedOnAnalysis = function (identifier){
@@ -941,7 +983,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             }
         };
 
-        const filterUnwantedDatesFromGroupedDataAlsoUsingDataSelections = function (identifier){
+        const filterUsingDataSelections = function (identifier){
             const startDate = retrieveData (identifier, "startDate");
             const globalStartDate = retrieveData (identifier, "globalStartDate");
             const endDate = retrieveData (identifier, "endDate");
@@ -974,12 +1016,14 @@ mpgSoftware.growthFactorLauncher = (function () {
 
         return {
             noFilterAtAll:noFilterAtAll,
+            filterBasedOnDataSelection:filterBasedOnDataSelection,
+            filterUsingListOfGroups:filterUsingListOfGroups,
             filterBasedOnDataSelectionAndDate:filterBasedOnDataSelectionAndDate,
             filterDateAndListOfGroups:filterDateAndListOfGroups,
             filterOnlyOnListOfGroups:filterOnlyOnListOfGroups,
             filterBasedOnAnalysis:filterBasedOnAnalysis,
             filterUnwantedDatesFromGroupedData:filterUnwantedDatesFromGroupedData,
-            filterUnwantedDatesFromGroupedDataAlsoUsingDataSelections:filterUnwantedDatesFromGroupedDataAlsoUsingDataSelections
+            filterUsingDataSelections:filterUsingDataSelections
         }
     } ());
 
@@ -1039,7 +1083,9 @@ mpgSoftware.growthFactorLauncher = (function () {
     };
 
     const adjustTheMainSelectionBox = function (identifier,filteredData){
-        const everyoneWhoMadeItThroughTheTimeFilter =_.map(_.orderBy(filteredData,'key'),d=>d.key.key)
+        const textAccessor = retrieveData (identifier, "textAccessor");
+        const auxData = retrieveData(identifier,"auxData");
+        const everyoneWhoMadeItThroughTheTimeFilter =_.map(_.orderBy(filteredData,'key'),d=>textAccessor(d.key,auxData))
         const everybodyInTheExistingList = _.map($('#'+identifier+' div.everyGroupToDisplay div.item label.displayControl'),function (d) {
             return  {name:$(d).text(),node:$(d).parent()};
         });
@@ -1079,18 +1125,38 @@ mpgSoftware.growthFactorLauncher = (function () {
                 postAnalysisFilter = x=>x;
                 analysisToPerform = x=>x;
 
-            case FILTER_BASED_ON_DATA_SELECTION_AND_DATE:
-                preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier)
+            case FILTER_BASED_ON_DATA_SELECTION:
+                // we have reset the data selection, so we reset the date selector and fill the selection box
+                preAnalysisFilter = filterModule.filterBasedOnDataSelection (identifier);
                 dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
+                setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
+                resetDateExtents (identifier,groupedData);
                 fillTheMainEntitySelectionBox(identifier,dataAfterPreanalysisFiltering);
                 break;
-            case FILTER_UNWANTED_DATES_FROM_GROUPED_DATA:
+
+            case FILTER_BASED_ON_DATA_SELECTION_AND_DATE:
+                // we have reset the date.adjust the selection box.
                 preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier)
                 dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
-                preAnalysisFilter = filterModule.filterUnwantedDatesFromGroupedDataAlsoUsingDataSelections(identifier);
+                preAnalysisFilter = filterModule.filterUsingDataSelections(identifier);
                 dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
+                setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
                 adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
                 break;
+
+
+            case FILTER_BASED_ON_CHANGES_IN_SELECTED_GROUPS:
+                // we have reset the date.adjust the selection box.
+                preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier)
+                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
+                preAnalysisFilter = filterModule.filterUsingDataSelections(identifier);
+                dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
+                preAnalysisFilter = filterModule.filterUsingListOfGroups(identifier);
+                dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
+                setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
+                adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
+                break;
+
             case FILTER_ADJUST_LIST_OF_GROUPS_BASED_ON_DATE:
                 preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier)
                 dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
@@ -1116,7 +1182,13 @@ mpgSoftware.growthFactorLauncher = (function () {
         }
 
         if (dataFilteringChoice!==ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA) {
-            setData (identifier, "mostRecentDisplayableData", postAnalysisFilter (analysisToPerform (confirmThereAreNoZerosBeforeALogPlot (identifier)(dataAfterPreanalysisFiltering))));
+            setData (identifier, "mostRecentDisplayableData", postAnalysisFilter (
+                analysisToPerform (
+                confirmThereAreNoZerosBeforeALogPlot (identifier)(
+                    retrieveData(identifier,'mostRecentPreAnalysisData')
+                )
+                )
+            ));
         }
 
 
@@ -1137,10 +1209,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             .buildGrowthFactorPlot(retrieveData(identifier,'mostRecentDisplayableData'));
     };
 
-    const buildThePlotWithRememberedData = function (identifier){
 
-        buildThePlot (identifier, FILTER_BASED_ON_DATA_SELECTION_AND_DATE);
-    }
 
 
 
@@ -1186,19 +1255,14 @@ mpgSoftware.growthFactorLauncher = (function () {
                         const allData = _.first (dataFromServerArray).rawData ;
                         const groupedData = _.first (dataFromServerArray).groupedData ;
 
-                        // Now remember the data that we have, and calculate a universal start date and end date
-                        const [startDate,endDate]=d3.extent(_.flatten(_.map(groupedData,d=>d.values)), d => d.date);
-                        setData (identifier, "startDate",startDate);
-                        setData (identifier, "globalStartDate",startDate);
-                        setData (identifier, "endDate",endDate);
-                        setData (identifier, "globalEndDate",endDate);
+                        resetDateExtents (identifier,groupedData);
 
                         initializeDateSlider (identifier);  //we can only do this after we have calculated the date range
 
                         synchronizeDataGroupingWithUi (identifier);
 
                         // all preparations are complete. Now we can build the plot
-                        buildThePlot(identifier, FILTER_BASED_ON_DATA_SELECTION_AND_DATE);
+                        buildThePlot(identifier, FILTER_BASED_ON_DATA_SELECTION);
 
                         // remember that we've retrieve data, so we don't need to do it again unless specifically requested
                         setData (identifier, "dataRetrieved",true);
@@ -1246,7 +1310,6 @@ mpgSoftware.growthFactorLauncher = (function () {
         dateConverterUtil:dateConverterUtil,
         DataFromAServer:DataFromAServer,
         analysisModule:analysisModule,
-        buildThePlotWithRememberedData:buildThePlotWithRememberedData,
         prepareToDisplay:prepareToDisplay,
         changeWhatIsDisplayed:changeWhatIsDisplayed,
         changeGroupCheckbox:changeGroupCheckbox,
