@@ -922,6 +922,19 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
         };
+
+        const filterByDaysSinceParticularThreshold = function (identifier, groupedData, count, field){
+            const modifiedGroupedData = [];
+            _.forEach(groupedData,function (v, k) {
+                const daysSinceFifthDeath = _.filter(v.values, d => d.y > 5);
+                if (daysSinceFifthDeath.length > 0) {
+                    modifiedGroupedData.push({key: v.key, values: daysSinceFifthDeath})
+                }
+            });
+            return modifiedGroupedData;
+        };
+
+
         const filterOnlyOnListOfGroups = function (identifier){
 
             let andFilterArray = [];
@@ -974,7 +987,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                             }
                         });
                         if (dataPointsToSave.length > 0){
-                            revisedGroupData.push ({key:eachGroup, values:dataPointsToSave})
+                            revisedGroupData.push ({key:eachGroup.key, values:dataPointsToSave})
                         }
                     });
                     return revisedGroupData;
@@ -983,7 +996,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             }
         };
 
-        const filterUsingDataSelections = function (identifier){
+        const filterUsingDateSelections = function (identifier){
             const startDate = retrieveData (identifier, "startDate");
             const globalStartDate = retrieveData (identifier, "globalStartDate");
             const endDate = retrieveData (identifier, "endDate");
@@ -1003,7 +1016,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                             }
                         });
                         if (dataPointsToSave.length > 0){
-                            revisedGroupData.push ({key:eachGroup, values:dataPointsToSave})
+                            revisedGroupData.push ({key:eachGroup.key, values:dataPointsToSave})
                         }
                     });
                     return revisedGroupData;
@@ -1019,11 +1032,12 @@ mpgSoftware.growthFactorLauncher = (function () {
             filterBasedOnDataSelection:filterBasedOnDataSelection,
             filterUsingListOfGroups:filterUsingListOfGroups,
             filterBasedOnDataSelectionAndDate:filterBasedOnDataSelectionAndDate,
+            filterByDaysSinceParticularThreshold:filterByDaysSinceParticularThreshold,
             filterDateAndListOfGroups:filterDateAndListOfGroups,
             filterOnlyOnListOfGroups:filterOnlyOnListOfGroups,
             filterBasedOnAnalysis:filterBasedOnAnalysis,
             filterUnwantedDatesFromGroupedData:filterUnwantedDatesFromGroupedData,
-            filterUsingDataSelections:filterUsingDataSelections
+            filterUsingDateSelections:filterUsingDateSelections
         }
     } ());
 
@@ -1085,7 +1099,7 @@ mpgSoftware.growthFactorLauncher = (function () {
     const adjustTheMainSelectionBox = function (identifier,filteredData){
         const textAccessor = retrieveData (identifier, "textAccessor");
         const auxData = retrieveData(identifier,"auxData");
-        const everyoneWhoMadeItThroughTheTimeFilter =_.map(_.orderBy(filteredData,'key'),d=>textAccessor(d.key,auxData))
+        const everyoneWhoMadeItThroughTheTimeFilter =_.map(_.orderBy(filteredData,'key'),d=>textAccessor(d,auxData))
         const everybodyInTheExistingList = _.map($('#'+identifier+' div.everyGroupToDisplay div.item label.displayControl'),function (d) {
             return  {name:$(d).text(),node:$(d).parent()};
         });
@@ -1136,10 +1150,13 @@ mpgSoftware.growthFactorLauncher = (function () {
 
             case FILTER_BASED_ON_DATA_SELECTION_AND_DATE:
                 // we have reset the date.adjust the selection box.
-                preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier)
+                preAnalysisFilter = filterModule.filterBasedOnDataSelection (identifier)
                 dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
-                preAnalysisFilter = filterModule.filterUsingDataSelections(identifier);
+                preAnalysisFilter = filterModule.filterUsingDateSelections(identifier);
                 dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
+                dataAfterPreanalysisFiltering = filterModule.filterByDaysSinceParticularThreshold(identifier,dataAfterPreanalysisFiltering);
+
+
                 setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
                 adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
                 break;
@@ -1149,7 +1166,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 // we have reset the date.adjust the selection box.
                 preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier)
                 dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
-                preAnalysisFilter = filterModule.filterUsingDataSelections(identifier);
+                preAnalysisFilter = filterModule.filterUsingDateSelections(identifier);
                 dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
                 preAnalysisFilter = filterModule.filterUsingListOfGroups(identifier);
                 dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
