@@ -321,7 +321,6 @@ mpgSoftware.growthFactorLauncher = (function () {
          showGroupsWithoutInflectionPoints =  false;
          showGroupsWithInsufficientData = true;
          useLinearNotLog = true;
-         rememberData = [];
          includeTopLevelGroups = true;
          includeSummaryGroups = false;
          height = 600;
@@ -332,19 +331,6 @@ mpgSoftware.growthFactorLauncher = (function () {
          daysOfNonExponentialGrowthRequired = 7;
          collapseToCommonStart = true;
         countingTotalDeaths = true;
-         changesRequiringDataInitialization = function (dataChanged){
-             let initializationRequired = false;
-             switch(buildThePlot){
-                 case 'includeTopLevelGroups':
-                 case 'includeSummaryGroups':
-                     initializationRequired = false;
-                     break;
-                 default:
-                     initializationRequired = false;
-                     break;
-             }
-             return initializationRequired;
-         }
     };
 
     const retrieveData = function (identifier,fieldName){
@@ -417,23 +403,23 @@ mpgSoftware.growthFactorLauncher = (function () {
         let buildingXValueAccessor;
         let buildingYValueAccessor;
         if (retrieveData (identifier, "collapseToCommonStart")){
-            buildingXValueAccessor = d => +d.x;
+            buildingXValueAccessor = d => ( typeof d !== 'undefined')?+d.x: 1;
         }else {
-            buildingXValueAccessor = d => new Date(d.date);
+            buildingXValueAccessor = d => ( typeof d !== 'undefined')?d.date: new Date ();
         }
         //
         // set the values that we will use to access vertical axis data.
         //
         if (retrieveData (identifier, "countingTotalDeaths")){
-            buildingYValueAccessor = d => +d.y;
+            buildingYValueAccessor = d => ( typeof d !== 'undefined')?+d.y: 1;
         }else {
             if((identifier ==='states')  && (retrieveData(identifier,"auxData").length>0)) {
                 buildingYValueAccessor = function (d, auxData) {
                     const auxiliaryRecord = _.find(auxData[0], {Abbreviation: d.key});
                     if ((auxiliaryRecord) && (+auxiliaryRecord.Pop > 0)) {
-                        return ((+d.y) * 1000000) / (+auxiliaryRecord.Pop);
+                        return ((( typeof d !== 'undefined')?+d.y: 1) * 1000000) / (+auxiliaryRecord.Pop);
                     }else {
-                        return (+d.y);
+                        return (( typeof d !== 'undefined')?+d.y: 1);
                     }
                 };
             }else  {
@@ -606,23 +592,17 @@ mpgSoftware.growthFactorLauncher = (function () {
             return developingAverage /vectorLength;
         };
         const calculateGrowthFactorByCountry = function (dataByCountry,movingAverageWindow,daysOfNonExponentialGrowthRequired){
-            // let dataByCountry = _.map(_.groupBy(data,'code'), (v,k)=>({key:k,values:v}))
-            // let dataByCountry =d3.nest() // nest function to group by country
-            //     .key(function(d) { return d.code;} )
-            //     .entries(data);
-
-            // if X values don't exist then calculate them from the dates
             if (_.filter (dataByCountry,v=>_.filter (v.values,d=>(typeof d.x==='undefined')).length>0).length>0){
                 let modifiedDataByCountry = [];
                 _.forEach(dataByCountry,function (v, k){
                     const daysSinceFifthDeath = _.filter (v.values,d=>d.y>5);
                     if (daysSinceFifthDeath.length>0){
-                        const sortedDaysSinceFifthDeath = _.orderBy (daysSinceFifthDeath,d=>new Date(d.date).getTime());
+                        const sortedDaysSinceFifthDeath = _.orderBy (daysSinceFifthDeath,d=>d.date.getTime());
                         const firstDayAfterFifthDeath = _.first (sortedDaysSinceFifthDeath);
-                        const dateAfterFifthDeath = new Date(firstDayAfterFifthDeath.date).getTime()/1000;
+                        const dateAfterFifthDeath = firstDayAfterFifthDeath.date.getTime()/1000;
                         const dataWithCalculatedXAddedIn = _.map(sortedDaysSinceFifthDeath,function (d){
                             let tempRec = d;
-                            tempRec['x']=((new Date(d.date).getTime()/1000)-dateAfterFifthDeath)/86400;
+                            tempRec['x']=((d.date.getTime()/1000)-dateAfterFifthDeath)/86400;
                             return tempRec;
                         });
                         modifiedDataByCountry.push({key:_.first(dataWithCalculatedXAddedIn).key,
@@ -763,17 +743,23 @@ mpgSoftware.growthFactorLauncher = (function () {
             const currentMonth = (+dateString.substring (4, 6))-1;
             const currentYear = +dateString.substring (0, 4);
             const currentDate = new Date (currentYear,currentMonth,currentDay);
-            return ""+months[currentDate.getMonth()]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear();
-
+            return currentDate;
+            // return ""+months[currentDate.getMonth()]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear();
         };
         const yyyymmddDash = function(dateString) {
             const currentDay = +dateString.substring (8, 10);
             const currentMonth = (+dateString.substring (5, 7))-1;
             const currentYear = +dateString.substring (0, 4);
             const currentDate = new Date (currentYear,currentMonth,currentDay);
+            return currentDate;
+            // return ""+months[currentDate.getMonth()]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear();
+        };
+        const formatDateAsString = function(currentDate) {
             return ""+months[currentDate.getMonth()]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear();
         };
+
         return {
+            formatDateAsString:formatDateAsString,
             yyyymmddNoDash:yyyymmddNoDash,
             yyyymmddDash:yyyymmddDash
         }
@@ -837,7 +823,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             }
             if (retrieveData (identifier, "includeSummaryGroups")){
                 //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
-                orFilterArray.push (datum => !(_.includes ('World')));
+                orFilterArray.push (datum => (_.includes (datum.key,'World')));
             }
 
             // In this case, if neither or filter is selected then we want the graft be blank. Therefore let's insert a fake and filter which will always fail
@@ -854,19 +840,11 @@ mpgSoftware.growthFactorLauncher = (function () {
                 (endDate ===globalEndDate)){
                 andFilterArray.push (datum =>true);
             }else {
-
-                // andFilterArray.push (datum => (((new Date(datum.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
-                // ((new Date(datum.date).getTime() / 1000)<=(endDate.getTime() / 1000))));
                 andFilterArray.push (function(datum){
-                    // if ( typeof datum.values === 'undefined'){
-                    //     return (((new Date(datum.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
-                    //         ((new Date(datum.date).getTime() / 1000)<=(endDate.getTime() / 1000)))
-                    // }else {
                         const oneSuitableDate =   _.find(datum.values,
-                            data=>(((new Date(data.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
-                                ((new Date(data.date).getTime() / 1000)<=(endDate.getTime() / 1000))))
+                            data=>(((data.date.getTime() / 1000)>=(startDate.getTime() / 1000))  &&
+                                ((data.date.getTime() / 1000)<=(endDate.getTime() / 1000))))
                         return ( typeof oneSuitableDate !== 'undefined')
-                    // }
 
                 });
 
@@ -890,8 +868,8 @@ mpgSoftware.growthFactorLauncher = (function () {
             const endDate = retrieveData (identifier, "endDate");
             andFilterArray.push ( function(datum) {
                 const oneSuitableDate = _.find(datum.values,
-                    data => (((new Date(data.date).getTime() / 1000) >= (startDate.getTime() / 1000)) &&
-                        ((new Date(data.date).getTime() / 1000) <= (endDate.getTime() / 1000))))
+                    data => (((data.date.getTime() / 1000) >= (startDate.getTime() / 1000)) &&
+                        ((data.date.getTime() / 1000) <= (endDate.getTime() / 1000))))
                 return (typeof oneSuitableDate !== 'undefined')
             }
             );
@@ -934,6 +912,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         };
 
         const filterUnwantedDatesFromGroupedData = function (identifier){
+
             const startDate = retrieveData (identifier, "startDate");
             const globalStartDate = retrieveData (identifier, "globalStartDate");
             const endDate = retrieveData (identifier, "endDate");
@@ -947,8 +926,37 @@ mpgSoftware.growthFactorLauncher = (function () {
                     _.forEach(groupedData, function (eachGroup){
                         const dataPointsToSave = [];
                         _.forEach(eachGroup. values, function (eachDataPoint){
-                            if(((new Date(eachDataPoint.date).getTime() / 1000)>=(startDate.getTime() / 1000))  &&
-                                ((new Date(eachDataPoint.date).getTime() / 1000)<=(endDate.getTime() / 1000))){
+                            if(((eachDataPoint.date.getTime() / 1000)>=(startDate.getTime() / 1000))  &&
+                                ((eachDataPoint.date.getTime() / 1000)<=(endDate.getTime() / 1000))){
+                                dataPointsToSave.push (eachDataPoint);
+                            }
+                        });
+                        if (dataPointsToSave.length > 0){
+                            revisedGroupData.push ({key:eachGroup, values:dataPointsToSave})
+                        }
+                    });
+                    return revisedGroupData;
+                }
+
+            }
+        };
+
+        const filterUnwantedDatesFromGroupedDataAlsoUsingDataSelections = function (identifier){
+            const startDate = retrieveData (identifier, "startDate");
+            const globalStartDate = retrieveData (identifier, "globalStartDate");
+            const endDate = retrieveData (identifier, "endDate");
+            const globalEndDate = retrieveData (identifier, "globalEndDate");
+            if ((startDate ===globalStartDate) &&
+                (endDate ===globalEndDate)){
+                return function (groupedData) {return groupedData};
+            }else {
+                return function (groupedData){
+                    const revisedGroupData = [];
+                    _.forEach(groupedData, function (eachGroup){
+                        const dataPointsToSave = [];
+                        _.forEach(eachGroup. values, function (eachDataPoint){
+                            if(((eachDataPoint.date.getTime() / 1000)>=(startDate.getTime() / 1000))  &&
+                                ((eachDataPoint.date.getTime() / 1000)<=(endDate.getTime() / 1000))){
                                 dataPointsToSave.push (eachDataPoint);
                             }
                         });
@@ -964,14 +972,14 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
 
-
         return {
             noFilterAtAll:noFilterAtAll,
             filterBasedOnDataSelectionAndDate:filterBasedOnDataSelectionAndDate,
             filterDateAndListOfGroups:filterDateAndListOfGroups,
             filterOnlyOnListOfGroups:filterOnlyOnListOfGroups,
             filterBasedOnAnalysis:filterBasedOnAnalysis,
-            filterUnwantedDatesFromGroupedData:filterUnwantedDatesFromGroupedData
+            filterUnwantedDatesFromGroupedData:filterUnwantedDatesFromGroupedData,
+            filterUnwantedDatesFromGroupedDataAlsoUsingDataSelections:filterUnwantedDatesFromGroupedDataAlsoUsingDataSelections
         }
     } ());
 
@@ -1014,11 +1022,6 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
     const fillTheMainEntitySelectionBox = function(identifier,filteredData){
-
-        // const allData = _.first(retrieveData (identifier,"dataFromServerArray")).rawData;
-        // const groupedData = _.first(retrieveData (identifier,"dataFromServerArray")).groupedData;
-
-        //let preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier);
         $('#' +identifier +' div.everyGroupToDisplay').empty ();
         const startTheGroup = $('#' +identifier +' div.everyGroupToDisplay');
         const textAccessor = retrieveData (identifier, "textAccessor");
@@ -1036,13 +1039,6 @@ mpgSoftware.growthFactorLauncher = (function () {
     };
 
     const adjustTheMainSelectionBox = function (identifier,filteredData){
-        // const allData = _.first(retrieveData (identifier,"dataFromServerArray")).rawData;
-        // const groupedData = _.first(retrieveData (identifier,"dataFromServerArray")).groupedData;
-        //
-        // const preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier);
-        // const everyoneWhoMadeItThroughTheTimeFilter = _.map(_.uniqBy(_.orderBy(filteredData,'key'),'key'),function (d) {
-        //     return  d.key;
-        // });
         const everyoneWhoMadeItThroughTheTimeFilter =_.map(_.orderBy(filteredData,'key'),d=>d.key.key)
         const everybodyInTheExistingList = _.map($('#'+identifier+' div.everyGroupToDisplay div.item label.displayControl'),function (d) {
             return  {name:$(d).text(),node:$(d).parent()};
@@ -1082,13 +1078,23 @@ mpgSoftware.growthFactorLauncher = (function () {
                 dataAfterPreanalysisFiltering = groupedData;
                 postAnalysisFilter = x=>x;
                 analysisToPerform = x=>x;
+
             case FILTER_BASED_ON_DATA_SELECTION_AND_DATE:
                 preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier)
                 dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
                 fillTheMainEntitySelectionBox(identifier,dataAfterPreanalysisFiltering);
                 break;
+            case FILTER_UNWANTED_DATES_FROM_GROUPED_DATA:
+                preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier)
+                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
+                preAnalysisFilter = filterModule.filterUnwantedDatesFromGroupedDataAlsoUsingDataSelections(identifier);
+                dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
+                adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
+                break;
             case FILTER_ADJUST_LIST_OF_GROUPS_BASED_ON_DATE:
-                preAnalysisFilter = filterModule.filterDateAndListOfGroups(identifier);
+                preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier)
+                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
+                preAnalysisFilter = filterModule.filterDateAndListOfGroups(dataAfterPreanalysisFiltering);
                 dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
                 adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
                 break;
@@ -1101,11 +1107,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 postAnalysisFilter = filterModule.filterBasedOnAnalysis (identifier);
                 dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
                 break;
-            case FILTER_UNWANTED_DATES_FROM_GROUPED_DATA:
-                preAnalysisFilter = filterModule.filterUnwantedDatesFromGroupedData(identifier);
-                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
-                adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
-                break;
+
             case ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA:
                 break;
             default:
@@ -1132,11 +1134,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             .valueAccessors(...retrieveData(identifier,'valueAccessors'))
             .textAccessor (retrieveData(identifier,'textAccessor'))
             .auxData(auxData)
-            // .buildGrowthFactorPlot(allData,
-            .buildGrowthFactorPlot(retrieveData(identifier,'mostRecentDisplayableData'),
-                x=> alert(' should never be called'),
-                x=> alert(' should never be called')
-            );
+            .buildGrowthFactorPlot(retrieveData(identifier,'mostRecentDisplayableData'));
     };
 
     const buildThePlotWithRememberedData = function (identifier){
@@ -1189,9 +1187,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                         const groupedData = _.first (dataFromServerArray).groupedData ;
 
                         // Now remember the data that we have, and calculate a universal start date and end date
-                        // setData (identifier, "startDate",new Date(_.minBy(allData,d=>new Date(d.date).getTime()).date));
-                        // setData (identifier, "endDate",new Date(_.maxBy(allData,d=>new Date(d.date).getTime()).date));
-                        const [startDate,endDate]=d3.extent(_.flatten(_.map(groupedData,d=>d.values)), d => new Date(d.date));
+                        const [startDate,endDate]=d3.extent(_.flatten(_.map(groupedData,d=>d.values)), d => d.date);
                         setData (identifier, "startDate",startDate);
                         setData (identifier, "globalStartDate",startDate);
                         setData (identifier, "endDate",endDate);

@@ -168,7 +168,7 @@ baget.growthFactor = (function () {
                 .attr("x", function(d,i){
                     return x(xValueAccessor (chooseValueFunction (d),auxData))+shiftPopUpMessage;
                 })
-                .text( function(d,i){return "("+chooseValueFunction (d).date+")"});
+                .text( function(d,i){return "("+mpgSoftware.growthFactorLauncher.dateConverterUtil.formatDateAsString(chooseValueFunction (d).date)+")"});
             // the old prediction, from back when I thought that inflection might occur when the cumulative death curve
             // was halfway to its eventual asymptote. Clearly that model was far too hopeful.
             // if ("Inflection point detected"===title){
@@ -258,58 +258,9 @@ baget.growthFactor = (function () {
         }
     };
 
-    // const xValue = function (d){
-    //     if (collapseToCommonStart){
-    //         return +d.x;
-    //     }else {
-    //         return new Date(d.date);
-    //     }
-    // };
-    // const yValue = function (d){
-    //     if (deathsIndependentOfPopulation){
-    //         let retVal=+d.y;
-    //         return retVal;
-    //     }else {
-    //         if (auxData.length>0) {
-    //             const auxiliaryRecord = _.find (auxData[0],{Abbreviation:d.key});
-    //             if ((auxiliaryRecord)&&(+auxiliaryRecord.Pop>0)) {
-    //                 retVal =  ((+d.y)*1000000)/(+auxiliaryRecord.Pop);
-    //             }
-    //         } else {
-    //             retVal = +d.total_deaths_per_million;
-    //         }
-    //         return retVal;
-    //     }
-    // };
-
-    instance.buildGrowthFactorPlot = function (growthFactorByCountry,
-                                            preAnalysisFilter,
-                                            postAnalysisFilter ) {
+    instance.buildGrowthFactorPlot = function (growthFactorByCountry ) {
         const transitionTime = 1500;
-        // if (!linearNotLog) { // log functions prefer values > 0
-        //     _.forEach(unfilteredData, function (rec) {
-        //         if(yValue (rec)<0.1){
-        //             if (deathsIndependentOfPopulation){
-        //                 rec["y"] = 1;
-        //             } else {
-        //                 rec["total_deaths_per_million"]=0.1;
-        //             }
-        //         }
-        //     })
-        // }
         assignColorsToCurvesUsingGroupedData (growthFactorByCountry);
-        // assignColorsToCurves(unfilteredData);
-
-        // const data = preAnalysisFilter (unfilteredData);
-        // const data = unfilteredData;
-
-
-        // const growthFactorByCountry = postAnalysisFilter(
-        //     mpgSoftware.growthFactorLauncher.analysisModule.calculateGrowthFactorByCountry (data,
-        //         movingAverageWindow,daysOfNonExponentialGrowthRequired));
-
-
-
         const flattenEverything = _.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues));
         let [yLower,yUpper] = d3.extent(flattenEverything, d => yValueAccessor (d,auxData));
         if (linearNotLog){
@@ -329,25 +280,14 @@ baget.growthFactor = (function () {
                 .range([margin.left, width - margin.right]);
 
         }else {
-            [xLower,xUpper] = d3.extent(flattenEverything, d => new Date(d.date));
+            [xLower,xUpper] = d3.extent(flattenEverything, d => d.date);
             x = d3.scaleTime()
                 .domain([xLower,xUpper])
                 .range([margin.left, width - margin.right]);
         }
         let dateExtentObject = [];
-        // if (data.length>0){
-        //     const timeParse = d3.timeParse("%b %e, %Y");
-        //     const dateExtent = d3.extent(_.flatten(_.map(data,d=>d.values)), function(d){
-        //         return timeParse(d.date);
-        //     });
-        //     dateExtentObject = [dateExtent];
-        // }
         if (growthFactorByCountry.length>0){
-            //const timeParse = d3.timeParse("%b %e, %Y");
-            // const dateExtent = d3.extent(flattenEverything, function(d){
-            //     return timeParse(d.date);
-            // });
-            dateExtentObject = [d3.extent(flattenEverything, d => new Date(d.date))];
+            dateExtentObject = [d3.extent(flattenEverything, d => d.date)];
         }
 
 
