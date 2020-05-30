@@ -180,7 +180,10 @@ div.item.checkboxHolder.active label{
 div.item.checkboxHolder.passive label{
     color: #aaa;
 }
-
+input.startingWith {
+    width: 40px;
+    height: 15px;
+}
 input.movingAverageWindow {
     width: 15px;
 }
@@ -198,8 +201,9 @@ input.amount {
     background: #eee;
 }
 div.dateSliderContainer {
-    padding: 15px;
-    margin: 15px;
+    font-size:14px;
+    padding: 10px;
+    margin: 5px;
     border: 1px solid black;
     background: #eee;
     -moz-border-radius: 4px;
@@ -218,11 +222,17 @@ div.dateChooserContainer {
     border-radius: 4px; /* future proofing */
     -khtml-border-radius: 4px; /* for old Konqueror browsers */
 }
-/*button.logLinChg {*/
-/*    font-size: 16px;*/
-/*    border:1px solid blue;*/
-/*    margin: 30px;*/
-/*}*/
+div.startingWithContainer {
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid black;
+    background: #eee;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px; /* future proofing */
+    -khtml-border-radius: 4px; /* for old Konqueror browsers */
+}
+
 button.logLinChg{
     display:inline-block;
     width: 100%;

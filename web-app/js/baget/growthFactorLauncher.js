@@ -33,6 +33,14 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title: "Countries"
                 }
             ],
+            startingWithTitle:"Starting with day after",
+            startingWithSection:[{
+                preamble: "",
+                quantity: "death",
+                value:"5",
+                className:"startingWith",
+                postamble: ""
+            }],
             analysisSelectionTitle:"Include countries that:",
             analysisSelection: [
                 {
@@ -365,6 +373,8 @@ mpgSoftware.growthFactorLauncher = (function () {
         setData (identifier, "labelAccessors",displayOrganizer [identifier][0].labelAccessors);
         setData (identifier, "valueAccessors",displayOrganizer [identifier][0].valueAccessors);
         setData (identifier, "textAccessor",displayOrganizer [identifier][0].textAccessor);
+        setData(identifier,"startingWithValue",displayOrganizer [identifier][0].startingWithSection [0].value);
+        setData(identifier,"startingWithQuantity",displayOrganizer [identifier][0].startingWithSection [0].quantity);
     }
     const adjustAccessors = function (identifier){
         //
@@ -450,11 +460,17 @@ mpgSoftware.growthFactorLauncher = (function () {
             step: 2,
             min: 1,
             max: 99,
-            spin: function (event, ui){
+            // spin: function (event, ui){
+            //     const identifier = $(event.target).closest("div.coreObject").attr('id');
+            //     setData(identifier,"movingAverageWindow", ui.value);
+            //     buildThePlot(identifier,FILTER_BASED_ON_ANALYSIS);
+            // },
+            stop: function (event, ui){
                 const identifier = $(event.target).closest("div.coreObject").attr('id');
-                setData(identifier,"movingAverageWindow", ui.value);
+                setData(identifier,"movingAverageWindow", this.value);
                 buildThePlot(identifier,FILTER_BASED_ON_ANALYSIS);
             }
+
         });
         spinnerAverage.spinner( "value", retrieveData(identifier,"movingAverageWindow"));
         const spinnerThreshold = $('#' + identifier+' input.spinner.daysOfNonExponentialGrowthRequired');
@@ -462,21 +478,44 @@ mpgSoftware.growthFactorLauncher = (function () {
             step: 1,
             min: 1,
             max: 100,
-            spin: function (event, ui){
+            // spin: function (event, ui){
+            //     const identifier = $(event.target).closest("div.coreObject").attr('id');
+            //     setData(identifier,"daysOfNonExponentialGrowthRequired", ui.value);
+            //     buildThePlot (identifier,FILTER_BASED_ON_ANALYSIS);
+            // },
+            stop:function (event, ui){
                 const identifier = $(event.target).closest("div.coreObject").attr('id');
-                setData(identifier,"daysOfNonExponentialGrowthRequired", ui.value);
+                setData(identifier,"daysOfNonExponentialGrowthRequired", this.value);
                 buildThePlot (identifier,FILTER_BASED_ON_ANALYSIS);
             }
-            // ,
-            // change: function (event, ui){
-            //     const identifier = $(event.target).closest("div.coreObject").attr('id');
-            //     setData(identifier,"daysOfNonExponentialGrowthRequired", $(this).spinner('value'));
-            //     buildThePlotWithRememberedData (identifier);
-            // }
-
         });
         spinnerThreshold.spinner( "value",  retrieveData(identifier,"daysOfNonExponentialGrowthRequired") );
+    };
+    const setUpStartingWithSpinner = function (identifier){
+        if(( typeof displayOrganizer [identifier][0].startingWithSection === 'undefined')) return;
+        setData(identifier,"startingWithValue",displayOrganizer [identifier][0].startingWithSection [0].value);
+        setData(identifier,"startingWithQuantity",displayOrganizer [identifier][0].startingWithSection [0].quantity);
+        const spinnerStartingWith = $('#' + identifier+' input.spinner.startingWith');
+        spinnerStartingWith.spinner({
+            step: 1,
+            min: 1,
+            max: 10000,
+            // spin: function (event, ui){
+            //     console.log('spin='+ui.value);
+            //     const identifier = $(event.target).closest("div.coreObject").attr('id');
+            //     setData(identifier,"startingWithValue", ui.value);
+            //     buildThePlot (identifier,FILTER_BASED_ON_DATA_SELECTION);
+            // },
+            stop: function (event, ui){
 
+                const identifier = $(event.target).closest("div.coreObject").attr('id');
+                setData(identifier,"startingWithValue", this.value);
+                console.log('stop='+retrieveData(identifier,"startingWithValue"));
+                buildThePlot (identifier,FILTER_BASED_ON_DATA_SELECTION);
+            }
+        });
+
+        spinnerStartingWith.spinner( "value",  +retrieveData(identifier,"startingWithValue") );
     };
     const modifyAllCheckboxes = function (callingObject){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
@@ -571,15 +610,16 @@ mpgSoftware.growthFactorLauncher = (function () {
             step: 86400,
             values: [ startDate.getTime() / 1000, endDate.getTime() / 1000 ],
             slide: function( event, ui ) {
-                $( currentDateIndicator ).val( (new Date(ui.values[ 0 ] *1000).toDateString() ) + " - " + (new Date(ui.values[ 1 ] *1000)).toDateString() );
+                $( currentDateIndicator ).val( mpgSoftware.growthFactorLauncher.dateConverterUtil.formatDateAsString(new Date(ui.values[ 0 ] *1000)) +
+                    " - " + mpgSoftware.growthFactorLauncher.dateConverterUtil.formatDateAsString(new Date(ui.values[ 1 ] *1000)) );
                 setData (identifier, "startDate",new Date(ui.values[ 0 ] *1000));
                 setData (identifier, "endDate",new Date(ui.values[ 1 ] *1000));
                 buildThePlot (identifier, FILTER_BASED_ON_DATA_SELECTION_AND_DATE);
 
             }
         });
-        $( currentDateIndicator ).val( (new Date($( currentDateSlider ).slider( "values", 0 )*1000).toDateString()) +
-            " - " + (new Date($( currentDateSlider ).slider( "values", 1 )*1000)).toDateString());
+        $( currentDateIndicator ).val( mpgSoftware.growthFactorLauncher.dateConverterUtil.formatDateAsStringShort(new Date($( currentDateSlider ).slider( "values", 0 )*1000)) +
+            " - " + mpgSoftware.growthFactorLauncher.dateConverterUtil.formatDateAsStringShort(new Date($( currentDateSlider ).slider( "values", 1 )*1000)));
     };
 
 
@@ -766,8 +806,16 @@ mpgSoftware.growthFactorLauncher = (function () {
         const formatDateAsString = function(currentDate) {
             return ""+months[currentDate.getMonth()]+" "+currentDate.getDate()+ ", "+currentDate.getFullYear();
         };
+        const formatDateAsStringShort = function(currentDate) {
+            let year = currentDate.getFullYear();
+            let month = (1 + currentDate.getMonth()).toString().padStart(2, '0');
+            let day = currentDate.getDate().toString().padStart(2, '0');
+            return day + '/' + month + '/' + year;        };
+
+
 
         return {
+            formatDateAsStringShort:formatDateAsStringShort,
             formatDateAsString:formatDateAsString,
             yyyymmddNoDash:yyyymmddNoDash,
             yyyymmddDash:yyyymmddDash
@@ -923,10 +971,11 @@ mpgSoftware.growthFactorLauncher = (function () {
 
         };
 
-        const filterByDaysSinceParticularThreshold = function (identifier, groupedData, count, field){
+        const filterByDaysSinceParticularThreshold = function (identifier, groupedData){
             const modifiedGroupedData = [];
+            const startingWithValue = retrieveData (identifier, "startingWithValue");
             _.forEach(groupedData,function (v, k) {
-                const daysSinceFifthDeath = _.filter(v.values, d => d.y > 5);
+                const daysSinceFifthDeath = _.filter(v.values, d => d.y > +startingWithValue);
                 if (daysSinceFifthDeath.length > 0) {
                     modifiedGroupedData.push({key: v.key, values: daysSinceFifthDeath})
                 }
@@ -1143,6 +1192,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 // we have reset the data selection, so we reset the date selector and fill the selection box
                 preAnalysisFilter = filterModule.filterBasedOnDataSelection (identifier);
                 dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
+                dataAfterPreanalysisFiltering = filterModule.filterByDaysSinceParticularThreshold(identifier,dataAfterPreanalysisFiltering);
                 setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
                 resetDateExtents (identifier,groupedData);
                 fillTheMainEntitySelectionBox(identifier,dataAfterPreanalysisFiltering);
@@ -1170,6 +1220,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
                 preAnalysisFilter = filterModule.filterUsingListOfGroups(identifier);
                 dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
+                dataAfterPreanalysisFiltering = filterModule.filterByDaysSinceParticularThreshold(identifier,dataAfterPreanalysisFiltering);
                 setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
                 adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
                 break;
@@ -1310,6 +1361,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             setData (element [0].id, "dataRetrieved",false);// note that we have no data, since we just built the display
             baget.growthFactor.resize(false);
             setUpMovingWindowSpinner (element [0].id);
+            setUpStartingWithSpinner (element [0].id)
         });
         d3.select(window).on('resize', baget.growthFactor.resize);
         jQuery.noConflict();

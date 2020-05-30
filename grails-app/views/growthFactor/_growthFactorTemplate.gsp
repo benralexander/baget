@@ -21,14 +21,14 @@
     <div class="row">
         <div class="col-lg-8 col-lg-offset-2 col-sm-12">
             <div class="row">
-                <div class="col-sm-8">
+                <div class="col-sm-4">
                     <div class="dataChoosingSection">
                         <div class="sectionDescription" style="margin-bottom: 5px">
                             Choose data for analysis
                         </div>
                         <div class="row">
-%{--                            <div class="">--}%
-                                <div class="col-sm-6 clickOnSectionsWeWant">
+
+                                <div class="col-sm-12 clickOnSectionsWeWant">
 
                                     <div class='dateChooserContainer'>
                                         <div class="subSectionDescription">
@@ -43,60 +43,75 @@
                                         {{/dataChoosers}}
                                     </div>
                                 </div>
-                                <div class="col-sm-6 clickOnSectionsWeWant">
-                                    {{#dataFilters}}
-                                    <div class='text-center dateSliderContainer'>
-
-                                        <label >Date range:</label>
-                                        <input type="text" class="amount" style="margin-top: 10px" width="150"/>
-                                        <div class="dateSlider" style="margin-top: 10px"></div>
 
 
-                                    </div>
-                                    {{/dataFilters}}
-                                </div>
 
-%{--                            </div>--}%
 
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-4">
+                <div class="col-sm-8">
                  <div class="dataChoosingSection">
                      <div class="sectionDescription" style="margin-bottom: 10px">
                        Refine data selection
                     </div>
-                    <div class="displayTheSectionsWeWant holdTheExpandableBlock" >
-                        {{#specificDeactivators}}
-                        <div class="everyGroupToDisplayHolder smaller" >
-                            <div class="expander">
-                                <div class="row">
-                                    <div class="col-xs-4">
-                                        <span class = "pull-left describeWhatWeAreExpanding">{{title}}</span>
-                                    </div>
-                                    <div class="col-xs-5">
-                                        <span>
-                                            <button class = "btn btn-primary btn-xs modifyAllCheckboxes" onclick="mpgSoftware.growthFactorLauncher.modifyAllCheckboxes(this)">ALL</button>
-                                            <button class = "btn btn-primary btn-xs modifyAllCheckboxes" onclick="mpgSoftware.growthFactorLauncher.modifyAllCheckboxes(this)">NONE</button>
-                                        </span>
-
-                                    </div>
-%{--                                    <div class="col-xs-3">--}%
-
-%{--                                    </div>--}%
-                                    <div class="col-xs-3">
-                                        <span class = "pull-right expanderText" onclick="mpgSoftware.growthFactorLauncher.toggleDisplayOfSelectableElements(this)">Expand</span>
+                    <div class="row">
+                        <div class="col-sm-6 clickOnSectionsWeWant">
+                            {{#dataFilters}}
+                            <div class='dateSliderContainer'>
+                                <div class ='form-group' style="margin-left:0">
+                                    <label for="{{id}}dateSliderContainer" class="col-sm-2" style="padding: 0">Date:</label>
+                                    <div class="col-sm-10"  style="padding-left: 0">
+                                        <input type="text" id="{{id}}dateSliderContainer" class="amount" style:10px>
                                     </div>
                                 </div>
-
-
-
-
+                                <div class="dateSlider" style="margin-top: 25px"></div>
                             </div>
-                            <div class="everyGroupToDisplay"></div>
+                            <div class='startingWithContainer' >
+                                 <div class="subSectionDescription">
+                                    {{startingWithTitle}}
+                                </div>
+                                {{#startingWithSection}}
+                                    <div>
+                                        <label class="custom-control-label displayControl">{{preamble}}
+                                        <span class="{{className}}Quantity">{{quantity}}</span> number</label>
+                                        <input type="text" class="spinner {{className}}"/>
+                                        <span class="{{className}}Suffix">{{postamble}}</span>
+                                    </div>
+                                {{/startingWithSection}}
+                            </div>
+                            {{/dataFilters}}
                         </div>
-                        {{/specificDeactivators}}
+                        <div class="col-sm-6 clickOnSectionsWeWant">
+                            <div class="displayTheSectionsWeWant holdTheExpandableBlock" >
+                                {{#specificDeactivators}}
+                                <div class="everyGroupToDisplayHolder smaller" >
+                                    <div class="expander">
+                                        <div class="row">
+                                            <div class="col-xs-4">
+                                                <span class = "pull-left describeWhatWeAreExpanding">{{title}}</span>
+                                            </div>
+                                            <div class="col-xs-5">
+                                                <span>
+                                                    <button class = "btn btn-primary btn-xs modifyAllCheckboxes" onclick="mpgSoftware.growthFactorLauncher.modifyAllCheckboxes(this)">ALL</button>
+                                                    <button class = "btn btn-primary btn-xs modifyAllCheckboxes" onclick="mpgSoftware.growthFactorLauncher.modifyAllCheckboxes(this)">NONE</button>
+                                                </span>
 
+                                            </div>
+                                            <div class="col-xs-3">
+                                                <span class = "pull-right expanderText" onclick="mpgSoftware.growthFactorLauncher.toggleDisplayOfSelectableElements(this)">Expand</span>
+                                            </div>
+                                        </div>
+
+
+
+
+                                    </div>
+                                    <div class="everyGroupToDisplay"></div>
+                                </div>
+                                {{/specificDeactivators}}
+                            </div>
+                        </div>
                     </div>
                 </div>
                 </div>
