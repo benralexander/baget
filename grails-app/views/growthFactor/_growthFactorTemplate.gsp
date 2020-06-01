@@ -28,6 +28,21 @@
                         </div>
                         <div class="row">
 
+                        <div class="col-sm-12 clickOnSectionsWeWant">
+                            <div class="dropDownDataSelector">
+                                  <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"
+                                  aria-haspopup="true" aria-expanded="true" name="{{dropDownDataSelectorfield}}">
+                                    <span class="dropDownDataSelectorLabel">{{dropDownDataSelectorLabel}}
+                                    <span class="caret"></span>
+                                  </button>
+                                  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                                  {{#availableDataTypeChoices}}
+                                    <li><a onclick="mpgSoftware.growthFactorLauncher.changeDatatypeDisplayed(this)" name="{{datatypeField}}" href="#">{{datatypeLabel}}</a></li>
+                                  {{/availableDataTypeChoices}}
+                                  </ul>
+                            </div>
+                            </div>
+
                                 <div class="col-sm-12 clickOnSectionsWeWant">
 
                                     <div class='dateChooserContainer'>

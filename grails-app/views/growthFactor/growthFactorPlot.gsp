@@ -47,10 +47,14 @@
             [new mpgSoftware.growthFactorLauncher.DataFromAServer ('primary',
                 "https://covidtracking.com/api/v1/states/daily.csv",
                 function(d) {
-                    return {
-                        key: d["state"],
-                        date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddNoDash (d["date"]),
-                        y:+d["death"]};
+                    let temporaryHolder = d;
+                    temporaryHolder ["key"] = d["state"];
+                    temporaryHolder ["date"] =  mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddNoDash (d["date"]);
+                    return temporaryHolder;
+                    // return {
+                    //     key: d["state"],
+                    //     date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddNoDash (d["date"]),
+                    //     y:+d["death"]};
                 },
                 function(rawData){
                     return rawData;
@@ -71,14 +75,33 @@
             [new mpgSoftware.growthFactorLauncher.DataFromAServer ('primary',
                 "https://covid.ourworldindata.org/data/owid-covid-data.csv",
                 function(d) {
-                    return {
-                        total_cases: d["total_cases"],
-                        total_deaths_per_million: d["total_deaths_per_million"],
-                        total_tests_per_thousand: d["total_tests_per_thousand"],
-                        key: d["location"],
-                        date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash (d["date"]),
-                        y:+d["total_deaths"]};
 
+                        let temporaryHolder = d;
+                        temporaryHolder ["key"] = d["location"];
+                        temporaryHolder ["date"] =  mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash(d["date"]);
+                        return temporaryHolder;
+                        // return {
+                        //     key: d["state"],
+                        //     date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddNoDash (d["date"]),
+                        //     y:+d["death"]};
+                    //}
+                    //     return {
+                    //         total_cases: d["total_cases"],
+                    //         total_deaths_per_million: d["total_deaths_per_million"],
+                    //         key: d["location"],
+                    //         date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash(d["date"]),
+                    //         y: +d["total_deaths"]
+                    //     };
+                    // } else {
+                    //     return {
+                    //         total_cases: d["total_cases"],
+                    //         total_deaths_per_million: d["total_deaths_per_million"],
+                    //         extra: d[additionalFieldToInclude],
+                    //         key: d["location"],
+                    //         date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash(d["date"]),
+                    //         y: +d["total_deaths"]
+                    //     };
+                    // }
                 },
                 function(rawData){
                     return  _.filter (rawData,datum => ((!(datum.key.search('International')>=0)))&&
@@ -93,10 +116,15 @@
             [new mpgSoftware.growthFactorLauncher.DataFromAServer ('primary',
                 "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv",
                 function(d) {
-                    return {
-                        key: d["county"],
-                        date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash (d["date"]),
-                        y:+d["deaths"]};
+                    let temporaryHolder = d;
+                    temporaryHolder ["key"] = d["county"]+", "+d['state'];
+                    temporaryHolder ["date"] =  mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash(d["date"]);
+                    return temporaryHolder;
+                    // return {
+                    // return {
+                    //     key: d["county"],
+                    //     date: mpgSoftware.growthFactorLauncher.dateConverterUtil.yyyymmddDash (d["date"]),
+                    //     y:+d["deaths"]};
                 },
                 function(rawData){
                     return  _.filter (rawData,datum => ((!(datum.key.search('Unknown')>=0)))&&

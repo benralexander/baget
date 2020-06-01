@@ -12,6 +12,19 @@ mpgSoftware.growthFactorLauncher = (function () {
         country: [{
             id:"country",
             initialClasses:"active in",
+            dropDownDataSelectorLabel: "Deaths",
+            dropDownDataSelectorfield: "total_deaths",
+            DataTypeId:"DataTypeId",
+            availableDataTypeChoices: [
+                {
+                    datatypeLabel: "Deaths",
+                    datatypeField: "total_deaths"
+                },
+                {
+                    datatypeLabel: "Cases",
+                    datatypeField: "total_cases"
+                }
+            ],
             dataChoosersTitle: "Include data for:",
             dataChoosers: [
                 {
@@ -104,6 +117,23 @@ mpgSoftware.growthFactorLauncher = (function () {
         states: [{
             id:"states",
             initialClasses:"",
+            dropDownDataSelectorLabel: "Deaths",
+            dropDownDataSelectorfield: "death",
+            availableDataTypeChoices: [
+                {
+                    datatypeLabel: "Deaths",
+                    datatypeField: "death"
+                },
+                {
+                    datatypeLabel: "Hospitalizations",
+                    datatypeField: "hospitalizedCumulative"
+                },
+                {
+                    datatypeLabel: "Test results",
+                    datatypeField: "totalTestResults"
+                }
+
+            ],
             dataChoosersTitle: "Include data for:",
             dataChoosers: [
                 {
@@ -119,6 +149,14 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title: "States"
                 }
             ],
+            startingWithTitle:"Starting with day after",
+            startingWithSection:[{
+                preamble: "",
+                quantity: "death",
+                value:"5",
+                className:"startingWith",
+                postamble: ""
+            }],
             analysisSelectionTitle:"Include states that:",
             analysisSelection: [
                 {
@@ -181,6 +219,18 @@ mpgSoftware.growthFactorLauncher = (function () {
         county: [{
             id:"county",
             initialClasses:"",
+            dropDownDataSelectorLabel: "Deaths",
+            dropDownDataSelectorfield: "deaths",
+            availableDataTypeChoices: [
+                {
+                    datatypeLabel: "Deaths",
+                    datatypeField: "deaths"
+                },
+                {
+                    datatypeLabel: "Cases",
+                    datatypeField: "cases"
+                }
+            ],
             dataChoosersTitle: "Include data for:",
             dataChoosers: [
                 {
@@ -196,6 +246,14 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title: "US counties"
                 }
             ],
+            startingWithTitle:"Starting with day after",
+            startingWithSection:[{
+                preamble: "",
+                quantity: "death",
+                value:"5",
+                className:"startingWith",
+                postamble: ""
+            }],
             analysisSelectionTitle:"Include counties that:",
             analysisSelection: [
                 {
@@ -299,24 +357,54 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     class DataFromAServer {
 
-        constructor (name,dataUrl,dataAssignmentFunction,rawDataFilter){
+        constructor (name,dataUrl,dataAssignmentFunction,rawDataConverter){
             this.name = name;//how should we refer to this data set
             this.dataUrl = dataUrl;//where do we go for the data
             this.dataAssignmentFunction = dataAssignmentFunction;// assigned data fields to names we like
-            this.rawDataFilter = rawDataFilter;//filter the raw data before we do anything else
-            this.savedData ={};
-            this.savedGroupedData ={};
+            this.rawDataConverter = rawDataConverter;//conversions that we only need to do once
+            this.rawDataStorage; // not really wrong, but only done with one conversion
+//            this.savedData; // having gone through a datatype filter
+            this.savedGroupedData ={};// saved grouped data ready for action
+            this.datatypeToUseStorage;
+            this.datatypeFieldToUseStorage;
+
         }
         set rawData (incomingRawData){
-            this.savedData = this.rawDataFilter (incomingRawData);
+            this.rawDataStorage = incomingRawData;
         }
         get rawData (){
-            return this.savedData;
+            return this.rawDataStorage;
         }
         set groupedData (incomingGroupedRawData){
             this.savedGroupedData = incomingGroupedRawData;
         }
         get groupedData (){
+            return this.savedGroupedData;
+        }
+        // set savedData (incomingSavedData){
+        //     this.savedData = incomingSavedData;
+        // }
+        // get savedData() {
+        //     return this.savedData;
+        // }
+        set datatypeToUse (incomingDatatypeToUse){
+            this.datatypeToUseStorage = incomingDatatypeToUse;
+        }
+        get datatypeToUse() {
+            return this.datatypeToUseStorage;
+        }
+
+        extractTheFieldWeWantAndGroup (fieldToExtract){
+            const simplifiedData = _.map(this.rawData, function (d){
+                let temporaryHolder = {};
+                temporaryHolder ["key"] = d["key"];
+                temporaryHolder ["date"] =  d["date"];
+                temporaryHolder ["y"] =  d[fieldToExtract];
+                return temporaryHolder;
+            });
+            this.savedGroupedData =  d3.nest() // nest function to group by country
+                    .key(function(d) { return d.key;} )
+                    .entries(simplifiedData);
             return this.savedGroupedData;
         }
 
@@ -375,6 +463,12 @@ mpgSoftware.growthFactorLauncher = (function () {
         setData (identifier, "textAccessor",displayOrganizer [identifier][0].textAccessor);
         setData(identifier,"startingWithValue",displayOrganizer [identifier][0].startingWithSection [0].value);
         setData(identifier,"startingWithQuantity",displayOrganizer [identifier][0].startingWithSection [0].quantity);
+        setData(identifier,"chosenDatatype",$.trim ($('#' + identifier + " button.dropdown-toggle span").text()));
+        setData(identifier,"chosenDatatypeField",$('#' + identifier + " button").attr('name'));
+        if (displayOrganizer [identifier][0].availableDataTypeChoices.length<=1) {
+            $('#' + identifier + " button").prop('disabled', true);
+        }
+
     }
     const adjustAccessors = function (identifier){
         //
@@ -510,8 +604,7 @@ mpgSoftware.growthFactorLauncher = (function () {
 
                 const identifier = $(event.target).closest("div.coreObject").attr('id');
                 setData(identifier,"startingWithValue", this.value);
-                console.log('stop='+retrieveData(identifier,"startingWithValue"));
-                buildThePlot (identifier,FILTER_BASED_ON_DATA_SELECTION);
+                buildThePlot (identifier,FILTER_BASED_ON_DATA_SELECTION_AND_DATE);
             }
         });
 
@@ -573,6 +666,16 @@ mpgSoftware.growthFactorLauncher = (function () {
         setData(identifier,"countingTotalDeaths", shallWeShowcountingTotalDeaths);
         buildThePlot(identifier,ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA);
     };
+    const changeDatatypeDisplayed = function (callingObject){
+        const identifier = $(callingObject).closest("div.coreObject").attr('id');
+        const chosenDatatype = $(callingObject).text ();
+        const chosenDatatypeField = $(callingObject).attr('name');
+        console.log(" need to change this!");
+        setData(identifier,"chosenDatatype", chosenDatatype);
+        setData(identifier,"chosenDatatypeField", chosenDatatypeField);
+        buildThePlot (identifier,FILTER_BASED_ON_DATA_SELECTION);
+    };
+
 
     const changeWhatIsDisplayed = function (callingObject,callingObjectId){
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
@@ -829,7 +932,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             return function(data){
                 return _.filter (data, function (oneRec){
                     let finalAnswer = false;
-                    if ((orFilterArray.length === 0 ) && (andFilterArray.length === 0 )) { // we have no filters at all. Simply pass everything
+                    if ((orFilterArray.length === 0 ) && (andFilterArray.length === 0 )  ) { // we have no filters at all. Simply pass everything
                         finalAnswer = true;
                     }else {
                         if(orFilterArray.length > 0 ){  // we have some OR filters to check
@@ -857,7 +960,6 @@ mpgSoftware.growthFactorLauncher = (function () {
                                 return false;
                             }
                         });
-
                     }
                     return finalAnswer;
                 })
@@ -934,15 +1036,35 @@ mpgSoftware.growthFactorLauncher = (function () {
             return andOrFilterModule (orFilterArray,andFilterArray);
 
         };
-        const filterUsingListOfGroups = function (identifier){
+        const filterUsingListOfGroups = function (identifier) {
 
-            let andFilterArray = [];
-            const textAccessor = retrieveData (identifier, "textAccessor");
-            const auxData = retrieveData(identifier,"auxData");
-            const selectedGroups = _.map ($("#" + identifier +" div.everyGroupToDisplay input.displayControl:checked").next("label"),d=>$(d).text());
-            andFilterArray.push (datum => _.includes (selectedGroups,textAccessor (datum,auxData) ));
+            // let andFilterArray = [];
+            // const textAccessor = retrieveData (identifier, "textAccessor");
+            // const auxData = retrieveData(identifier,"auxData");
+            // const selectedGroups = _.map ($("#" + identifier +" div.everyGroupToDisplay input.displayControl:checked").next("label"),d=>$(d).text());
+            // andFilterArray.push (datum => _.includes (selectedGroups,textAccessor (datum,auxData) ));
+            //
+            // return andOrFilterModule ([],andFilterArray);
 
-            return andOrFilterModule ([],andFilterArray);
+
+            return function (groupedData) {
+                const revisedGroupData = [];
+                const auxData = retrieveData(identifier, "auxData");
+                const textAccessor = retrieveData(identifier, "textAccessor");
+                const selectedGroups = _.map($("#" + identifier + " div.everyGroupToDisplay input.displayControl:checked").next("label"), d => $(d).text());
+
+                _.forEach(groupedData, function (eachGroup) {
+                    const modifiedGroupedData = [];
+                    if (_.includes(selectedGroups, textAccessor(eachGroup, auxData))) {
+                        modifiedGroupedData.push({key: eachGroup.key, values: eachGroup.values})
+                    }
+                    if (modifiedGroupedData.length > 0){
+                        revisedGroupData.push ({key:eachGroup.key, values:eachGroup.values})
+                    }
+                });
+                return revisedGroupData;
+            }
+
 
 
         };
@@ -971,16 +1093,18 @@ mpgSoftware.growthFactorLauncher = (function () {
 
         };
 
-        const filterByDaysSinceParticularThreshold = function (identifier, groupedData){
-            const modifiedGroupedData = [];
-            const startingWithValue = retrieveData (identifier, "startingWithValue");
-            _.forEach(groupedData,function (v, k) {
-                const daysSinceFifthDeath = _.filter(v.values, d => d.y > +startingWithValue);
-                if (daysSinceFifthDeath.length > 0) {
-                    modifiedGroupedData.push({key: v.key, values: daysSinceFifthDeath})
-                }
-            });
-            return modifiedGroupedData;
+        const filterByDaysSinceParticularThreshold = function (identifier){
+            return function (groupedData) {
+                const modifiedGroupedData = [];
+                const startingWithValue = retrieveData(identifier, "startingWithValue");
+                _.forEach(groupedData, function (v, k) {
+                    const daysSinceFifthDeath = _.filter(v.values, d => d.y > +startingWithValue);
+                    if (daysSinceFifthDeath.length > 0) {
+                        modifiedGroupedData.push({key: v.key, values: daysSinceFifthDeath})
+                    }
+                });
+                return modifiedGroupedData;
+            }
         };
 
 
@@ -1076,6 +1200,47 @@ mpgSoftware.growthFactorLauncher = (function () {
 
 
 
+
+        const filterUsingDateSelectionsAndThreshold = function (identifier){
+            const startDate = retrieveData (identifier, "startDate");
+            const globalStartDate = retrieveData (identifier, "globalStartDate");
+            const endDate = retrieveData (identifier, "endDate");
+            const globalEndDate = retrieveData (identifier, "globalEndDate");
+            const startingWithValue = retrieveData(identifier, "startingWithValue");
+            if ((startDate ===globalStartDate) &&
+                (endDate ===globalEndDate) &&
+                (startingWithValue === "5")){
+                return function (groupedData) {return groupedData};
+            }else {
+                return function (groupedData){
+                    const revisedGroupData = [];
+                    _.forEach(groupedData, function (eachGroup){
+                        const dataPointsToSave = [];
+                        const daysSinceThreshold = _.filter(eachGroup.values, d => d.y > +startingWithValue);
+                        _.forEach(_.orderBy(daysSinceThreshold,'date'), function (eachDataPoint){
+                            if(((eachDataPoint.date.getTime() / 1000)>=(startDate.getTime() / 1000))  &&
+                                ((eachDataPoint.date.getTime() / 1000)<=(endDate.getTime() / 1000))){
+                                dataPointsToSave.push (eachDataPoint);
+                            }
+                        });
+                        if (dataPointsToSave.length > 0){
+                            revisedGroupData.push ({key:eachGroup.key, values:dataPointsToSave})
+                        }
+                    });
+                    return revisedGroupData;
+                }
+
+            }
+        };
+
+
+
+
+
+
+
+
+
         return {
             noFilterAtAll:noFilterAtAll,
             filterBasedOnDataSelection:filterBasedOnDataSelection,
@@ -1086,7 +1251,8 @@ mpgSoftware.growthFactorLauncher = (function () {
             filterOnlyOnListOfGroups:filterOnlyOnListOfGroups,
             filterBasedOnAnalysis:filterBasedOnAnalysis,
             filterUnwantedDatesFromGroupedData:filterUnwantedDatesFromGroupedData,
-            filterUsingDateSelections:filterUsingDateSelections
+            filterUsingDateSelections:filterUsingDateSelections,
+            filterUsingDateSelectionsAndThreshold:filterUsingDateSelectionsAndThreshold
         }
     } ());
 
@@ -1167,8 +1333,20 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     const buildThePlot= function (identifier, dataFilteringChoice) {
         const allTheDataWeHaveAccumulated = retrieveData (identifier,"dataFromServerArray");
-        const allData = _.first(allTheDataWeHaveAccumulated).rawData;
-        const groupedData =  _.first(allTheDataWeHaveAccumulated).groupedData;
+
+        // first thing to do is to identify the chosen datatype, filter by it, and group the data
+        const primaryDataSet =  _.first(allTheDataWeHaveAccumulated);
+        if (( typeof  primaryDataSet.datatypeToUse === 'undefined') ||
+            (primaryDataSet.datatypeToUse !==retrieveData(identifier,"chosenDatatype"))){
+            primaryDataSet.extractTheFieldWeWantAndGroup(retrieveData(identifier,"chosenDatatypeField"));
+            primaryDataSet.datatypeToUse = retrieveData(identifier,"chosenDatatype");
+            primaryDataSet.datatypeFieldToUse = retrieveData(identifier,"chosenDatatypeField");
+
+            // const groupedData = _.first (dataFromServerArray).groupedData ;
+            resetDateExtents (identifier,primaryDataSet.groupedData);
+            initializeDateSlider (identifier);  //we can only do this after we have calculated the date range
+        }
+        const groupedData =  primaryDataSet.groupedData;
 
         const auxData =  _. map (allTheDataWeHaveAccumulated.slice (1,allTheDataWeHaveAccumulated.length), d => d.rawData);
         setData(identifier,"auxData", auxData);
@@ -1176,7 +1354,6 @@ mpgSoftware.growthFactorLauncher = (function () {
         let postAnalysisFilter = filterModule.filterBasedOnAnalysis (identifier);
         let preAnalysisFilter;
         adjustAccessors (identifier);
-       // const revisedGroupData = confirmThereAreNoZerosBeforeALogPlot (identifier)(groupedData );  //we should only do this once for each data set
         let analysisToPerform = data=>analysisModule.calculateGrowthFactorByCountry (data,
             retrieveData(identifier,'movingAverageWindow'),
             retrieveData(identifier,'daysOfNonExponentialGrowthRequired'));
@@ -1190,9 +1367,9 @@ mpgSoftware.growthFactorLauncher = (function () {
 
             case FILTER_BASED_ON_DATA_SELECTION:
                 // we have reset the data selection, so we reset the date selector and fill the selection box
-                preAnalysisFilter = filterModule.filterBasedOnDataSelection (identifier);
-                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
-                dataAfterPreanalysisFiltering = filterModule.filterByDaysSinceParticularThreshold(identifier,dataAfterPreanalysisFiltering);
+                // preAnalysisFilter = filterModule.filterBasedOnDataSelection (identifier);
+                dataAfterPreanalysisFiltering = filterModule.filterBasedOnDataSelection (identifier) (groupedData);
+                dataAfterPreanalysisFiltering = filterModule.filterUsingDateSelectionsAndThreshold(identifier)(dataAfterPreanalysisFiltering);
                 setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
                 resetDateExtents (identifier,groupedData);
                 fillTheMainEntitySelectionBox(identifier,dataAfterPreanalysisFiltering);
@@ -1200,11 +1377,12 @@ mpgSoftware.growthFactorLauncher = (function () {
 
             case FILTER_BASED_ON_DATA_SELECTION_AND_DATE:
                 // we have reset the date.adjust the selection box.
-                preAnalysisFilter = filterModule.filterBasedOnDataSelection (identifier)
-                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
-                preAnalysisFilter = filterModule.filterUsingDateSelections(identifier);
-                dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
-                dataAfterPreanalysisFiltering = filterModule.filterByDaysSinceParticularThreshold(identifier,dataAfterPreanalysisFiltering);
+               // preAnalysisFilter = filterModule.filterBasedOnDataSelection (identifier)
+                dataAfterPreanalysisFiltering = filterModule.filterBasedOnDataSelection (identifier) (groupedData);
+                dataAfterPreanalysisFiltering = filterModule.filterUsingListOfGroups(identifier)(dataAfterPreanalysisFiltering);
+                dataAfterPreanalysisFiltering = filterModule.filterUsingDateSelectionsAndThreshold(identifier)(dataAfterPreanalysisFiltering);
+
+                // dataAfterPreanalysisFiltering = filterModule.filterByDaysSinceParticularThreshold(identifier)(dataAfterPreanalysisFiltering);
 
 
                 setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
@@ -1214,13 +1392,11 @@ mpgSoftware.growthFactorLauncher = (function () {
 
             case FILTER_BASED_ON_CHANGES_IN_SELECTED_GROUPS:
                 // we have reset the date.adjust the selection box.
-                preAnalysisFilter = filterModule.filterBasedOnDataSelectionAndDate (identifier)
-                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
-                preAnalysisFilter = filterModule.filterUsingDateSelections(identifier);
-                dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
-                preAnalysisFilter = filterModule.filterUsingListOfGroups(identifier);
-                dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
-                dataAfterPreanalysisFiltering = filterModule.filterByDaysSinceParticularThreshold(identifier,dataAfterPreanalysisFiltering);
+                dataAfterPreanalysisFiltering = filterModule.filterBasedOnDataSelection (identifier) (groupedData);
+                dataAfterPreanalysisFiltering = filterModule.filterUsingDateSelectionsAndThreshold(identifier)(dataAfterPreanalysisFiltering);
+                dataAfterPreanalysisFiltering = filterModule.filterUsingListOfGroups(identifier)(dataAfterPreanalysisFiltering);
+                // dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
+                // dataAfterPreanalysisFiltering = filterModule.filterByDaysSinceParticularThreshold(identifier)(dataAfterPreanalysisFiltering);
                 setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
                 adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
                 break;
@@ -1240,6 +1416,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 preAnalysisFilter = filterModule.filterDateAndListOfGroups(identifier);
                 postAnalysisFilter = filterModule.filterBasedOnAnalysis (identifier);
                 dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
+                setData(identifier,'mostRecentPreAnalysisData',dataAfterPreanalysisFiltering);
                 break;
 
             case ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA:
@@ -1308,26 +1485,26 @@ mpgSoftware.growthFactorLauncher = (function () {
                         }else {
                             _.forEach(dataFromAllRemoteCalls, function (dataToSave, index){
                                 dataFromServerArray[index].rawData = dataToSave;
-                                if (index === 0){
-                                    dataFromServerArray[index].groupedData =  d3.nest() // nest function to group by country
-                                        .key(function(d) { return d.key;} )
-                                        .entries(dataFromServerArray[index].rawData);
-                                }
+                                // if (index === 0){
+                                //     dataFromServerArray[index].groupedData =  d3.nest() // nest function to group by country
+                                //         .key(function(d) { return d.key;} )
+                                //         .entries(dataFromServerArray[index].rawData);
+                                // }
 
                             });
                         }
 
-                        //
-                        // deal with primary data
-                        //
-                        const allData = _.first (dataFromServerArray).rawData ;
-                        const groupedData = _.first (dataFromServerArray).groupedData ;
-
-                        resetDateExtents (identifier,groupedData);
-
-                        initializeDateSlider (identifier);  //we can only do this after we have calculated the date range
-
+                        // Necessary before first plot, but data independent
                         synchronizeDataGroupingWithUi (identifier);
+
+                        //
+                        // initialize based on the data
+                        //
+                        // const groupedData = _.first (dataFromServerArray).groupedData ;
+                        // resetDateExtents (identifier,groupedData);
+                        // initializeDateSlider (identifier);  //we can only do this after we have calculated the date range
+
+
 
                         // all preparations are complete. Now we can build the plot
                         buildThePlot(identifier, FILTER_BASED_ON_DATA_SELECTION);
@@ -1384,6 +1561,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         changeGroupCheckbox:changeGroupCheckbox,
         changeFormOfAnalysis:changeFormOfAnalysis,
         logVersusLinear:logVersusLinear,
+        changeDatatypeDisplayed:changeDatatypeDisplayed,
         modifyAllCheckboxes:modifyAllCheckboxes,
         collapseToCommonStart:collapseToCommonStart,
         countingTotalDeaths:countingTotalDeaths,
