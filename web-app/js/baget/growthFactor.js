@@ -260,8 +260,9 @@ baget.growthFactor = (function () {
 
     instance.buildGrowthFactorPlot = function (growthFactorByCountry ) {
         const transitionTime = 1500;
-        assignColorsToCurvesUsingGroupedData (growthFactorByCountry);
-        const flattenEverything = _.flatten(_.map(growthFactorByCountry,d=>d.values.rawValues));
+        const currentDataSetToPlot = _.find (growthFactorByCountry,'current');
+        assignColorsToCurvesUsingGroupedData (currentDataSetToPlot.dataGoesHere);
+        const flattenEverything = _.flatten(_.map(currentDataSetToPlot.dataGoesHere,d=>d.values.rawValues));
         let [yLower,yUpper] = d3.extent(flattenEverything, d => yValueAccessor (d,auxData));
         if (linearNotLog){
             y = d3.scaleLinear()
@@ -285,12 +286,7 @@ baget.growthFactor = (function () {
                 .domain([xLower,xUpper])
                 .range([margin.left, width - margin.right]);
         }
-        let dateExtentObject = [];
-        if (growthFactorByCountry.length>0){
-            dateExtentObject = [d3.extent(flattenEverything, d => d.date)];
-        }
-
-
+        let dateExtentObject = [[currentDataSetToPlot.startDate,currentDataSetToPlot.endDate]];
 
 
 
@@ -365,17 +361,46 @@ baget.growthFactor = (function () {
             })
             .attr("y", 30)
             .text(function(d){
-                return "data covers period from "+ dateFormat (d[0])+ " to "+ dateFormat (d[1]) +".";
+                return currentDataSetToPlot.name+ " from "+ dateFormat (d[0])+ " to "+ dateFormat (d[1]) +".";
             });
         printDateRange.transition().duration (transitionTime)
             .text(function(d){
-                return "data covers period from "+ dateFormat (d[0])+ " to "+ dateFormat (d[1]) +".";
+                return currentDataSetToPlot.name+ " from "+ dateFormat (d[0])+ " to "+ dateFormat (d[1]) +".";
             });
         printDateRange.exit()
             .remove();
 
+        const callOnEnter = function(a,b){
+            console.log('enter a='+a +' b='+b);
+        }
+        const callOnExit = function(a,b){
+            if ( typeof a.data()[0] !== 'undefined'){
+                svg.selectAll("g.gh")
+                    .remove();
+                svg.selectAll("circle.inflectionPoint")
+                    .remove();
+            }
+
+        }
+
+
+        const rememberYourOrigin = svg.selectAll('text.r')
+            .data (growthFactorByCountry,d=>d.name);
+        rememberYourOrigin.enter ()
+            .append("text")
+            .attr("class",'r')
+            .attr("x", 150)
+            .attr("y", 150)
+            // .text (d=>d.name)
+            .call (callOnEnter);
+        rememberYourOrigin.exit ()
+            .call (callOnExit)
+            .remove();
+
         // data lines for each country or category
+        // let groupHolder = svg.selectAll("g.gh");
         let groupHolder = svg.selectAll("g.gh");
+
         const rememberLastValue = {};
         _.forEach (groupHolder.data (),  function (element) {
             const lastValue = _.last (element.values.rawValues);
@@ -387,7 +412,7 @@ baget.growthFactor = (function () {
                 len:element.values.rawValues.length };
         });
         groupHolder =groupHolder
-            .data(growthFactorByCountry,d=>d.key);
+            .data(currentDataSetToPlot.dataGoesHere,d=>d.key);
         const groupHolderEnter = groupHolder.enter()
             .append("g")
             .attr("class",'gh');
@@ -472,7 +497,8 @@ baget.growthFactor = (function () {
 
         // inflection point for each line, if it exists
         const inflectionPoint = svg.selectAll("circle.inflectionPoint")
-            .data(_.filter (growthFactorByCountry,function(o){return o.values.inflection}),d=>d.key);
+            .data(_.filter (currentDataSetToPlot.dataGoesHere,
+                function(o){return o.values.inflection}),d=>d.key);
         inflectionPoint.enter()
             .append("circle")
             .attr("class",  d => d.values.inflection.key+" inflectionPoint "+d.type)
@@ -492,26 +518,6 @@ baget.growthFactor = (function () {
         inflectionPoint.exit()
             .remove()
         ;
-
-        // // a point to describe lack of inflection
-        // const noinflectionPoint = svg.selectAll("circle.noinflection")
-        //     .data(_.filter (growthFactorByCountry,function(o){return ((o.values.noinflection)  && (!o.values.inflection))})
-        //         ,d=>d.key);
-        // noinflectionPoint.enter()
-        //     .append("circle")
-        //     .attr("class",  d => d.values.noinflection.key+" noinflection "+d.type)
-        //     .attr("r", 3)
-        //     .attr("fill", function(d){ return countryColor(d.key) })
-        //     .attr("cx", d => x(0))
-        //     .attr("cy", d => y(yLower))
-        //     .transition().duration (transitionTime)
-        //     .attr("cx", d => x(d.values.noinflection.x))
-        //     .attr("cy", d => y(d.values.noinflection.y));
-        // noinflectionPoint.transition().duration (transitionTime)
-        //     .attr("cx", d => x(d.values.noinflection.x))
-        //     .attr("cy", d => y(d.values.noinflection.y))
-        // noinflectionPoint.exit()
-        //     .remove();
 
         // label the axes
         const xAxisLabelElement = svg.selectAll("text.axisLabel.xAxis")

@@ -354,6 +354,31 @@ mpgSoftware.growthFactorLauncher = (function () {
         }
     };
 
+    class PlottingPackage {
+        constructor (name,startDate,endDate){
+            this.name = name;
+            this.data;
+            this.startDate = startDate;
+            this.endDate =  endDate
+            this.current;
+        }
+        set dataGoesHere (incomingData){
+            this.data = incomingData;
+            this.current = true;
+        }
+        get dataGoesHere (){
+            return this.data;
+        }
+        set isCurrent (status){
+            this.current = status;
+        }
+        get isCurrent (){
+            return this.current;
+        }
+
+
+    }
+
 
     class DataFromAServer {
 
@@ -363,7 +388,6 @@ mpgSoftware.growthFactorLauncher = (function () {
             this.dataAssignmentFunction = dataAssignmentFunction;// assigned data fields to names we like
             this.rawDataConverter = rawDataConverter;//conversions that we only need to do once
             this.rawDataStorage; // not really wrong, but only done with one conversion
-//            this.savedData; // having gone through a datatype filter
             this.savedGroupedData ={};// saved grouped data ready for action
             this.datatypeToUseStorage;
             this.datatypeFieldToUseStorage;
@@ -456,6 +480,18 @@ mpgSoftware.growthFactorLauncher = (function () {
         setData (identifier, "globalStartDate",startDate);
         setData (identifier, "endDate",endDate);
         setData (identifier, "globalEndDate",endDate);
+    }
+    const realignDateExtents = function (identifier,groupedData){
+        // Now remember the data that we have, and calculate a universal start date and end date
+        const [startDate,endDate]=d3.extent(_.flatten(_.map(groupedData,d=>d.values)), d => d.date);
+        const currentDateSlider = '#' +identifier +' div.dateSlider';
+        const currentDateIndicator = '#' +identifier +' input.amount';
+        $(currentDateSlider).slider('values',0,startDate.getTime() / 1000);
+        $(currentDateSlider).slider('values',1,endDate.getTime() / 1000);
+        $( currentDateIndicator ).val( mpgSoftware.growthFactorLauncher.dateConverterUtil.formatDateAsStringShort(new Date($( currentDateSlider ).slider( "values", 0 )*1000)) +
+            " - " + mpgSoftware.growthFactorLauncher.dateConverterUtil.formatDateAsStringShort(new Date($( currentDateSlider ).slider( "values", 1 )*1000)));
+        setData (identifier, "startDate",startDate);
+        setData (identifier, "endDate",endDate);
     }
     const synchronizeDataGroupingWithUi = function (identifier){
         setData (identifier, "labelAccessors",displayOrganizer [identifier][0].labelAccessors);
@@ -670,7 +706,8 @@ mpgSoftware.growthFactorLauncher = (function () {
         const identifier = $(callingObject).closest("div.coreObject").attr('id');
         const chosenDatatype = $(callingObject).text ();
         const chosenDatatypeField = $(callingObject).attr('name');
-        console.log(" need to change this!");
+        $(callingObject).closest("div.dropDownDataSelector").find('button span.dropDownDataSelectorLabel')
+            .text(chosenDatatype).append("<span class='caret'><span>");
         setData(identifier,"chosenDatatype", chosenDatatype);
         setData(identifier,"chosenDatatypeField", chosenDatatypeField);
         buildThePlot (identifier,FILTER_BASED_ON_DATA_SELECTION);
@@ -713,8 +750,8 @@ mpgSoftware.growthFactorLauncher = (function () {
             step: 86400,
             values: [ startDate.getTime() / 1000, endDate.getTime() / 1000 ],
             slide: function( event, ui ) {
-                $( currentDateIndicator ).val( mpgSoftware.growthFactorLauncher.dateConverterUtil.formatDateAsString(new Date(ui.values[ 0 ] *1000)) +
-                    " - " + mpgSoftware.growthFactorLauncher.dateConverterUtil.formatDateAsString(new Date(ui.values[ 1 ] *1000)) );
+                $( currentDateIndicator ).val( mpgSoftware.growthFactorLauncher.dateConverterUtil.formatDateAsStringShort(new Date(ui.values[ 0 ] *1000)) +
+                    " - " + mpgSoftware.growthFactorLauncher.dateConverterUtil.formatDateAsStringShort(new Date(ui.values[ 1 ] *1000)) );
                 setData (identifier, "startDate",new Date(ui.values[ 0 ] *1000));
                 setData (identifier, "endDate",new Date(ui.values[ 1 ] *1000));
                 buildThePlot (identifier, FILTER_BASED_ON_DATA_SELECTION_AND_DATE);
@@ -1329,6 +1366,35 @@ mpgSoftware.growthFactorLauncher = (function () {
         });
     }
 
+    const packageDataForPlotting = function (identifier,dataWithGrowthFactorsCalculated){
+        const chosenDatatype = retrieveData(identifier,"chosenDatatype" );
+        let packageForAllPlotTypes = retrieveData(identifier,"packageForAllPlotTypes" );
+
+        let packageForThisDatatype;
+        if ( typeof packageForAllPlotTypes === 'undefined'){  //the very first time through
+            packageForThisDatatype = new PlottingPackage (chosenDatatype,
+                retrieveData (identifier, "startDate"),
+                retrieveData (identifier, "endDate"));
+            setData(identifier,"packageForAllPlotTypes",[packageForThisDatatype] )
+        }else if( typeof _.find (packageForAllPlotTypes, {'name':chosenDatatype}) === 'undefined'){
+            packageForThisDatatype = new PlottingPackage (chosenDatatype,
+                retrieveData (identifier, "startDate"),
+                retrieveData (identifier, "endDate"));
+            packageForAllPlotTypes = [packageForThisDatatype];
+            setData(identifier,"packageForAllPlotTypes",[packageForThisDatatype] )
+        }else {
+            packageForThisDatatype =packageForAllPlotTypes [0];
+        }
+
+        // always make sure the date is accurate
+        packageForThisDatatype.startDate = retrieveData (identifier, "startDate");
+        packageForThisDatatype.endDate = retrieveData (identifier, "endDate");
+
+
+        packageForThisDatatype.dataGoesHere = dataWithGrowthFactorsCalculated;
+        return [packageForThisDatatype];
+    };
+
 
 
     const buildThePlot= function (identifier, dataFilteringChoice) {
@@ -1342,7 +1408,6 @@ mpgSoftware.growthFactorLauncher = (function () {
             primaryDataSet.datatypeToUse = retrieveData(identifier,"chosenDatatype");
             primaryDataSet.datatypeFieldToUse = retrieveData(identifier,"chosenDatatypeField");
 
-            // const groupedData = _.first (dataFromServerArray).groupedData ;
             resetDateExtents (identifier,primaryDataSet.groupedData);
             initializeDateSlider (identifier);  //we can only do this after we have calculated the date range
         }
@@ -1367,23 +1432,18 @@ mpgSoftware.growthFactorLauncher = (function () {
 
             case FILTER_BASED_ON_DATA_SELECTION:
                 // we have reset the data selection, so we reset the date selector and fill the selection box
-                // preAnalysisFilter = filterModule.filterBasedOnDataSelection (identifier);
                 dataAfterPreanalysisFiltering = filterModule.filterBasedOnDataSelection (identifier) (groupedData);
                 dataAfterPreanalysisFiltering = filterModule.filterUsingDateSelectionsAndThreshold(identifier)(dataAfterPreanalysisFiltering);
                 setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
-                resetDateExtents (identifier,groupedData);
+                realignDateExtents (identifier,groupedData);
                 fillTheMainEntitySelectionBox(identifier,dataAfterPreanalysisFiltering);
                 break;
 
             case FILTER_BASED_ON_DATA_SELECTION_AND_DATE:
                 // we have reset the date.adjust the selection box.
-               // preAnalysisFilter = filterModule.filterBasedOnDataSelection (identifier)
                 dataAfterPreanalysisFiltering = filterModule.filterBasedOnDataSelection (identifier) (groupedData);
                 dataAfterPreanalysisFiltering = filterModule.filterUsingListOfGroups(identifier)(dataAfterPreanalysisFiltering);
                 dataAfterPreanalysisFiltering = filterModule.filterUsingDateSelectionsAndThreshold(identifier)(dataAfterPreanalysisFiltering);
-
-                // dataAfterPreanalysisFiltering = filterModule.filterByDaysSinceParticularThreshold(identifier)(dataAfterPreanalysisFiltering);
-
 
                 setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
                 adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
@@ -1395,8 +1455,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 dataAfterPreanalysisFiltering = filterModule.filterBasedOnDataSelection (identifier) (groupedData);
                 dataAfterPreanalysisFiltering = filterModule.filterUsingDateSelectionsAndThreshold(identifier)(dataAfterPreanalysisFiltering);
                 dataAfterPreanalysisFiltering = filterModule.filterUsingListOfGroups(identifier)(dataAfterPreanalysisFiltering);
-                // dataAfterPreanalysisFiltering = preAnalysisFilter (dataAfterPreanalysisFiltering);
-                // dataAfterPreanalysisFiltering = filterModule.filterByDaysSinceParticularThreshold(identifier)(dataAfterPreanalysisFiltering);
+
                 setData (identifier, "mostRecentPreAnalysisData", dataAfterPreanalysisFiltering);
                 adjustTheMainSelectionBox(identifier,dataAfterPreanalysisFiltering);
                 break;
@@ -1413,10 +1472,10 @@ mpgSoftware.growthFactorLauncher = (function () {
                 dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
                 break;
             case FILTER_BASED_ON_ANALYSIS:
-                preAnalysisFilter = filterModule.filterDateAndListOfGroups(identifier);
+               // preAnalysisFilter = filterModule.filterDateAndListOfGroups(identifier);
                 postAnalysisFilter = filterModule.filterBasedOnAnalysis (identifier);
-                dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
-                setData(identifier,'mostRecentPreAnalysisData',dataAfterPreanalysisFiltering);
+                // dataAfterPreanalysisFiltering = preAnalysisFilter (groupedData);
+                // setData(identifier,'mostRecentPreAnalysisData',dataAfterPreanalysisFiltering);
                 break;
 
             case ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA:
@@ -1451,7 +1510,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             .valueAccessors(...retrieveData(identifier,'valueAccessors'))
             .textAccessor (retrieveData(identifier,'textAccessor'))
             .auxData(auxData)
-            .buildGrowthFactorPlot(retrieveData(identifier,'mostRecentDisplayableData'));
+            .buildGrowthFactorPlot(packageDataForPlotting (identifier,retrieveData(identifier,'mostRecentDisplayableData')));
     };
 
 
@@ -1485,25 +1544,11 @@ mpgSoftware.growthFactorLauncher = (function () {
                         }else {
                             _.forEach(dataFromAllRemoteCalls, function (dataToSave, index){
                                 dataFromServerArray[index].rawData = dataToSave;
-                                // if (index === 0){
-                                //     dataFromServerArray[index].groupedData =  d3.nest() // nest function to group by country
-                                //         .key(function(d) { return d.key;} )
-                                //         .entries(dataFromServerArray[index].rawData);
-                                // }
-
                             });
                         }
 
                         // Necessary before first plot, but data independent
                         synchronizeDataGroupingWithUi (identifier);
-
-                        //
-                        // initialize based on the data
-                        //
-                        // const groupedData = _.first (dataFromServerArray).groupedData ;
-                        // resetDateExtents (identifier,groupedData);
-                        // initializeDateSlider (identifier);  //we can only do this after we have calculated the date range
-
 
 
                         // all preparations are complete. Now we can build the plot
