@@ -89,20 +89,71 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"of declining growth"
                 }
             ],
-            displayAdjustmentSlim:"slim",
-            displayAdjustment: [
-                {
-                    methodCallBack:"logVersusLinear",
-                    title:"Log scale"
-                },
-                {
-                    methodCallBack:"collapseToCommonStart",
-                    title:" Date dependent"
-                },
-                {
-                    methodCallBack:"countingTotalDeaths",
-                    title:"Deaths per million"
-                }
+            // displayAdjustmentSlim:"superSlender",
+            // displayAdjustmentBootstrapSections:"6",
+            // displayAdjustment: [
+            //     {
+            //         methodCallBack:"logVersusLinear",
+            //         title:"Log scale"
+            //     },
+            //     {
+            //         methodCallBack:"collapseToCommonStart",
+            //         title:" Date dependent"
+            //     },
+            //     {
+            //         methodCallBack:"countingTotalDeaths",
+            //         title:"Deaths per million"
+            //     },
+            //     {
+            //         methodCallBack:"logVersusLinear",
+            //         title:"Per population density"
+            //     },
+            //     {
+            //         methodCallBack:"collapseToCommonStart",
+            //         title:"Per GDP per capita"
+            //     }
+            //
+            // ],
+            displayAdjustmentWithDenominatorSection: [{
+                clickChoiceSection: [
+                    {
+                        methodCallBack:"logVersusLinear",
+                        title:"Log scale"
+                    },
+                    {
+                        methodCallBack:"collapseToCommonStart",
+                        title:" Date dependent"
+                    }
+                ],
+                radioButtonSection: [
+                    {
+                        methodCallBack:"chooseDenominator",
+                        value:"none",
+                        title:"None",
+                        default: "checked"
+                    },
+                    {
+                        methodCallBack:"chooseDenominator",
+                        value:"population",
+                        title:"Population"
+                    },
+                    {
+                        methodCallBack:"chooseDenominator",
+                        value:"population_density",
+                        title:"1/(Population density)"
+                    },
+                    {
+                        methodCallBack:"chooseDenominator",
+                        value:"GDP_per_capita",
+                        title:"1/GDP"
+                    },
+                    {
+                        methodCallBack:"chooseDenominator",
+                        value:"GDP_per_land",
+                        title:"GDP per land area"
+                    }
+                ]
+            }
             ],
             labelAccessors: [   x =>'X axis label',
                                 y =>'Y axis label'  ],
@@ -192,21 +243,65 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"of declining growth"
                 }
             ],
-            displayAdjustmentSlim:"slim",
-            displayAdjustment: [
-                {
-                    methodCallBack:"logVersusLinear",
-                    title:"Log scale"
-                },
-                {
-                    methodCallBack:"collapseToCommonStart",
-                    title:" Date dependent"
-                },
-                {
-                    methodCallBack:"countingTotalDeaths",
-                    title:"Deaths per million"
-                }
+            // displayAdjustmentSlim:"slim",
+            // displayAdjustmentBootstrapSections:"12",
+            // displayAdjustment: [
+            //     {
+            //         methodCallBack:"logVersusLinear",
+            //         title:"Log scale"
+            //     },
+            //     {
+            //         methodCallBack:"collapseToCommonStart",
+            //         title:" Date dependent"
+            //     },
+            //     {
+            //         methodCallBack:"countingTotalDeaths",
+            //         title:"Deaths per million"
+            //     }
+            // ],
+            displayAdjustmentWithDenominatorSection: [{
+                clickChoiceSection: [
+                    {
+                        methodCallBack:"logVersusLinear",
+                        title:"Log scale"
+                    },
+                    {
+                        methodCallBack:"collapseToCommonStart",
+                        title:" Date dependent"
+                    }
+                ],
+                radioButtonSection: [
+                    {
+                        methodCallBack:"chooseDenominator",
+                        value:"none",
+                        title:"None",
+                        default: "checked"
+                    },
+                    {
+                        methodCallBack:"chooseDenominator",
+                        value:"population",
+                        title:"Population"
+                    },
+                    {
+                        methodCallBack:"chooseDenominator",
+                        value:"population_density",
+                        title:"1/(Population density)"
+                    }
+                    // ,
+                    // {
+                    //     methodCallBack:"chooseDenominator",
+                    //     value:"GDP_per_capita",
+                    //     title:"1/GDP"
+                    // },
+                    // {
+                    //     methodCallBack:"chooseDenominator",
+                    //     value:"GDP_per_land",
+                    //     title:"GDP per land area"
+                    // }
+                ]
+            }
             ],
+
             labelAccessors: [   x =>'X axis label',
                 y =>'Y axis label'  ],
             valueAccessors:[   x =>x.x,
@@ -289,6 +384,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"of declining growth"
                 }
             ],
+            displayAdjustmentBootstrapSections:"12",
             displayAdjustment: [
                 {
                     methodCallBack:"logVersusLinear",
@@ -382,12 +478,13 @@ mpgSoftware.growthFactorLauncher = (function () {
 
     class DataFromAServer {
 
-        constructor (name,dataUrl,dataAssignmentFunction,rawDataConverter){
+        constructor (name,dataUrl,dataAssignmentFunction,filterUnusableData,generateAuxiliaryData){
             this.name = name;//how should we refer to this data set
             this.dataUrl = dataUrl;//where do we go for the data
             this.dataAssignmentFunction = dataAssignmentFunction;// assigned data fields to names we like
-            this.rawDataConverter = rawDataConverter;//conversions that we only need to do once
+            this.filterUnusableData = filterUnusableData;//conversions that we only need to do once
             this.rawDataStorage; // not really wrong, but only done with one conversion
+            this.generateAuxiliaryData = generateAuxiliaryData;
             this.savedGroupedData ={};// saved grouped data ready for action
             this.datatypeToUseStorage;
             this.datatypeFieldToUseStorage;
@@ -405,12 +502,6 @@ mpgSoftware.growthFactorLauncher = (function () {
         get groupedData (){
             return this.savedGroupedData;
         }
-        // set savedData (incomingSavedData){
-        //     this.savedData = incomingSavedData;
-        // }
-        // get savedData() {
-        //     return this.savedData;
-        // }
         set datatypeToUse (incomingDatatypeToUse){
             this.datatypeToUseStorage = incomingDatatypeToUse;
         }
@@ -428,7 +519,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             });
             this.savedGroupedData =  d3.nest() // nest function to group by country
                     .key(function(d) { return d.key;} )
-                    .entries(simplifiedData);
+                    .entries(this.filterUnusableData (simplifiedData));
             return this.savedGroupedData;
         }
 
@@ -501,25 +592,31 @@ mpgSoftware.growthFactorLauncher = (function () {
         setData(identifier,"startingWithQuantity",displayOrganizer [identifier][0].startingWithSection [0].quantity);
         setData(identifier,"chosenDatatype",$.trim ($('#' + identifier + " button.dropdown-toggle span").text()));
         setData(identifier,"chosenDatatypeField",$('#' + identifier + " button").attr('name'));
+        setData(identifier,"chosenDenominator", "none");
         if (displayOrganizer [identifier][0].availableDataTypeChoices.length<=1) {
             $('#' + identifier + " button").prop('disabled', true);
         }
 
     }
     const adjustAccessors = function (identifier){
+        // the denominator can impact many of the accessors
+        const chosenDenominator = retrieveData(identifier,"chosenDenominator");
+
         //
         // set the X and Y label on the axes
         //
         const currentAccessors = retrieveData (identifier, "labelAccessors");
         let buildingXAxisLabel = "";
         let buildingYAxisLabel = "";
+        const chosenDatatype = retrieveData(identifier,"chosenDatatype");
+        const startingWithValue = retrieveData(identifier,"startingWithValue");
         if (retrieveData (identifier, "countingTotalDeaths")){
-            buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?"Total deaths":"total deaths";
+            buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?("Total "+chosenDatatype):("total "+chosenDatatype);
         }else {
-            buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?"Deaths per million":"deaths per million";
+            buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" per million"):(chosenDatatype +" per million");
         }
         if (retrieveData (identifier, "collapseToCommonStart")){
-            buildingXAxisLabel = "Days since fifth death";
+            buildingXAxisLabel = "Days since "+chosenDatatype + " number "+startingWithValue;
         }else {
             buildingXAxisLabel = "Date";
         }
@@ -559,23 +656,95 @@ mpgSoftware.growthFactorLauncher = (function () {
         //
         // set the values that we will use to access vertical axis data.
         //
-        if (retrieveData (identifier, "countingTotalDeaths")){
-            buildingYValueAccessor = d => ( typeof d !== 'undefined')?+d.y: 1;
-        }else {
-            if((identifier ==='states')  && (retrieveData(identifier,"auxData").length>0)) {
-                buildingYValueAccessor = function (d, auxData) {
-                    const auxiliaryRecord = _.find(auxData[0], {Abbreviation: d.key});
-                    if ((auxiliaryRecord) && (+auxiliaryRecord.Pop > 0)) {
-                        return ((( typeof d !== 'undefined')?+d.y: 1) * 1000000) / (+auxiliaryRecord.Pop);
-                    }else {
-                        return (( typeof d !== 'undefined')?+d.y: 1);
-                    }
-                };
-            }else  {
-                buildingYValueAccessor = d =>+d.total_deaths_per_million;
+        buildingYValueAccessor = d => ( typeof d !== 'undefined')?+d.y: 1;
+        if((identifier ==='country')  && (retrieveData(identifier,"auxData").length>0)) {
+            buildingYValueAccessor = function (d, auxData) {
+                const chosenDenominator = retrieveData(identifier,"chosenDenominator");
+                const auxiliaryRecord = _.find(auxData[0], {key: d.key});
+                switch (chosenDenominator){
+                    case "none":
+                        return +d.y;
+                        break;
+                    case "population":
+                        if ((auxiliaryRecord) && (+auxiliaryRecord.population > 0)) {
+                            return (+d.y * 1000000) / auxiliaryRecord.population;
+                        }else {
+                            return  +d.y;
+                        }
+                        break;
+                    case "population_density":
+                        if ((auxiliaryRecord) && (+auxiliaryRecord.density > 0)) {
+                            return (+d.y) * auxiliaryRecord.density;
+                        }else {
+                            return  +d.y;
+                        }
+                        break;
+                    case "GDP_per_capita":
+                        if ((auxiliaryRecord) && (+auxiliaryRecord.gdpPerCapita > 0)) {
+                            return (+d.y) * (auxiliaryRecord.gdpPerCapita*auxiliaryRecord.population);
+                        }else {
+                            return  +d.y;
+                        }
+                        break;
+                    case "GDP_per_land":
+                        if ((auxiliaryRecord) && (+auxiliaryRecord.gdpPerCapita > 0)) {
+                            return (+d.y) / (auxiliaryRecord.gdpPerCapita/auxiliaryRecord.density);
+                        }else {
+                            return  +d.y;
+                        }
+                        break;
+                    default:
+                        alert ("we should never have chosenDenominator == "+chosenDenominator);
+                        break;
+                }
+            };
+        }else if((identifier ==='states')  && (retrieveData(identifier,"auxData").length>0)) {
+            buildingYValueAccessor = function (d, auxData) {
+                const chosenDenominator = retrieveData(identifier,"chosenDenominator");
+                const auxiliaryRecord = _.find(auxData[0], {Abbreviation: d.key});
+                switch (chosenDenominator){
+                    case "none":
+                        return +d.y;
+                        break;
+                    case "population":
+                        if ((auxiliaryRecord) && (+auxiliaryRecord.Pop > 0)) {
+                            return (+d.y * 1000000) / auxiliaryRecord.Pop;
+                        }else {
+                            return  +d.y;
+                        }
+                        break;
+                    case "population_density":
+                        if ((auxiliaryRecord) && (+auxiliaryRecord.density > 0)) {
+                            return (+d.y) * auxiliaryRecord.density;
+                        }else {
+                            return  +d.y;
+                        }
+                        break;
+                    default:
+                        alert ("we should never have chosenDenominator == "+chosenDenominator);
+                        break;
+                }
+            };
+        }else
+            {
+            if (retrieveData (identifier, "countingTotalDeaths")){
+                buildingYValueAccessor = d => ( typeof d !== 'undefined')?+d.y: 1;
+            }else {
+                if((identifier ==='states')  && (retrieveData(identifier,"auxData").length>0)) {
+                    buildingYValueAccessor = function (d, auxData) {
+                        const auxiliaryRecord = _.find(auxData[0], {Abbreviation: d.key});
+                        if ((auxiliaryRecord) && (+auxiliaryRecord.Pop > 0)) {
+                            return ((( typeof d !== 'undefined')?+d.y: 1) * 1000000) / (+auxiliaryRecord.Pop);
+                        }else {
+                            return (( typeof d !== 'undefined')?+d.y: 1);
+                        }
+                    };
+                }else  {
+                    buildingYValueAccessor = d =>+d.total_deaths_per_million;
+                }
             }
         }
-        currentValueAccessors [0] =  buildingXValueAccessor;
+         currentValueAccessors [0] =  buildingXValueAccessor;
         currentValueAccessors [1] =  buildingYValueAccessor;
         setData(identifier,"valueAccessors", currentValueAccessors);
 
@@ -654,6 +823,12 @@ mpgSoftware.growthFactorLauncher = (function () {
     };
 
 
+    const chooseDenominator = function (callingObject){
+        const identifier = $(callingObject).closest("div.coreObject").attr('id');
+        const chosenDenominator = $(callingObject).attr('value');
+        setData(identifier,"chosenDenominator", chosenDenominator);
+        buildThePlot (identifier,  ONLY_CHANGE_DISPLAY_NO_FILTERING_DATA);
+    };
 
     const toggleDisplayOfSelectableElements = function (callingObject){
         const identifier = $(callingObject).closest("div.everyGroupToDisplayHolder");
@@ -1413,7 +1588,24 @@ mpgSoftware.growthFactorLauncher = (function () {
         }
         const groupedData =  primaryDataSet.groupedData;
 
-        const auxData =  _. map (allTheDataWeHaveAccumulated.slice (1,allTheDataWeHaveAccumulated.length), d => d.rawData);
+        let auxData;
+        if (allTheDataWeHaveAccumulated.length > 1){
+            auxData =  _.map (allTheDataWeHaveAccumulated.slice (1,allTheDataWeHaveAccumulated.length), d => d.rawData);
+        }else if(identifier=== "country"){
+            const rawCountryData = allTheDataWeHaveAccumulated[0].rawData;
+            const buildAuxiliaryData = [];
+            _.forEach(groupedData,function (oneRecord) {
+                const findAnyRecordForThisCountry= _.find (rawCountryData,{key:oneRecord.key});
+                buildAuxiliaryData.push ({key:oneRecord.key,
+                    population:+findAnyRecordForThisCountry.population,
+                    density:+findAnyRecordForThisCountry.population_density,
+                    gdpPerCapita: +findAnyRecordForThisCountry.gdp_per_capita,
+                    continent:+findAnyRecordForThisCountry.continent});
+            })
+            auxData = [buildAuxiliaryData];
+        }
+
+
         setData(identifier,"auxData", auxData);
         const idOfThePlaceWhereThePlotGoes  = _.find (tabHeaderOrganizer.topSection[0].headers,o =>o[0].id===identifier )[0].plotGoesHere[0].id;
         let postAnalysisFilter = filterModule.filterBasedOnAnalysis (identifier);
@@ -1602,6 +1794,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         DataFromAServer:DataFromAServer,
         analysisModule:analysisModule,
         prepareToDisplay:prepareToDisplay,
+        chooseDenominator:chooseDenominator,
         changeWhatIsDisplayed:changeWhatIsDisplayed,
         changeGroupCheckbox:changeGroupCheckbox,
         changeFormOfAnalysis:changeFormOfAnalysis,

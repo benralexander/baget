@@ -137,7 +137,7 @@
     </div>
     <div class="row col-container">
 
-        <div class="col-lg-6 col-lg-offset-2 col-sm-8 col">
+        <div class="col-lg-5 col-lg-offset-2 col-sm-7 col">
             <div class="dataChoosingSection">
                 <div class="sectionDescription">
                     Adjust analysis
@@ -177,17 +177,45 @@
 
 
         </div>
-        <div class="col-lg-2 col-sm-4 col">
+        <div class="col-lg-3 col-sm-5 col">
             <div class="displayAdjustmentSection">
                 <div class="sectionDescription displayButtonAdjuster {{displayAdjustmentSlim}}">
                     Adjust display
                 </div>
+                <div class="row">
                 {{#displayAdjustment}}
-                <div class="text-center" >
-                    <button type="button" class="btn btn-outline-primary logLinChg {{displayAdjustmentSlim}} align-middle" onclick="mpgSoftware.growthFactorLauncher.{{methodCallBack}} (this)"
-                            style="">{{title}}</button>
-                </div>
+                    <div class="col-sm-{{displayAdjustmentBootstrapSections}}">
+                        <div class="text-center" >
+                            <button type="button" class="btn btn-outline-primary logLinChg {{displayAdjustmentSlim}} align-middle" onclick="mpgSoftware.growthFactorLauncher.{{methodCallBack}} (this)"
+                                    style="">{{title}}</button>
+                        </div>
+                    </div>
                 {{/displayAdjustment}}
+                {{#displayAdjustmentWithDenominatorSection}}
+                    <div class="col-sm-6">
+                        {{#clickChoiceSection}}
+                        <div class="text-center" >
+                            <button type="button" class="btn btn-outline-primary logLinChg {{displayAdjustmentSlim}} align-middle" onclick="mpgSoftware.growthFactorLauncher.{{methodCallBack}} (this)"
+                                    style="">{{title}}</button>
+                        </div>
+                        {{/clickChoiceSection}}
+                    </div>
+                    <div class="col-sm-6">
+
+                        <div class="surroundDenominators text-left">
+                        <div class="smallSectionDescription">
+                            Denominators
+                        </div>
+                        {{#radioButtonSection}}
+                            <label>
+                                <input type="radio" name="chooseDenominator" onclick="mpgSoftware.growthFactorLauncher.{{methodCallBack}}(this)" value="{{value}}" {{default}}>
+                                {{title}}
+                            </label>
+                        {{/radioButtonSection}}
+                        </div>
+                    </div>
+                {{/displayAdjustmentWithDenominatorSection}}
+                </div>
             </div>
         </div>
         <div class="col-lg-2 col">

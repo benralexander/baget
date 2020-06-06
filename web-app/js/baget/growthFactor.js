@@ -371,7 +371,7 @@ baget.growthFactor = (function () {
             .remove();
 
         const callOnEnter = function(a,b){
-            console.log('enter a='+a +' b='+b);
+
         }
         const callOnExit = function(a,b){
             if ( typeof a.data()[0] !== 'undefined'){
