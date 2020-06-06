@@ -610,11 +610,31 @@ mpgSoftware.growthFactorLauncher = (function () {
         let buildingYAxisLabel = "";
         const chosenDatatype = retrieveData(identifier,"chosenDatatype");
         const startingWithValue = retrieveData(identifier,"startingWithValue");
-        if (retrieveData (identifier, "countingTotalDeaths")){
-            buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?("Total "+chosenDatatype):("total "+chosenDatatype);
-        }else {
-            buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" per million"):(chosenDatatype +" per million");
+        switch (chosenDenominator){
+            case "none":
+                buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?("Total "+chosenDatatype):("total "+chosenDatatype);
+                break;
+            case "population":
+                buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" per million"):(chosenDatatype +" per million");
+                break;
+            case "population_density":
+                buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" * density (person/km^2)"):(chosenDatatype +" * density (person/km^2)");
+                break;
+            case "GDP_per_capita":
+                buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" * GDP *10^-12"):(chosenDatatype +" * GDP");
+                break;
+            case "GDP_per_land":
+                buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" * area (km^2) / GDP"):(chosenDatatype +" * area (km^2) / GDP");
+                break;
+            default:
+                alert ("we should never have chosenDenominator == "+chosenDenominator);
+                break;
         }
+        // if (retrieveData (identifier, "countingTotalDeaths")){
+        //     buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?("Total "+chosenDatatype):("total "+chosenDatatype);
+        // }else {
+        //     buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" per million"):(chosenDatatype +" per million");
+        // }
         if (retrieveData (identifier, "collapseToCommonStart")){
             buildingXAxisLabel = "Days since "+chosenDatatype + " number "+startingWithValue;
         }else {
@@ -681,7 +701,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                         break;
                     case "GDP_per_capita":
                         if ((auxiliaryRecord) && (+auxiliaryRecord.gdpPerCapita > 0)) {
-                            return (+d.y) * (auxiliaryRecord.gdpPerCapita*auxiliaryRecord.population);
+                            return (+d.y/1000000000000) * (auxiliaryRecord.gdpPerCapita*auxiliaryRecord.population);
                         }else {
                             return  +d.y;
                         }
