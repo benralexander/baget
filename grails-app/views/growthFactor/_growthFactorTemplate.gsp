@@ -80,7 +80,7 @@
                                         <input type="text" id="{{id}}dateSliderContainer" class="amount" style:10px>
                                     </div>
                                 </div>
-                                <div class="dateSlider" style="margin-top: 25px"></div>
+                                <div class="dateSlider" style="margin: 25px 25px 10px 25px"></div>
                             </div>
                             <div class='startingWithContainer' >
                                  <div class="subSectionDescription">
@@ -140,7 +140,7 @@
         <div class="col-lg-5 col-lg-offset-2 col-sm-7 col">
             <div class="dataChoosingSection">
                 <div class="sectionDescription">
-                    Adjust analysis
+                    Growth factor analysis
                 </div>
                 <div class="row">
                     <div class="col-sm-7 clickOnSectionsWeWant">

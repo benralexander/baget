@@ -140,7 +140,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                     {
                         methodCallBack:"chooseDenominator",
                         value:"population_density",
-                        title:"1/(Population density)"
+                        title:"Population density"
                     },
                     {
                         methodCallBack:"chooseDenominator",
@@ -243,22 +243,6 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"of declining growth"
                 }
             ],
-            // displayAdjustmentSlim:"slim",
-            // displayAdjustmentBootstrapSections:"12",
-            // displayAdjustment: [
-            //     {
-            //         methodCallBack:"logVersusLinear",
-            //         title:"Log scale"
-            //     },
-            //     {
-            //         methodCallBack:"collapseToCommonStart",
-            //         title:" Date dependent"
-            //     },
-            //     {
-            //         methodCallBack:"countingTotalDeaths",
-            //         title:"Deaths per million"
-            //     }
-            // ],
             displayAdjustmentWithDenominatorSection: [{
                 clickChoiceSection: [
                     {
@@ -285,19 +269,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                     {
                         methodCallBack:"chooseDenominator",
                         value:"population_density",
-                        title:"1/(Population density)"
+                        title:"Population density"
                     }
-                    // ,
-                    // {
-                    //     methodCallBack:"chooseDenominator",
-                    //     value:"GDP_per_capita",
-                    //     title:"1/GDP"
-                    // },
-                    // {
-                    //     methodCallBack:"chooseDenominator",
-                    //     value:"GDP_per_land",
-                    //     title:"GDP per land area"
-                    // }
                 ]
             }
             ],
@@ -590,6 +563,10 @@ mpgSoftware.growthFactorLauncher = (function () {
         setData (identifier, "textAccessor",displayOrganizer [identifier][0].textAccessor);
         setData(identifier,"startingWithValue",displayOrganizer [identifier][0].startingWithSection [0].value);
         setData(identifier,"startingWithQuantity",displayOrganizer [identifier][0].startingWithSection [0].quantity);
+        const showGroupsWithInsufficientData = _.find (displayOrganizer [identifier][0].analysisSelection ,{'identifier':'showGroupsWithInsufficientData'});
+        if (showGroupsWithInsufficientData){
+            setData(identifier,"showGroupsWithInsufficientData", showGroupsWithInsufficientData.checked === "checked");
+        }
         setData(identifier,"chosenDatatype",$.trim ($('#' + identifier + " button.dropdown-toggle span").text()));
         setData(identifier,"chosenDatatypeField",$('#' + identifier + " button").attr('name'));
         setData(identifier,"chosenDenominator", "none");
@@ -618,7 +595,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                 buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" per million"):(chosenDatatype +" per million");
                 break;
             case "population_density":
-                buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" * density (person/km^2)"):(chosenDatatype +" * density (person/km^2)");
+                buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" / density (person/km^2)"):(chosenDatatype +" / density (person/km^2)");
                 break;
             case "GDP_per_capita":
                 buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" * GDP *10^-12"):(chosenDatatype +" * GDP");
@@ -694,7 +671,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                         break;
                     case "population_density":
                         if ((auxiliaryRecord) && (+auxiliaryRecord.density > 0)) {
-                            return (+d.y) * auxiliaryRecord.density;
+                            return (+d.y) / auxiliaryRecord.density;
                         }else {
                             return  +d.y;
                         }
@@ -1087,11 +1064,11 @@ mpgSoftware.growthFactorLauncher = (function () {
                 }else if ((!countryGrowthFactorRecord.values.inflection) && (countryGrowthFactorRecord.values.noinflection)){
                     countryGrowthFactorRecord.values['type']='noinflection';
                 }else {
-                    if (countryGrowthFactorRecord.values.rawValues.length === 0){
-                        countryGrowthFactorRecord.values['type']='noDataYet';
-                    }else {
+                    // if (countryGrowthFactorRecord.values.rawValues.length === 0){
+                    //     countryGrowthFactorRecord.values['type']='noDataYet';
+                    // }else {
                         countryGrowthFactorRecord.values['type']='inflectionUndetermined';
-                    }
+                    // }
 
                 }
 

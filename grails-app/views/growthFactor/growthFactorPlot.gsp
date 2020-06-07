@@ -17,7 +17,7 @@
 
 
     <div class="starter-template">
-        <h2>Growth factor analysis of Covid-19</h2>
+        <h1>COVID-19</h1>
     </div>
 
     <div class="container" id="headerSection" style="width: 100%">
