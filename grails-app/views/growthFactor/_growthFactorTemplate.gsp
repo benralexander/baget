@@ -89,8 +89,9 @@
                                 {{#startingWithSection}}
                                     <div>
                                         <label class="custom-control-label displayControl">{{preamble}}
-                                        <span class="{{className}}Quantity">{{quantity}}</span> number</label>
+                                        first day with</label>
                                         <input type="text" class="spinner {{className}}"/>
+                                        <span class="{{className}}Quantity">{{quantity}}</span>
                                         <span class="{{className}}Suffix">{{postamble}}</span>
                                     </div>
                                 {{/startingWithSection}}

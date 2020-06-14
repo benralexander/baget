@@ -26,7 +26,7 @@ class GrowthFactorController {
         return
     }
     def populationPerState() {
-        String csvDataAsString = new File('./web-app/WEB-INF/resources/StatePopulationAndAbbrev.csv').text
+        String csvDataAsString =  new File(grailsApplication.mainContext.getResource("/WEB-INF/resources/StatePopulationAndAbbrev.csv").file.toString()).text;
         response.setHeader("Content-disposition", "attachment; filename=foo.csv");
         render(contentType: "text/csv", text: csvDataAsString);
         return

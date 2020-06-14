@@ -34,6 +34,12 @@ mpgSoftware.growthFactorLauncher = (function () {
                     checked: "checked"
                 },
                 {
+                    title:"continents",
+                    methodCallBack:"changeWhatIsDisplayed",
+                    identifier:"includeContinents",
+                    checked: ""
+                },
+                {
                     title:"the world",
                     methodCallBack:"changeWhatIsDisplayed",
                     identifier:"includeSummaryGroups",
@@ -46,10 +52,10 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title: "Countries"
                 }
             ],
-            startingWithTitle:"Starting with day after",
+            startingWithTitle:"Exclude data prior to",
             startingWithSection:[{
                 preamble: "",
-                quantity: "death",
+                quantity: "Deaths",
                 value:"5",
                 className:"startingWith",
                 postamble: ""
@@ -89,31 +95,6 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title:"of declining growth"
                 }
             ],
-            // displayAdjustmentSlim:"superSlender",
-            // displayAdjustmentBootstrapSections:"6",
-            // displayAdjustment: [
-            //     {
-            //         methodCallBack:"logVersusLinear",
-            //         title:"Log scale"
-            //     },
-            //     {
-            //         methodCallBack:"collapseToCommonStart",
-            //         title:" Date dependent"
-            //     },
-            //     {
-            //         methodCallBack:"countingTotalDeaths",
-            //         title:"Deaths per million"
-            //     },
-            //     {
-            //         methodCallBack:"logVersusLinear",
-            //         title:"Per population density"
-            //     },
-            //     {
-            //         methodCallBack:"collapseToCommonStart",
-            //         title:"Per GDP per capita"
-            //     }
-            //
-            // ],
             displayAdjustmentWithDenominatorSection: [{
                 clickChoiceSection: [
                     {
@@ -141,11 +122,6 @@ mpgSoftware.growthFactorLauncher = (function () {
                         methodCallBack:"chooseDenominator",
                         value:"population_density",
                         title:"Population density"
-                    },
-                    {
-                        methodCallBack:"chooseDenominator",
-                        value:"GDP_per_capita",
-                        title:"1/GDP"
                     },
                     {
                         methodCallBack:"chooseDenominator",
@@ -180,10 +156,13 @@ mpgSoftware.growthFactorLauncher = (function () {
                     datatypeField: "hospitalizedCumulative"
                 },
                 {
-                    datatypeLabel: "Test results",
-                    datatypeField: "totalTestResults"
+                    datatypeLabel: "On ventilator",
+                    datatypeField: "onVentilatorCumulative"
+                },
+                {
+                    datatypeLabel: "Cases",
+                    datatypeField: "positive"
                 }
-
             ],
             dataChoosersTitle: "Include data for:",
             dataChoosers: [
@@ -200,10 +179,10 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title: "States"
                 }
             ],
-            startingWithTitle:"Starting with day after",
+            startingWithTitle:"Exclude data prior to",
             startingWithSection:[{
                 preamble: "",
-                quantity: "death",
+                quantity: "Deaths",
                 value:"5",
                 className:"startingWith",
                 postamble: ""
@@ -314,10 +293,10 @@ mpgSoftware.growthFactorLauncher = (function () {
                     title: "US counties"
                 }
             ],
-            startingWithTitle:"Starting with day after",
+            startingWithTitle:"Exclude data prior to",
             startingWithSection:[{
                 preamble: "",
-                quantity: "death",
+                quantity: "Deaths",
                 value:"5",
                 className:"startingWith",
                 postamble: ""
@@ -458,6 +437,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             this.filterUnusableData = filterUnusableData;//conversions that we only need to do once
             this.rawDataStorage; // not really wrong, but only done with one conversion
             this.generateAuxiliaryData = generateAuxiliaryData;
+            this.savedAggregatedData=[];
             this.savedGroupedData ={};// saved grouped data ready for action
             this.datatypeToUseStorage;
             this.datatypeFieldToUseStorage;
@@ -475,6 +455,13 @@ mpgSoftware.growthFactorLauncher = (function () {
         get groupedData (){
             return this.savedGroupedData;
         }
+        set aggregatedData (incomingAggregatedData){
+            this.savedAggregatedData = incomingAggregatedData;
+        }
+        get aggregatedData (){
+            return this.savedAggregatedData;
+        }
+
         set datatypeToUse (incomingDatatypeToUse){
             this.datatypeToUseStorage = incomingDatatypeToUse;
         }
@@ -493,7 +480,20 @@ mpgSoftware.growthFactorLauncher = (function () {
             this.savedGroupedData =  d3.nest() // nest function to group by country
                     .key(function(d) { return d.key;} )
                     .entries(this.filterUnusableData (simplifiedData));
-            return this.savedGroupedData;
+            const savedGroupedDataAsArray =  [];
+            _.forEach(this.savedGroupedData,function (dd){savedGroupedDataAsArray.push(dd)});
+            _.forEach(this.savedAggregatedData, function (dataVector,eachContinent){
+                const revisedVector = _.map(dataVector, function (d){
+                    let temporaryHolder = {};
+                    temporaryHolder ["key"] = d["continent"];
+                    temporaryHolder ["date"] =  d["date"];
+                    temporaryHolder ["y"] =  d[fieldToExtract];
+                    return temporaryHolder;
+                });
+                savedGroupedDataAsArray.push ({key:eachContinent, values:revisedVector})
+            });
+            this.savedGroupedData = savedGroupedDataAsArray;
+            return savedGroupedDataAsArray;
         }
 
     }
@@ -607,13 +607,9 @@ mpgSoftware.growthFactorLauncher = (function () {
                 alert ("we should never have chosenDenominator == "+chosenDenominator);
                 break;
         }
-        // if (retrieveData (identifier, "countingTotalDeaths")){
-        //     buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?("Total "+chosenDatatype):("total "+chosenDatatype);
-        // }else {
-        //     buildingYAxisLabel += (buildingYAxisLabel.length=== 0)?(chosenDatatype +" per million"):(chosenDatatype +" per million");
-        // }
+
         if (retrieveData (identifier, "collapseToCommonStart")){
-            buildingXAxisLabel = "Days since "+chosenDatatype + " number "+startingWithValue;
+            buildingXAxisLabel = "Days since first day with "+startingWithValue+ " "+chosenDatatype;
         }else {
             buildingXAxisLabel = "Date";
         }
@@ -656,6 +652,7 @@ mpgSoftware.growthFactorLauncher = (function () {
         buildingYValueAccessor = d => ( typeof d !== 'undefined')?+d.y: 1;
         if((identifier ==='country')  && (retrieveData(identifier,"auxData").length>0)) {
             buildingYValueAccessor = function (d, auxData) {
+                if ( typeof d === 'undefined') { return  1;}
                 const chosenDenominator = retrieveData(identifier,"chosenDenominator");
                 const auxiliaryRecord = _.find(auxData[0], {key: d.key});
                 switch (chosenDenominator){
@@ -684,7 +681,7 @@ mpgSoftware.growthFactorLauncher = (function () {
                         }
                         break;
                     case "GDP_per_land":
-                        if ((auxiliaryRecord) && (+auxiliaryRecord.gdpPerCapita > 0)) {
+                        if ((auxiliaryRecord) && (+auxiliaryRecord.gdpPerCapita > 0)&& (+auxiliaryRecord.density > 0)) {
                             return (+d.y) / (auxiliaryRecord.gdpPerCapita/auxiliaryRecord.density);
                         }else {
                             return  +d.y;
@@ -697,6 +694,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             };
         }else if((identifier ==='states')  && (retrieveData(identifier,"auxData").length>0)) {
             buildingYValueAccessor = function (d, auxData) {
+                if ( typeof d === 'undefined') { return  1;}
                 const chosenDenominator = retrieveData(identifier,"chosenDenominator");
                 const auxiliaryRecord = _.find(auxData[0], {Abbreviation: d.key});
                 switch (chosenDenominator){
@@ -756,11 +754,6 @@ mpgSoftware.growthFactorLauncher = (function () {
             step: 2,
             min: 1,
             max: 99,
-            // spin: function (event, ui){
-            //     const identifier = $(event.target).closest("div.coreObject").attr('id');
-            //     setData(identifier,"movingAverageWindow", ui.value);
-            //     buildThePlot(identifier,FILTER_BASED_ON_ANALYSIS);
-            // },
             stop: function (event, ui){
                 const identifier = $(event.target).closest("div.coreObject").attr('id');
                 setData(identifier,"movingAverageWindow", this.value);
@@ -774,11 +767,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             step: 1,
             min: 1,
             max: 100,
-            // spin: function (event, ui){
-            //     const identifier = $(event.target).closest("div.coreObject").attr('id');
-            //     setData(identifier,"daysOfNonExponentialGrowthRequired", ui.value);
-            //     buildThePlot (identifier,FILTER_BASED_ON_ANALYSIS);
-            // },
+
             stop:function (event, ui){
                 const identifier = $(event.target).closest("div.coreObject").attr('id');
                 setData(identifier,"daysOfNonExponentialGrowthRequired", this.value);
@@ -882,6 +871,7 @@ mpgSoftware.growthFactorLauncher = (function () {
             .text(chosenDatatype).append("<span class='caret'><span>");
         setData(identifier,"chosenDatatype", chosenDatatype);
         setData(identifier,"chosenDatatypeField", chosenDatatypeField);
+        $('#' + identifier +' span.startingWithQuantity').html(chosenDatatype);
         buildThePlot (identifier,FILTER_BASED_ON_DATA_SELECTION);
     };
 
@@ -1185,9 +1175,15 @@ mpgSoftware.growthFactorLauncher = (function () {
             let andFilterArray = [];
 
             if (retrieveData (identifier, "includeTopLevelGroups")){
-                //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
-                orFilterArray.push (datum => !(_.includes (datum.key,'World')));
+                orFilterArray.push (datum => (!(_.includes (datum.key,'World'))&&
+                (_.indexOf (['Africa','Australia','Asia','Europe','North America','South America','Oceana'],datum.key) === -1))
+                );
             }
+            if (retrieveData (identifier, "includeContinents")){
+                //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
+                orFilterArray.push (datum => (_.indexOf (['Africa','Australia','Asia','Europe','North America','South America','Oceana'],datum.key) > -1));
+            }
+
             if (retrieveData (identifier, "includeSummaryGroups")){
                 //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
                 orFilterArray.push (datum => (_.includes (datum.key,'World')));
@@ -1207,9 +1203,15 @@ mpgSoftware.growthFactorLauncher = (function () {
             let andFilterArray = [];
 
             if (retrieveData (identifier, "includeTopLevelGroups")){
-                //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
-                orFilterArray.push (datum => !(_.includes (datum.key,'World')));
+                orFilterArray.push (datum => (!(_.includes (datum.key,'World'))&&
+                    (_.indexOf (['Africa','Australia','Asia','Europe','North America','South America','Oceana'],datum.key) === -1))
+                );
             }
+            if (retrieveData (identifier, "includeContinents")){
+                //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
+                orFilterArray.push (datum => (_.indexOf (['Africa','Australia','Asia','Europe','North America','South America','Oceana'],datum.key) > -1));
+            }
+
             if (retrieveData (identifier, "includeSummaryGroups")){
                 //the world has a code, though otherwise only countries have codes. Exclude the world specifically from the country search
                 orFilterArray.push (datum => (_.includes (datum.key,'World')));
@@ -1483,11 +1485,9 @@ mpgSoftware.growthFactorLauncher = (function () {
                     _.forEach(eachGroup. values, function (eachDataPoint){
                         if (yValueAccessor (eachDataPoint,auxData) <= 0) {
                             if (retrieveData(identifier, "countingTotalDeaths")) {
-                                if (identifier === 'country') {
-                                    eachDataPoint ['total_deaths_per_million'] = 0.1;
-                                } else {
+
                                     eachDataPoint ['y'] = 1;
-                                }
+
                             }else {
                                 eachDataPoint ['y'] = 1;
                             }
@@ -1590,16 +1590,36 @@ mpgSoftware.growthFactorLauncher = (function () {
             auxData =  _.map (allTheDataWeHaveAccumulated.slice (1,allTheDataWeHaveAccumulated.length), d => d.rawData);
         }else if(identifier=== "country"){
             const rawCountryData = allTheDataWeHaveAccumulated[0].rawData;
+            const aggregatedData = allTheDataWeHaveAccumulated[0].aggregatedData;
             const buildAuxiliaryData = [];
+
+            // generate our own auxiliary data for countries, providing a consistent handling of denominators
             _.forEach(groupedData,function (oneRecord) {
                 const findAnyRecordForThisCountry= _.find (rawCountryData,{key:oneRecord.key});
-                buildAuxiliaryData.push ({key:oneRecord.key,
-                    population:+findAnyRecordForThisCountry.population,
-                    density:+findAnyRecordForThisCountry.population_density,
-                    gdpPerCapita: +findAnyRecordForThisCountry.gdp_per_capita,
-                    continent:+findAnyRecordForThisCountry.continent});
-            })
+                if ( typeof findAnyRecordForThisCountry !== 'undefined'){
+                    buildAuxiliaryData.push ({key:oneRecord.key,
+                        population:+findAnyRecordForThisCountry.population,
+                        density:+findAnyRecordForThisCountry.population_density,
+                        gdpPerCapita: +findAnyRecordForThisCountry.gdp_per_capita,
+                        continent:+findAnyRecordForThisCountry.continent});
+                }else{
+                    const findAggregatedRecordsForThisCountry= aggregatedData[oneRecord.key];
+                    if ( typeof findAggregatedRecordsForThisCountry !== 'undefined'){
+                        const findAnyAggregatedRecordForThisCountry = _.first (findAggregatedRecordsForThisCountry);
+                        buildAuxiliaryData.push ({key:oneRecord.key,
+                            population:+findAnyAggregatedRecordForThisCountry.population,
+                            density:(+findAnyAggregatedRecordForThisCountry.population)/(+findAnyAggregatedRecordForThisCountry.area),
+                            gdpPerCapita: (+findAnyAggregatedRecordForThisCountry.gdp)*(+findAnyAggregatedRecordForThisCountry.population),
+                            continent:+findAnyAggregatedRecordForThisCountry.continent});
+                    }
+
+                }
+
+            });
             auxData = [buildAuxiliaryData];
+
+
+
         }
 
 
@@ -1703,7 +1723,50 @@ mpgSoftware.growthFactorLauncher = (function () {
     };
 
 
+    const addAnyAggregates = function(identifier,){
+        const primaryData = _.first (retrieveData (identifier, "dataFromServerArray"));
+        const originalData = primaryData.rawData;
+        // we can aggregate the data to create some new categories like continents. When complete, add this back into the grouped data.
+        const dateGrouped = _.chain(originalData).groupBy(v=>v.date.getTime()/1000).value();
+        const dateGroupedKeys = _.chain(dateGrouped).keys().orderBy().value();
+        const dateGroupedOrdered = [];
+        _.forEach(dateGroupedKeys,function(oneDate){dateGroupedOrdered.push (dateGrouped [+oneDate])});
+        const invertedData = [];
+        _.forEach(dateGroupedOrdered,function(oneDate){
+            const thisParticularDate = _.first(oneDate).date;
+            invertedData.push (_.chain(oneDate)
+                .groupBy('continent')
+                .map(function(objs, key){
+                    const totalPop = _.sumBy(objs, r=>+r.population);
+                    return {'continent': key,
+                    'date':thisParticularDate,
+                    'total_deaths': _.sumBy(objs, r=>+r.total_deaths) ,
+                    'total_cases': _.sumBy(objs, r=>+r.total_cases),
+                    'population': totalPop,
+                    'area':  _.sumBy(objs, r=>(+r.population)/(+r.population_density)),
+                     'gdp':_.sumBy(objs, r=>(+r.population)*(+r.gdp_per_capita))
 
+                }})
+
+        .value());
+        });
+        const aggregatedData = {};
+        _.forEach(invertedData,function(oneDate){
+            _.forEach(oneDate,function(place){
+                const continentName = place.continent;
+                if (continentName.length > 0){
+                    if ( typeof aggregatedData [continentName] === 'undefined'){
+                        aggregatedData [continentName] = [];
+                    }
+                    aggregatedData [continentName].push (place);
+                }
+
+            });
+
+        });
+        primaryData.aggregatedData = aggregatedData;
+        // setData (identifier, "dataFromServerArray",primaryData);
+    }
 
 
 
@@ -1717,6 +1780,7 @@ mpgSoftware.growthFactorLauncher = (function () {
     };
 
     const displayPlotRetrievingIfNecessary = function(identifier){
+        baget.growthFactor.resize(false);
         const dataRetrieved = retrieveData  (identifier, "dataRetrieved");
         if (!dataRetrieved){
             const dataFromServerArray = retrieveData (identifier, "dataFromServerArray");
@@ -1735,6 +1799,8 @@ mpgSoftware.growthFactorLauncher = (function () {
                                 dataFromServerArray[index].rawData = dataToSave;
                             });
                         }
+
+                        addAnyAggregates(identifier);
 
                         // Necessary before first plot, but data independent
                         synchronizeDataGroupingWithUi (identifier);
